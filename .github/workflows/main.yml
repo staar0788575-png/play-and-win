@@ -26,14 +26,19 @@ jobs:
           flutter-version: '3.24.x'
           channel: 'stable'
 
-      - name: Generate Android & iOS files
-        run: flutter create . --org com.example.app --project-name play_and_win
+      - name: Create Structure and Move Files
+        run: |
+          mkdir -p lib android
+          find . -maxdepth 1 -name "*.dart" -exec mv {} lib/ \;
+
+      - name: Generate Android project files if missing
+        run: flutter create . --org com.example.app --project-name play_and_win --overwrite
 
       - name: Get Flutter Packages
         run: flutter pub get
 
       - name: Build APK
-        run: flutter build apk --release --target=main.dart
+        run: flutter build apk --release --target=lib/main.dart
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
