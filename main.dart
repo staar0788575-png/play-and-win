@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 
 void main() {
   runApp(const PlayAndWinApp());
@@ -57,7 +58,6 @@ class _HomeScreenState extends State<HomeScreen> {
           IconButton(
             icon: const Icon(Icons.settings, color: Colors.white70),
             onPressed: () {
-              // فتح نافذة الإعدادات
               _showSettingsModal(context);
             },
           ),
@@ -68,7 +68,6 @@ class _HomeScreenState extends State<HomeScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // بطاقة الأرباح والرصيد الاحترافية
             Container(
               padding: const EdgeInsets.all(20),
               decoration: BoxDecoration(
@@ -121,7 +120,6 @@ class _HomeScreenState extends State<HomeScreen> {
               style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white),
             ),
             const SizedBox(height: 15),
-            // شبكة الألعاب
             GridView.count(
               crossAxisCount: 2,
               shrinkWrap: true,
@@ -129,11 +127,19 @@ class _HomeScreenState extends State<HomeScreen> {
               crossAxisSpacing: 15,
               mainAxisSpacing: 15,
               childAspectRatio: 1.1,
-              children: const [
-                GameCard(title: 'لعبة لودو', icon: Icons.casino, color: Colors.redAccent),
-                GameCard(title: 'بلياردو', icon: Icons.sports_bar, color: Colors.blueAccent),
-                GameCard(title: 'السلم والثعبان', icon: Icons.leaderboard, color: Colors.greenAccent),
-                GameCard(title: 'الدومينو', icon: Icons.grid_view, color: Colors.amberAccent),
+              children: [
+                const GameCard(title: 'لعبة لودو', icon: Icons.casino, color: Colors.redAccent),
+                const GameCard(title: 'بلياردو', icon: Icons.sports_bar, color: Colors.blueAccent),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const SnakesAndLaddersGame()),
+                    );
+                  },
+                  child: const GameCard(title: 'السلم والثعبان', icon: Icons.leaderboard, color: Colors.greenAccent),
+                ),
+                const GameCard(title: 'الدومينو', icon: Icons.grid_view, color: Colors.amberAccent),
               ],
             ),
           ],
@@ -235,6 +241,229 @@ class GameCard extends StatelessWidget {
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// شاشة لعبة السلم والثعبان
+class SnakesAndLaddersGame extends StatefulWidget {
+  const SnakesAndLaddersGame({super.key});
+
+  @override
+  State<SnakesAndLaddersGame> createState() => _SnakesAndLaddersGameState();
+}
+
+class _SnakesAndLaddersGameState extends State<SnakesAndLaddersGame> {
+  int _playerPos = 1;
+  int _currentDice = 1;
+  bool _isRolling = false;
+
+  final Map<int, int> _snakesAndLadders = {
+    3: 20,
+    6: 14,
+    11: 28,
+    17: 38,
+    25: 5,
+    34: 22,
+    40: 19,
+    47: 26,
+    55: 36,
+    62: 43,
+    73: 51,
+    89: 70,
+    95: 75,
+    99: 80,
+  };
+
+  void _rollDice() {
+    if (_isRolling) return;
+
+    setState(() {
+      _isRolling = true;
+    });
+
+    Future.delayed(const Duration(milliseconds: 500), () {
+      setState(() {
+        _currentDice = Random().nextInt(6) + 1;
+        _playerPos += _currentDice;
+
+        if (_playerPos > 100) {
+          _playerPos = 100;
+        }
+
+        if (_snakesAndLadders.containsKey(_playerPos)) {
+          int newPos = _snakesAndLadders[_playerPos]!;
+          Future.delayed(const Duration(milliseconds: 300), () {
+            setState(() {
+              _playerPos = newPos;
+              _isRolling = false;
+            });
+          });
+        } else {
+          _isRolling = false;
+        }
+
+        if (_playerPos == 100) {
+          _showWinDialog();
+        }
+      });
+    });
+  }
+
+  void _resetGame() {
+    setState(() {
+      _playerPos = 1;
+      _currentDice = 1;
+    });
+  }
+
+  void _showWinDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('تهانينا!', style: TextStyle(color: Colors.greenAccent)),
+        content: const Text('لقد وصلت إلى الخلية 100 وفزت بـ 10 نقاط!'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              _resetGame();
+            },
+            child: const Text('اللعب مرة أخرى'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('السلم والثعبان'),
+        backgroundColor: const Color(0xFF1E293B),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0F172A), Color(0xFF334155)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Column(
+          children: [
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(10.0),
+                child: AspectRatio(
+                  aspectRatio: 1,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: Colors.white.withOpacity(0.05),
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    ),
+                    child: GridView.builder(
+                      physics: const NeverScrollableScrollPhysics(),
+                      reverse: true,
+                      itemCount: 100,
+                      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                        crossAxisCount: 10,
+                      ),
+                      itemBuilder: (context, index) {
+                        int number = index + 1;
+                        bool isPlayerHere = (number == _playerPos);
+                        bool hasFeature = _snakesAndLadders.containsKey(number);
+                        Color cellColor = Colors.transparent;
+                        IconData? featureIcon;
+
+                        if (hasFeature) {
+                          if (_snakesAndLadders[number]! > number) {
+                            cellColor = Colors.greenAccent.withOpacity(0.2);
+                            featureIcon = Icons.trending_up;
+                          } else {
+                            cellColor = Colors.redAccent.withOpacity(0.2);
+                            featureIcon = Icons.trending_down;
+                          }
+                        }
+
+                        return Container(
+                          decoration: BoxDecoration(
+                            color: cellColor,
+                            border: Border.all(color: Colors.white.withOpacity(0.05), width: 0.5),
+                          ),
+                          child: Stack(
+                            children: [
+                              Center(
+                                child: Text(
+                                  '$number',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(isPlayerHere ? 1.0 : 0.3),
+                                    fontSize: 12,
+                                    fontWeight: isPlayerHere ? FontWeight.bold : FontWeight.normal,
+                                  ),
+                                ),
+                              ),
+                              if (featureIcon != null)
+                                Align(
+                                  alignment: Alignment.topRight,
+                                  child: Icon(featureIcon, size: 14, color: Colors.white.withOpacity(0.3)),
+                                ),
+                              if (isPlayerHere)
+                                const Center(
+                                  child: Icon(Icons.person, color: Colors.amber, size: 30),
+                                ),
+                            ],
+                          ),
+                        );
+                      },
+                    ),
+                  ),
+                ),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.3), blurRadius: 10)],
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Column(
+                    children: [
+                      const Text('الخلية الحالية', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      Text('$_playerPos', style: const TextStyle(color: Colors.amber, fontSize: 32, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  Column(
+                    children: [
+                      const Text('النرد', style: TextStyle(color: Colors.white70, fontSize: 12)),
+                      _isRolling
+                          ? const SizedBox(width: 32, height: 32, child: CircularProgressIndicator(strokeWidth: 2))
+                          : Text('$_currentDice', style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: _rollDice,
+                    icon: const Icon(Icons.casino),
+                    label: const Text('رمي النرد', style: TextStyle(fontSize: 18)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFFF59E0B),
+                      padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
