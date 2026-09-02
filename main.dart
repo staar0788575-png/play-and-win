@@ -128,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSpacing: 15,
               childAspectRatio: 1.1,
               children: [
-                // زر لعبة لودو
+                // لعبة لودو
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -138,7 +138,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   child: const GameCard(title: 'لعبة لودو', icon: Icons.casino, color: Colors.redAccent),
                 ),
-                // زر لعبة بلياردو الجديدة والمرتبطة
+                // لعبة بلياردو
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -148,7 +148,7 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   child: const GameCard(title: 'بلياردو', icon: Icons.sports_bar, color: Colors.blueAccent),
                 ),
-                // زر لعبة السلم والثعبان
+                // لعبة السلم والثعبان
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -158,7 +158,16 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   child: const GameCard(title: 'السلم والثعبان', icon: Icons.leaderboard, color: Colors.greenAccent),
                 ),
-                const GameCard(title: 'الدومينو', icon: Icons.grid_view, color: Colors.amberAccent),
+                // لعبة الدومينو الجديدة المرتبطة
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const DominoGameScreen()),
+                    );
+                  },
+                  child: const GameCard(title: 'الدومينو', icon: Icons.grid_view, color: Colors.amberAccent),
+                ),
               ],
             ),
           ],
@@ -265,7 +274,129 @@ class GameCard extends StatelessWidget {
   }
 }
 
-// شاشة لعبة البلياردو التنافسية الجديدة
+// شاشة لعبة الدومينو الجديدة
+class DominoGameScreen extends StatefulWidget {
+  const DominoGameScreen({super.key});
+
+  @override
+  State<DominoGameScreen> createState() => _DominoGameScreenState();
+}
+
+class _DominoGameScreenState extends State<DominoGameScreen> {
+  int _dominoScore = 0;
+  bool _isPlaying = false;
+  String _dominoStatus = 'اختر بلاطة الدومينو المطابقة لتسجيل النقاط!';
+
+  void _playDomino() {
+    if (_isPlaying) return;
+    setState(() {
+      _isPlaying = true;
+      _dominoStatus = 'جاري مطابقة الأرقام على الطاولة...';
+    });
+
+    Future.delayed(const Duration(milliseconds: 600), () {
+      setState(() {
+        _isPlaying = false;
+        bool matchSuccess = Random().nextBool();
+        if (matchSuccess) {
+          _dominoScore += 20;
+          _dominoStatus = 'مطابقة صحيحة! ربحت 20 نقطة دومينو';
+        } else {
+          _dominoStatus = 'ليس لديك المطابقة المناسبة، دور الخصم!';
+        }
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('تحدي الدومينو الذكي'),
+        backgroundColor: const Color(0xFF1E293B),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0F172A), Color(0xFF78350F)], // طابع خشبي دافئ خاص بالدومينو
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('مجموع نقاط الدومينو:', style: TextStyle(fontSize: 18, color: Colors.white70)),
+                  Text('$_dominoScore نقطة', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.amberAccent)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              height: 240,
+              decoration: BoxDecoration(
+                color: const Color(0xFF92400E).withOpacity(0.6),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.amber.withOpacity(0.4), width: 3),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 15)],
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.grid_view, size: 50, color: Colors.amberAccent),
+                    const SizedBox(height: 15),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        _dominoStatus,
+                        style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+            Container(
+              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _playDomino,
+                    icon: const Icon(Icons.play_arrow),
+                    label: const Text('لعب البلاطة الآن', style: TextStyle(fontSize: 18)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.amber,
+                      foregroundColor: Colors.black,
+                      padding: const EdgeInsets.symmetric(horizontal: 35, vertical: 15),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// شاشة لعبة البلياردو
 class BilliardsGameScreen extends StatefulWidget {
   const BilliardsGameScreen({super.key});
 
@@ -288,7 +419,7 @@ class _BilliardsGameScreenState extends State<BilliardsGameScreen> {
     Future.delayed(const Duration(milliseconds: 700), () {
       setState(() {
         _isShooting = false;
-        bool success = Random().nextBool(); // نسبة نجاح عشوائية ممتعة
+        bool success = Random().nextBool();
         if (success) {
           _score += 15;
           _statusMessage = 'أحسنت! سُجلت الكرة بنجاح (+15 نقطة)';
@@ -309,7 +440,7 @@ class _BilliardsGameScreenState extends State<BilliardsGameScreen> {
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFF0F172A), Color(0xFF064E3B)], // طابع أخضر طاولة البلياردو الداكن
+            colors: [Color(0xFF0F172A), Color(0xFF064E3B)],
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
           ),
@@ -328,7 +459,6 @@ class _BilliardsGameScreenState extends State<BilliardsGameScreen> {
               ),
             ),
             const SizedBox(height: 20),
-            // طاولة البلياردو التخيلية
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
               height: 240,
