@@ -128,7 +128,7 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSpacing: 15,
               childAspectRatio: 1.1,
               children: [
-                // زر لعبة لودو مرتبطة مباشرة
+                // زر لعبة لودو
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -138,8 +138,17 @@ class _HomeScreenState extends State<HomeScreen> {
                   },
                   child: const GameCard(title: 'لعبة لودو', icon: Icons.casino, color: Colors.redAccent),
                 ),
-                const GameCard(title: 'بلياردو', icon: Icons.sports_bar, color: Colors.blueAccent),
-                // زر لعبة السلم والثعبان المرتبطة مسبقاً
+                // زر لعبة بلياردو الجديدة والمرتبطة
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const BilliardsGameScreen()),
+                    );
+                  },
+                  child: const GameCard(title: 'بلياردو', icon: Icons.sports_bar, color: Colors.blueAccent),
+                ),
+                // زر لعبة السلم والثعبان
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -256,7 +265,129 @@ class GameCard extends StatelessWidget {
   }
 }
 
-// شاشة لعبة لودو الجديدة كلياً
+// شاشة لعبة البلياردو التنافسية الجديدة
+class BilliardsGameScreen extends StatefulWidget {
+  const BilliardsGameScreen({super.key});
+
+  @override
+  State<BilliardsGameScreen> createState() => _BilliardsGameScreenState();
+}
+
+class _BilliardsGameScreenState extends State<BilliardsGameScreen> {
+  int _score = 0;
+  bool _isShooting = false;
+  String _statusMessage = 'اضغط على زر الضرب لتسجيل الكرة في الحفرة!';
+
+  void _shootBall() {
+    if (_isShooting) return;
+    setState(() {
+      _isShooting = true;
+      _statusMessage = 'جاري توجيه الضرب ودفعة العصا...';
+    });
+
+    Future.delayed(const Duration(milliseconds: 700), () {
+      setState(() {
+        _isShooting = false;
+        bool success = Random().nextBool(); // نسبة نجاح عشوائية ممتعة
+        if (success) {
+          _score += 15;
+          _statusMessage = 'أحسنت! سُجلت الكرة بنجاح (+15 نقطة)';
+        } else {
+          _statusMessage = 'يا للأسف، مرت الكرة بجانب الحفرة! حاول مرة أخرى';
+        }
+      });
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('تحدي البلياردو الملكي'),
+        backgroundColor: const Color(0xFF1E293B),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0F172A), Color(0xFF064E3B)], // طابع أخضر طاولة البلياردو الداكن
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  const Text('نقاط التحدي:', style: TextStyle(fontSize: 18, color: Colors.white70)),
+                  Text('$_score نقطة', style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.greenAccent)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            // طاولة البلياردو التخيلية
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              height: 240,
+              decoration: BoxDecoration(
+                color: const Color(0xFF065F46),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: const Color(0xFF047857), width: 8),
+                boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 15)],
+              ),
+              child: Center(
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const Icon(Icons.sports_bar, size: 50, color: Colors.white60),
+                    const SizedBox(height: 15),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                      child: Text(
+                        _statusMessage,
+                        style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                        textAlign: TextAlign.center,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 40),
+            Container(
+              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  ElevatedButton.icon(
+                    onPressed: _shootBall,
+                    icon: const Icon(Icons.sports_basketball),
+                    label: const Text('تسديد الكرة الآن', style: TextStyle(fontSize: 18)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.green,
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// شاشة لعبة لودو
 class LudoGameScreen extends StatefulWidget {
   const LudoGameScreen({super.key});
 
@@ -267,7 +398,7 @@ class LudoGameScreen extends StatefulWidget {
 class _LudoGameScreenState extends State<LudoGameScreen> {
   int _diceValue = 6;
   bool _isRolling = false;
-  int _tokenPosition = 0; // 0 تعني في القاعدة
+  int _tokenPosition = 0;
 
   void _rollLudoDice() {
     if (_isRolling) return;
@@ -282,12 +413,12 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
 
         if (_tokenPosition == 0) {
           if (_diceValue == 6) {
-            _tokenPosition = 1; // الخروج من القاعدة عند الحصول على 6
+            _tokenPosition = 1;
           }
         } else {
           _tokenPosition += _diceValue;
           if (_tokenPosition > 50) {
-            _tokenPosition = 50; // نهاية المسار الفوز
+            _tokenPosition = 50;
             _showLudoWinDialog();
           }
         }
@@ -341,7 +472,6 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
               style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.amber),
             ),
             const SizedBox(height: 20),
-            // لوحة اللعب التخيلية المبسطة
             Container(
               margin: const EdgeInsets.symmetric(horizontal: 20),
               padding: const EdgeInsets.all(20),
@@ -384,7 +514,6 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
               ),
             ),
             const SizedBox(height: 40),
-            // النرد والتحكم
             Container(
               padding: const EdgeInsets.all(20),
               margin: const EdgeInsets.symmetric(horizontal: 20),
