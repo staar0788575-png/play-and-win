@@ -128,8 +128,18 @@ class _HomeScreenState extends State<HomeScreen> {
               mainAxisSpacing: 15,
               childAspectRatio: 1.1,
               children: [
-                const GameCard(title: 'لعبة لودو', icon: Icons.casino, color: Colors.redAccent),
+                // زر لعبة لودو مرتبطة مباشرة
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => const LudoGameScreen()),
+                    );
+                  },
+                  child: const GameCard(title: 'لعبة لودو', icon: Icons.casino, color: Colors.redAccent),
+                ),
                 const GameCard(title: 'بلياردو', icon: Icons.sports_bar, color: Colors.blueAccent),
+                // زر لعبة السلم والثعبان المرتبطة مسبقاً
                 GestureDetector(
                   onTap: () {
                     Navigator.push(
@@ -241,6 +251,174 @@ class GameCard extends StatelessWidget {
             style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 16),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// شاشة لعبة لودو الجديدة كلياً
+class LudoGameScreen extends StatefulWidget {
+  const LudoGameScreen({super.key});
+
+  @override
+  State<LudoGameScreen> createState() => _LudoGameScreenState();
+}
+
+class _LudoGameScreenState extends State<LudoGameScreen> {
+  int _diceValue = 6;
+  bool _isRolling = false;
+  int _tokenPosition = 0; // 0 تعني في القاعدة
+
+  void _rollLudoDice() {
+    if (_isRolling) return;
+    setState(() {
+      _isRolling = true;
+    });
+
+    Future.delayed(const Duration(milliseconds: 600), () {
+      setState(() {
+        _diceValue = Random().nextInt(6) + 1;
+        _isRolling = false;
+
+        if (_tokenPosition == 0) {
+          if (_diceValue == 6) {
+            _tokenPosition = 1; // الخروج من القاعدة عند الحصول على 6
+          }
+        } else {
+          _tokenPosition += _diceValue;
+          if (_tokenPosition > 50) {
+            _tokenPosition = 50; // نهاية المسار الفوز
+            _showLudoWinDialog();
+          }
+        }
+      });
+    });
+  }
+
+  void _showLudoWinDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        title: const Text('مبروك الفوز!', style: TextStyle(color: Colors.redAccent)),
+        content: const Text('لقد أتممت مسار لودو بنجاح وحصلت على 20 نقطة!'),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop();
+              setState(() {
+                _tokenPosition = 0;
+                _diceValue = 6;
+              });
+            },
+            child: const Text('إعادة اللعبة'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('لعبة لودو التنافسية'),
+        backgroundColor: const Color(0xFF1E293B),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0F172A), Color(0xFF1E1B4B)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Text(
+              'حلبة لودو الملكية',
+              style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.amber),
+            ),
+            const SizedBox(height: 20),
+            // لوحة اللعب التخيلية المبسطة
+            Container(
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              padding: const EdgeInsets.all(20),
+              height: 220,
+              decoration: BoxDecoration(
+                color: Colors.black26,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.redAccent.withOpacity(0.5), width: 2),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    _tokenPosition == 0 ? 'القطعة داخل القاعدة (اظهر رقم 6 للخروج)' : 'موقع القطعة الحالي: المسار رقم $_tokenPosition',
+                    style: const TextStyle(color: Colors.white70, fontSize: 16),
+                    textAlign: TextAlign.center,
+                  ),
+                  const SizedBox(height: 20),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Container(
+                        width: 50,
+                        height: 50,
+                        decoration: BoxDecoration(
+                          color: _tokenPosition > 0 ? Colors.redAccent : Colors.grey.withOpacity(0.3),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            if (_tokenPosition > 0)
+                              const BoxShadow(color: Colors.redAccent, blurRadius: 10, spreadRadius: 2)
+                          ],
+                        ),
+                        child: const Center(
+                          child: Icon(Icons.star, color: Colors.white),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 40),
+            // النرد والتحكم
+            Container(
+              padding: const EdgeInsets.all(20),
+              margin: const EdgeInsets.symmetric(horizontal: 20),
+              decoration: BoxDecoration(
+                color: const Color(0xFF1E293B),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Column(
+                    children: [
+                      const Text('نتيجة النرد', style: TextStyle(color: Colors.white60)),
+                      const SizedBox(height: 5),
+                      _isRolling
+                          ? const SizedBox(width: 30, height: 30, child: CircularProgressIndicator(strokeWidth: 2))
+                          : Text('$_diceValue', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.bold, color: Colors.amber)),
+                    ],
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: _rollLudoDice,
+                    icon: const Icon(Icons.casino),
+                    label: const Text('رمي النرد', style: TextStyle(fontSize: 18)),
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.redAccent,
+                      padding: const EdgeInsets.symmetric(horizontal: 25, vertical: 12),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
