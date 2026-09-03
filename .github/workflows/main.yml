@@ -38,6 +38,10 @@ jobs:
           flutter pub add firebase_core
           flutter pub get
 
+      - name: Fix minSdkVersion for Firebase
+        run: |
+          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/g' android/app/build.gradle
+
       - name: Build APK
         run: flutter build apk --release --target=lib/main.dart
 
