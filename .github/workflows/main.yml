@@ -1,4 +1,3 @@
-
 name: Build and Deploy Android APK
 
 on:
@@ -26,13 +25,13 @@ jobs:
           flutter-version: '3.24.x'
           channel: 'stable'
 
-      - name: Create Structure and Move Files
-        run: |
-          mkdir -p lib android
-          find . -maxdepth 1 -name "*.dart" -exec mv {} lib/ \;
-
-      - name: Generate Android project files if missing
+      - name: Generate Flutter Project Structure First
         run: flutter create . --org com.example.app --project-name play_and_win --overwrite
+
+      - name: Move Custom Dart Files to lib
+        run: |
+          mkdir -p lib
+          find . -maxdepth 1 -name "*.dart" -exec mv {} lib/ \;
 
       - name: Get Flutter Packages
         run: flutter pub get
