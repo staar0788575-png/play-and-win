@@ -33,8 +33,10 @@ jobs:
           mkdir -p lib
           find . -maxdepth 1 -name "*.dart" -exec mv {} lib/ \;
 
-      - name: Get Flutter Packages
-        run: flutter pub get
+      - name: Get Flutter Packages and Add Firebase Core
+        run: |
+          flutter pub add firebase_core
+          flutter pub get
 
       - name: Build APK
         run: flutter build apk --release --target=lib/main.dart
