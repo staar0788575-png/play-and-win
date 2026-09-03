@@ -20,7 +20,7 @@ android {
 
     defaultConfig {
         applicationId "com.example.play_and_win"
-        minSdkVersion 23
+        minSdkVersion 24
         targetSdkVersion flutter.targetSdkVersion
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
