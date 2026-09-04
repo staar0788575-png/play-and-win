@@ -21,7 +21,8 @@ android {
     defaultConfig {
         applicationId "com.example.play_and_win"
         minSdkVersion 24
-        targetSdkVersion flutter.targetSdkVersion
+        targetSdkVersion flutter.minSdkVersion 24
+
         versionCode flutterVersionCode.toInteger()
         versionName flutterVersionName
         multiDexEnabled true
