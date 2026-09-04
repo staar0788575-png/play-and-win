@@ -25,14 +25,6 @@ jobs:
           flutter-version: '3.24.x'
           channel: 'stable'
 
-      - name: Generate Flutter Project Structure First
-        run: flutter create --org com.example.app --project-name play_and_win --overwrite
-
-      - name: Move Custom Dart Files in lib
-        run: |
-          mkdir -p lib
-          find . -maxdepth 1 -name "*.dart" -exec mv {} lib/ \;
-
       - name: Get Flutter Packages and Add Firebase Core
         run: |
           flutter pub add firebase_core
@@ -49,7 +41,7 @@ jobs:
           fi
 
       - name: Build APK
-        run: flutter build apk --release --target=lib/main.dart
+        run: flutter build apk --release
 
       - name: Upload APK Artifact
         uses: actions/upload-artifact@v4
