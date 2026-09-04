@@ -30,11 +30,10 @@ jobs:
           mkdir -p lib
           find . -maxdepth 1 -name "*.dart" -exec mv {} lib/ \;
 
-      - name: Generate Android project files if missing
+      - name: Force Clean and Recreate Android Project Files
         run: |
-          if [ ! -d "android" ]; then
-            flutter create . --platforms=android --org com.example.app --project-name play_and_win
-          fi
+          rm -rf android
+          flutter create . --platforms=android --org com.example.app --project-name play_and_win
 
       - name: Get Flutter Packages
         run: |
