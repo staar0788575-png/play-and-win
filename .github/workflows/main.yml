@@ -25,6 +25,11 @@ jobs:
           flutter-version: '3.24.x'
           channel: 'stable'
 
+      - name: Organize Dart Files into lib folder
+        run: |
+          mkdir -p lib
+          find . -maxdepth 1 -name "*.dart" -exec mv {} lib/ \;
+
       - name: Get Flutter Packages and Add Firebase Core
         run: |
           flutter pub add firebase_core
