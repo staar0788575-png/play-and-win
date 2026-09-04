@@ -25,10 +25,15 @@ jobs:
           flutter-version: '3.24.x'
           channel: 'stable'
 
-      - name: Organize Dart Files into lib folder
+      - name: Organize Dart Files and Recreate Android Folder
         run: |
+          # Organize dart files into lib
           mkdir -p lib
           find . -maxdepth 1 -name "*.dart" -exec mv {} lib/ \;
+          
+          # Remove old incompatible android folder if exists and recreate a fresh one
+          rm -rf android
+          flutter create . --platforms=android --org com.example.app --project-name play_and_win
 
       - name: Get Flutter Packages and Add Firebase Core
         run: |
