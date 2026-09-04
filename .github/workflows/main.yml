@@ -26,9 +26,9 @@ jobs:
           channel: 'stable'
 
       - name: Generate Flutter Project Structure First
-        run: flutter create . --org com.example.app --project-name play_and_win --overwrite
+        run: flutter create --org com.example.app --project-name play_and_win --overwrite
 
-      - name: Move Custom Dart Files to lib
+      - name: Move Custom Dart Files in lib
         run: |
           mkdir -p lib
           find . -maxdepth 1 -name "*.dart" -exec mv {} lib/ \;
@@ -38,9 +38,15 @@ jobs:
           flutter pub add firebase_core
           flutter pub get
 
-      - name: Fix minSdkVersion for Firebase
+      - name: Auto-fix minSdkVersion for Firebase
         run: |
-          sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/g' android/app/build.gradle
+          BUILD_FILE="android/app/build.gradle"
+          if [ -f "$BUILD_FILE" ]; then
+            echo "Updating minSdkVersion to 23 automatically..."
+            sed -i 's/minSdkVersion 21/minSdkVersion 23/g' $BUILD_FILE
+            sed -i 's/minSdkVersion flutter.minSdkVersion/minSdkVersion 23/g' $BUILD_FILE
+            sed -i 's/minSdkVersion Flutter.minSdkVersion/minSdkVersion 23/g' $BUILD_FILE
+          fi
 
       - name: Build APK
         run: flutter build apk --release --target=lib/main.dart
