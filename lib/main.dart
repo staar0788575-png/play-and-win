@@ -1,6 +1,14 @@
 import 'package:flutter/material.dart';
+import 'firebase_config.dart';
+import 'home_screen.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await FirebaseConfig.initializeFirebase();
+  } catch (e) {
+    // تجاهل خطأ التهيئة المؤقت في حال عدم توفر إعدادات فايربيز الحقيقية حالياً
+  }
   runApp(const PlayAndWinApp());
 }
 
@@ -17,27 +25,6 @@ class PlayAndWinApp extends StatelessWidget {
         useMaterial3: true,
       ),
       home: const HomeScreen(),
-    );
-  }
-}
-
-class HomeScreen extends StatelessWidget {
-  const HomeScreen({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Play and Win - Home'),
-        centerTitle: true,
-      ),
-      body: const Center(
-        child: Text(
-          'مرحباً بك في تطبيق العب واربح!',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-          textDirection: TextDirection.rtl,
-        ),
-      ),
     );
   }
 }
