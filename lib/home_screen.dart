@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'wallet_screen.dart';
+import 'social_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({super.key});
@@ -11,6 +12,16 @@ class HomeScreen extends StatelessWidget {
         title: const Text('تطبيق العب واربح'),
         centerTitle: true,
         actions: [
+          IconButton(
+            icon: const Icon(Icons.people, color: Colors.blueAccent),
+            onPressed: () {
+              Navigator.push(
+                context,
+                MaterialPageRoute(builder: (context) => const SocialScreen()),
+              );
+            },
+            tooltip: 'المجتمع والأصدقاء',
+          ),
           IconButton(
             icon: const Icon(Icons.account_balance_wallet, color: Colors.amber),
             onPressed: () {
@@ -26,7 +37,6 @@ class HomeScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16.0),
         children: [
-          // بطاقة ترحيبية أو تنبيه بالزر العلوي للمحفظة
           Card(
             color: Colors.blue[50],
             child: Padding(
@@ -37,7 +47,7 @@ class HomeScreen extends StatelessWidget {
                   SizedBox(width: 12),
                   Expanded(
                     child: Text(
-                      'اضغط على أيقونة المحفظة في الأعلى لشحن العملات وإدارة الورد اليومي!',
+                      'استخدم الأيقونات في الأعلى لفتح المحفظة والشحن أو إدارة المجتمع والأصدقاء!',
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                   ),
