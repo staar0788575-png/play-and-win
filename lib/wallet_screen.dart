@@ -34,7 +34,7 @@ class _WalletScreenState extends State<WalletScreen> {
                   children: [
                     Column(
                       children: [
-                        const Icon(Icons.monetization_icon, color: Colors.amber, size: 36),
+                        const Icon(Icons.monetization_on, color: Colors.amber, size: 36),
                         const SizedBox(height: 8),
                         const Text('العملات الذهبية', style: TextStyle(fontWeight: FontWeight.bold)),
                         Text('${_walletProvider.coins}', style: const TextStyle(fontSize: 18, color: Colors.green)),
