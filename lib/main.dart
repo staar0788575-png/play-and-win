@@ -1,14 +1,7 @@
 import 'package:flutter/material.dart';
-import 'firebase_config.dart';
 import 'home_screen.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await FirebaseConfig.initializeFirebase();
-  } catch (e) {
-    // تجاهل خطأ التهيئة المؤقت في حال عدم توفر إعدادات فايربيز الحقيقية حالياً
-  }
+void main() {
   runApp(const PlayAndWinApp());
 }
 
