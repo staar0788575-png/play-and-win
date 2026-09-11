@@ -27,14 +27,12 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // بيانات المستخدم والخصائص الجديدة المتقدمة
   int userPoints = 500;
-  int activeDays = 1; // عدد أيام اللعب الفعلية
-  int userLevel = 1; // الليفل الحالي (يصل حتى 99)
-  double totalSpentUSD = 0.0; // إجمالي الشحنات التراكمية بالدولار لعضوية الـ VIP
-  int vipLevel = 0; // مستوى الـ VIP (0 يعني عايدي، 1 يعني VIP 1 عند بلوغ 50 دولار)
+  int activeDays = 1;
+  int userLevel = 1;
+  double totalSpentUSD = 0.0;
+  int vipLevel = 0;
 
-  // دالة لتحديث الليفل بناءً على أيام اللعب (كل 5 أيام ليفل جديد، بحد أقصى 99)
   void addActiveDay() {
     setState(() {
       activeDays++;
@@ -43,13 +41,10 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
-  // دالة لتحديث الشحن وعضوية الـ VIP تراكمياً
   void addRecharge(double usdAmount, int earnedCoins) {
     setState(() {
       totalSpentUSD += usdAmount;
       userPoints += earnedCoins;
-      
-      // ترقية الـ VIP تلقائياً إذا بلغ إجمالي الشحن 50 دولار أو أكثر لـ VIP 1
       if (totalSpentUSD >= 50.0) {
         vipLevel = 1;
       }
@@ -60,7 +55,6 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Container(
-        // خلفية راقية جداً بتدرج داكن فخم
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             colors: [Color(0xFF0B0F19), Color(0xFF1E1B4B), Color(0xFF0F172A)],
@@ -74,7 +68,6 @@ class _HomeScreenState extends State<HomeScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // الهيدر العلوي المطور مع شارة الليفل والـ VIP
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -122,7 +115,6 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
-                    // زر المحفظة التفاعلي
                     GestureDetector(
                       onTap: () async {
                         final result = await Navigator.push(
@@ -136,7 +128,6 @@ class _HomeScreenState extends State<HomeScreen> {
                           ),
                         );
                         
-                        // إذا تم العودة من صفحة الشحن وتمرير شحنة جديدة
                         if (result != null && result is Map<String, dynamic>) {
                           addRecharge(result['usd'] as double, result['coins'] as int);
                         }
@@ -163,8 +154,6 @@ class _HomeScreenState extends State<HomeScreen> {
                   ],
                 ),
                 const SizedBox(height: 25),
-
-                // بطاقة الإرشادات
                 Container(
                   padding: const EdgeInsets.all(15),
                   decoration: BoxDecoration(
@@ -186,14 +175,11 @@ class _HomeScreenState extends State<HomeScreen> {
                   ),
                 ),
                 const SizedBox(height: 30),
-
                 const Text(
                   'الألعاب المتاحة',
                   style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                 ),
                 const SizedBox(height: 15),
-
-                // قائمة الألعاب
                 Expanded(
                   child: ListView(
                     children: [
@@ -212,7 +198,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // تصميم بطاقة اللعبة الواحدة
   Widget _buildGameCard(BuildContext context, String title, int points, Color color, IconData icon) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
@@ -255,7 +240,7 @@ class _HomeScreenState extends State<HomeScreen> {
             if (earnedPoints != null) {
               setState(() {
                 userPoints += earnedPoints;
-                addActiveDay(); // تسجيل يوم لعب جديد لرفع الليفل
+                addActiveDay();
               });
               
               ScaffoldMessenger.of(context).showSnackBar(
@@ -274,7 +259,6 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-// شاشة اللعبة الداخلية
 class GameScreen extends StatelessWidget {
   final String gameName;
   final int rewardPoints;
@@ -339,7 +323,6 @@ class GameScreen extends StatelessWidget {
   }
 }
 
-// صفحة المحفظة ونظام الشحن المتقدم بحسب الدولة وكروت الشحن
 class WalletScreen extends StatelessWidget {
   final int currentPoints;
   final double totalSpentUSD;
@@ -372,7 +355,6 @@ class WalletScreen extends StatelessWidget {
           padding: const EdgeInsets.all(20.0),
           child: ListView(
             children: [
-              // بطاقة الرصيد الفاخرة
               Container(
                 width: double.infinity,
                 padding: const EdgeInsets.all(25),
@@ -410,8 +392,6 @@ class WalletScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 30),
-
-              // زر فتح نافذة شحن كروت الموبايل واختيار الدولة
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   backgroundColor: Colors.blueAccent,
@@ -419,7 +399,6 @@ class WalletScreen extends StatelessWidget {
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
                 ),
                 onPressed: () {
-                  // فتح نافذة اختيار الدولة وكروت الشحن
                   showModalBottomSheet(
                     context: context,
                     isScrollControlled: true,
@@ -437,7 +416,6 @@ class WalletScreen extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 30),
-
               const Text(
                 'مزايا نظام الـ VIP والشحن',
                 style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
@@ -469,7 +447,6 @@ class WalletScreen extends StatelessWidget {
   }
 }
 
-// نافذة اختيار الدولة وكروت الشحن المحلية والعملات
 class RechargeCountrySheet extends StatefulWidget {
   const RechargeCountrySheet({Key? key}) : super(key: key);
 
@@ -482,7 +459,6 @@ class _RechargeCountrySheetState extends State<RechargeCountrySheet> {
   String selectedNetwork = 'فودافون كاش / كارت شحن';
   final TextEditingController pinController = TextEditingController();
 
-  // خريطة الدول والعملات وكروت الشحن المتاحة
   final Map<String, Map<String, dynamic>> countriesData = {
     'مصر': {
       'currency': 'جنيه مصري (EGP)',
@@ -538,8 +514,6 @@ class _RechargeCountrySheetState extends State<RechargeCountrySheet> {
               style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 15),
-
-            // قائمة اختيار الدولة
             const Text('الدولة:', style: TextStyle(color: Colors.white70)),
             const SizedBox(height: 6),
             DropdownButtonFormField<String>(
@@ -565,8 +539,6 @@ class _RechargeCountrySheetState extends State<RechargeCountrySheet> {
               },
             ),
             const SizedBox(height: 15),
-
-            // عرض العملة وسعر الصرف
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
@@ -583,8 +555,6 @@ class _RechargeCountrySheetState extends State<RechargeCountrySheet> {
               ),
             ),
             const SizedBox(height: 15),
-
-            // اختيار شبكة أو نوع الكارت
             const Text('طريقة الشحن / شبكة الاتصال:', style: TextStyle(color: Colors.white70)),
             const SizedBox(height: 6),
             DropdownButtonFormField<String>(
@@ -609,8 +579,6 @@ class _RechargeCountrySheetState extends State<RechargeCountrySheet> {
               },
             ),
             const SizedBox(height: 15),
-
-            // إدخال كود الكارت أو رقم العملية
             const Text('أدخل رقم كارت الشحن أو رقم الحوالة:', style: TextStyle(color: Colors.white70)),
             const SizedBox(height: 6),
             TextField(
@@ -625,8 +593,6 @@ class _RechargeCountrySheetState extends State<RechargeCountrySheet> {
               ),
             ),
             const SizedBox(height: 25),
-
-            // زر تأكيد الشحن
             SizedBox(
               width: double.infinity,
               child: ElevatedButton(
@@ -643,12 +609,11 @@ class _RechargeCountrySheetState extends State<RechargeCountrySheet> {
                     return;
                   }
 
-                  // افتراضياً سنضيف شحنة بقيمة 5 دولار (تعادل تقريباً 500 عملة ذهبية أو حسب الدولة)
                   double addedUSD = 5.0; 
                   int addedCoins = 500;
 
-                  Navigator.pop(context); // إغلاق النافذة
-                  Navigator.pop(context, {'usd': addedUSD, 'coins': addedCoins}); // العودة للمحفظة وتحديث البيانات
+                  Navigator.pop(context);
+                  Navigator.pop(context, {'usd': addedUSD, 'coins': addedCoins});
 
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(
