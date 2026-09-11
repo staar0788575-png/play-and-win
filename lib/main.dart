@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 
 void main() {
-  runApp(staaRApp());
+  runApp(StaarApp());
 }
 
-class staaRApp extends StatelessWidget {
+class StaarApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -12,7 +12,7 @@ class staaRApp extends StatelessWidget {
       title: 'Play and Win',
       theme: ThemeData(
         primarySwatch: Colors.blue,
-        scaffoldBackgroundColor: Color(0xFF0F172A),
+        scaffoldBackgroundColor: Color(0xFF1E293B),
       ),
       home: HomeScreen(),
     );
@@ -96,18 +96,40 @@ class MainDashboard extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'مرحباً بك في تطبيق العب واربح',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 20,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 10),
-                  Text(
-                    'استمتع بالألعاب واربح الجوائز اليومية بكل سهولة!',
-                    style: TextStyle(color: Colors.white70, fontSize: 13),
+                  Row(
+                    children: [
+                      // عرض شعار التطبيق Logo الذي قمنا برفعه
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(30),
+                        child: Image.asset(
+                          'assets/icon/logo.png',
+                          width: 50,
+                          height: 50,
+                          fit: BoxFit.cover,
+                        ),
+                      ),
+                      SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'مرحباً بك في تطبيق العب واربح',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 18,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 4),
+                            Text(
+                              'استمتع بألعاب وربح الجوائز اليومية بكل سهولة',
+                              style: TextStyle(color: Colors.white70, fontSize: 12),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ),
                 ],
               ),
@@ -175,7 +197,7 @@ class WalletScreenNode extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('المحفظة والرصيد', style: TextStyle(color: Colors.white)),
+        title: Text('المحفظة والأصوات', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF1E293B),
       ),
       body: Padding(
@@ -191,7 +213,7 @@ class WalletScreenNode extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  Text('رصيدك الحالي', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  Text('رصيدي الحالي', style: TextStyle(color: Colors.white70, fontSize: 14)),
                   SizedBox(height: 8),
                   Text('\$ 1,250.00', style: TextStyle(color: Colors.amber, fontSize: 32, fontWeight: FontWeight.bold)),
                 ],
@@ -229,7 +251,7 @@ class ChatScreenNode extends StatelessWidget {
               padding: EdgeInsets.all(16),
               children: [
                 ChatBubble(message: 'أهلاً بك في الدردشة!', isMe: false),
-                ChatBubble(message: 'شكراً، كيف يمكنني بدء اللعب؟', isMe: true),
+                ChatBubble(message: 'شكراً، كيف يمكنني بدء اللعبة؟', isMe: true),
               ],
             ),
           ),
@@ -308,7 +330,7 @@ class VipScreenNode extends StatelessWidget {
             SizedBox(height: 16),
             Text('ترقية إلى VIP قريباً', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
             SizedBox(height: 8),
-            Text('احصل على مزايا حصرية ومضاعفة الأرباح', style: TextStyle(color: Colors.white70, fontSize: 14)),
+            Text('احصل على مزايا حصرية ومضاعفة الأرباح!', style: TextStyle(color: Colors.white70, fontSize: 14)),
           ],
         ),
       ),
