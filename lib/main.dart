@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'dart:math';
 
 void main() {
   runApp(StaarApp());
@@ -237,24 +238,89 @@ class GameCard extends StatelessWidget {
   }
 }
 
-// 1. شاشة لعبة لودو
-class LudoGameScreen extends StatelessWidget {
+// 1. شاشة لعبة لودو التفاعلية (الخطوة الأولى)
+class LudoGameScreen extends StatefulWidget {
+  @override
+  _LudoGameScreenState createState() => _LudoGameScreenState();
+}
+
+class _LudoGameScreenState extends State<LudoGameScreen> {
+  int _diceValue = 1;
+  int _score = 0;
+  bool _isRolling = false;
+
+  void _rollDice() {
+    setState(() {
+      _isRolling = true;
+    });
+
+    // محاكاة حركة النرد البصرية البسيطة
+    Future.delayed(Duration(milliseconds: 300), () {
+      setState(() {
+        _diceValue = Random().nextInt(6) + 1;
+        _score += _diceValue * 10; // احتساب النقاط بناءً على نتيجة النرد
+        _isRolling = false;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('لعبة لودو', style: TextStyle(color: Colors.white)),
+        title: Text('لعبة لودو التفاعلية', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF1E293B),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.casino, size: 100, color: Colors.orange),
-            SizedBox(height: 20),
-            Text('مرحباً بك في ساحة لودو', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-            Text('اختر اللاعبين وابدأ رمي النرد!', style: TextStyle(color: Colors.white70, fontSize: 14)),
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Color(0xFF334155),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Text('نقاط اللعبة:', style: TextStyle(color: Colors.white70, fontSize: 16)),
+                  Text('$_score نقطة', style: TextStyle(color: Colors.amber, fontSize: 22, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+            SizedBox(height: 40),
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.orange, width: 2),
+              ),
+              child: Center(
+                child: Text(
+                  _isRolling ? '...' : '$_diceValue',
+                  style: TextStyle(color: Colors.orange, fontSize: 50, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+            SizedBox(height: 30),
+            Text(
+              _isRolling ? 'جاري رمي النرد...' : 'اضغط للرمي وحرك قطعك!',
+              style: TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+            SizedBox(height: 40),
+            ElevatedButton.styleFrom != null ? ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                minimumSize: Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: _isRolling ? null : _rollDice,
+              child: Text('ارمِ النرد الآن', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+            ) : Container(),
           ],
         ),
       ),
@@ -279,7 +345,7 @@ class SnakesGameScreen extends StatelessWidget {
             SizedBox(height: 20),
             Text('مرحباً بك في السلم والثعبان', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
-            Text('اصعد السلالم وتجنب الثعابين للفوز!', style: TextStyle(color: Colors.white70, fontSize: 14)),
+            Text('قريباً: تفعيل المسار والصعود والنزول!', style: TextStyle(color: Colors.white70, fontSize: 14)),
           ],
         ),
       ),
@@ -304,7 +370,7 @@ class BilliardsGameScreen extends StatelessWidget {
             SizedBox(height: 20),
             Text('طاولة البلياردو جاهزة', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
-            Text('صوب بدقة وأدخل الكرات في الجيوب!', style: TextStyle(color: Colors.white70, fontSize: 14)),
+            Text('قريباً: تفعيل التصويب والكرات!', style: TextStyle(color: Colors.white70, fontSize: 14)),
           ],
         ),
       ),
@@ -329,7 +395,7 @@ class DominoGameScreen extends StatelessWidget {
             SizedBox(height: 20),
             Text('تحدي الدومينو الذكي', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
             SizedBox(height: 10),
-            Text('طابق القطع واهزم الخصم!', style: TextStyle(color: Colors.white70, fontSize: 14)),
+            Text('قريباً: تفعيل مطابقة القطع!', style: TextStyle(color: Colors.white70, fontSize: 14)),
           ],
         ),
       ),
@@ -396,7 +462,7 @@ class ChatScreenNode extends StatelessWidget {
               padding: EdgeInsets.all(16),
               children: [
                 ChatBubble(message: 'أهلاً بك في الدردشة!', isMe: false),
-                ChatBubble(message: 'تم تجهيز الألعاب الأربعة بنجاح!', isMe: true),
+                ChatBubble(message: 'تم تفعيل لعبة لودو بنجاح!', isMe: true),
               ],
             ),
           ),
