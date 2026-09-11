@@ -25,14 +25,14 @@ jobs:
           flutter-version: '3.19.0'
           cache: true
 
-      - name: Get Flutter Packages
-        run: flutter pub get
-
-      - name: Build APK
-        run: flutter build apk --release --no-pub
+      - name: Build APK inside Project Directory
+        run: |
+          cd play-and-win
+          flutter pub get
+          flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: app-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: '**/output/flutter-apk/app-release.apk'
