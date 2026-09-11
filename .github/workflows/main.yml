@@ -25,9 +25,12 @@ jobs:
           flutter-version: '3.19.0'
           cache: true
 
-      - name: Build APK inside Project Directory
+      - name: Find Project and Build APK
         run: |
-          cd play-and-win
+          # العثور على مجلد المشروع تلقائياً بناءً على وجود ملف pubspec.yaml
+          PROJECT_DIR=$(find . -name "pubspec.yaml" -maxdepth 2 -exec dirname {} \;)
+          echo "Found project in: $PROJECT_DIR"
+          cd "$PROJECT_DIR"
           flutter pub get
           flutter build apk --release
 
