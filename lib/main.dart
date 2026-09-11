@@ -98,7 +98,6 @@ class MainDashboard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      // عرض شعار التطبيق Logo الذي قمنا برفعه
                       ClipRRect(
                         borderRadius: BorderRadius.circular(30),
                         child: Image.asset(
@@ -123,7 +122,7 @@ class MainDashboard extends StatelessWidget {
                             ),
                             SizedBox(height: 4),
                             Text(
-                              'استمتع بألعاب وربح الجوائز اليومية بكل سهولة',
+                              'استمتع بألعاب لودو، البلياردو، الدومينو والمزيد',
                               style: TextStyle(color: Colors.white70, fontSize: 12),
                             ),
                           ],
@@ -142,10 +141,10 @@ class MainDashboard extends StatelessWidget {
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
               children: [
-                GameCard(title: 'الألعاب السريعة', icon: Icons.games, color: Colors.orange),
-                GameCard(title: 'عجلة الحظ', icon: Icons.pie_chart, color: Colors.purple),
-                GameCard(title: 'مسابقات رابحة', icon: Icons.emoji_events, color: Colors.green),
-                GameCard(title: 'الهدايا اليومية', icon: Icons.card_giftcard, color: Colors.redAccent),
+                GameCard(title: 'لودو', icon: Icons.casino, color: Colors.orange),
+                GameCard(title: 'السلم والثعبان', icon: Icons.straighten, color: Colors.green),
+                GameCard(title: 'البلياردو', icon: Icons.sports_bar, color: Colors.blueAccent),
+                GameCard(title: 'الدومينو', icon: Icons.dashboard, color: Colors.purple),
               ],
             ),
           ],
@@ -251,7 +250,7 @@ class ChatScreenNode extends StatelessWidget {
               padding: EdgeInsets.all(16),
               children: [
                 ChatBubble(message: 'أهلاً بك في الدردشة!', isMe: false),
-                ChatBubble(message: 'شكراً، كيف يمكنني بدء اللعبة؟', isMe: true),
+                ChatBubble(message: 'شكراً، كيف يمكنني بدء لعب لودو؟', isMe: true),
               ],
             ),
           ),
