@@ -327,7 +327,7 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
   }
 }
 
-// 2. شاشة لعبة السلم والثعبان التفاعلية (الخطوة الثانية)
+// 2. شاشة لعبة السلم والثعبان التفاعلية
 class SnakesGameScreen extends StatefulWidget {
   @override
   _SnakesGameScreenState createState() => _SnakesGameScreenState();
@@ -349,7 +349,6 @@ class _SnakesGameScreenState extends State<SnakesGameScreen> {
         _diceValue = Random().nextInt(6) + 1;
         _position += _diceValue;
 
-        // قواعد السلالم والثعابين المبسطة
         if (_position == 10) {
           _position = 25;
           _message = 'رائع! صعدت سلماً إلى الخانة 25!';
@@ -438,24 +437,91 @@ class _SnakesGameScreenState extends State<SnakesGameScreen> {
   }
 }
 
-// 3. شاشة لعبة البلياردو
-class BilliardsGameScreen extends StatelessWidget {
+// 3. شاشة لعبة البلياردو التفاعلية (الخطوة الثالثة - أ)
+class BilliardsGameScreen extends StatefulWidget {
+  @override
+  _BilliardsGameScreenState createState() => _BilliardsGameScreenState();
+}
+
+class _BilliardsGameScreenState extends State<BilliardsGameScreen> {
+  int _ballsPocketed = 0;
+  String _status = 'اضغط للتصويب وإدخال الكرات!';
+  bool _isShooting = false;
+
+  void _shootBall() {
+    setState(() {
+      _isShooting = true;
+    });
+
+    Future.delayed(Duration(milliseconds: 300), () {
+      setState(() {
+        bool success = Random().nextBool();
+        if (success) {
+          _ballsPocketed += 1;
+          _status = 'رائع! دخلت الكرة في الجيب بنجاح!';
+        } else {
+          _status = 'للأسف، أخطأت التصويب هذه المرة!';
+        }
+        _isShooting = false;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('لعبة البلياردو', style: TextStyle(color: Colors.white)),
+        title: Text('لعبة البلياردو التفاعلية', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF1E293B),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.sports_bar, size: 100, color: Colors.blueAccent),
-            SizedBox(height: 20),
-            Text('طاولة البلياردو جاهزة', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-            Text('قريباً: تفعيل التصويب والكرات!', style: TextStyle(color: Colors.white70, fontSize: 14)),
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Color(0xFF334155),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Text('الكرات المسجلة:', style: TextStyle(color: Colors.white70, fontSize: 16)),
+                  Text('$_ballsPocketed كرات', style: TextStyle(color: Colors.blueAccent, fontSize: 22, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+            SizedBox(height: 40),
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.blueAccent.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.blueAccent, width: 2),
+              ),
+              child: Center(
+                child: Icon(Icons.sports_bar, color: Colors.blueAccent, size: 50),
+              ),
+            ),
+            SizedBox(height: 25),
+            Text(
+              _status,
+              style: TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 40),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blueAccent,
+                minimumSize: Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: _isShooting ? null : _shootBall,
+              child: Text('صوب وادخل الكرة', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
           ],
         ),
       ),
@@ -463,24 +529,87 @@ class BilliardsGameScreen extends StatelessWidget {
   }
 }
 
-// 4. شاشة لعبة الدومينو
-class DominoGameScreen extends StatelessWidget {
+// 4. شاشة لعبة الدومينو التفاعلية (الخطوة الثالثة - ب)
+class DominoGameScreen extends StatefulWidget {
+  @override
+  _DominoGameScreenState createState() => _DominoGameScreenState();
+}
+
+class _DominoGameScreenState extends State<DominoGameScreen> {
+  int _dominoScore = 0;
+  String _dominoStatus = 'اطابق القطع واحصد النقاط!';
+  bool _isPlaying = false;
+
+  void _playDomino() {
+    setState(() {
+      _isPlaying = true;
+    });
+
+    Future.delayed(Duration(milliseconds: 300), () {
+      setState(() {
+        int earned = (Random().nextInt(4) + 1) * 15;
+        _dominoScore += earned;
+        _dominoStatus = 'تمت المطابقة بنجاح! ربحت $earned نقطة';
+        _isPlaying = false;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('لعبة الدومينو', style: TextStyle(color: Colors.white)),
+        title: Text('لعبة الدومينو التفاعلية', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF1E293B),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.dashboard, size: 100, color: Colors.purple),
-            SizedBox(height: 20),
-            Text('تحدي الدومينو الذكي', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-            Text('قريباً: تفعيل مطابقة القطع!', style: TextStyle(color: Colors.white70, fontSize: 14)),
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Color(0xFF334155),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceAround,
+                children: [
+                  Text('مجموع النقاط:', style: TextStyle(color: Colors.white70, fontSize: 16)),
+                  Text('$_dominoScore نقطة', style: TextStyle(color: Colors.purpleAccent, fontSize: 22, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+            SizedBox(height: 40),
+            Container(
+              width: 120,
+              height: 120,
+              decoration: BoxDecoration(
+                color: Colors.purple.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.purple, width: 2),
+              ),
+              child: Center(
+                child: Icon(Icons.dashboard, color: Colors.purple, size: 50),
+              ),
+            ),
+            SizedBox(height: 25),
+            Text(
+              _dominoStatus,
+              style: TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 40),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.purple,
+                minimumSize: Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: _isPlaying ? null : _playDomino,
+              child: Text('العب قطعة دومينو', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
           ],
         ),
       ),
@@ -547,7 +676,7 @@ class ChatScreenNode extends StatelessWidget {
               padding: EdgeInsets.all(16),
               children: [
                 ChatBubble(message: 'أهلاً بك في الدردشة!', isMe: false),
-                ChatBubble(message: 'تم تفعيل لعبة السلم والثعبان بنجاح!', isMe: true),
+                ChatBubble(message: 'تم تفعيل جميع الألعاب الأربعة بنجاح!', isMe: true),
               ],
             ),
           ),
