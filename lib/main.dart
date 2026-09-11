@@ -122,7 +122,7 @@ class MainDashboard extends StatelessWidget {
                             ),
                             SizedBox(height: 4),
                             Text(
-                              'استمتع بألعاب لودو، البلياردو، الدومينو والمزيد',
+                              'اختر لعبتك المفضلة وابدأ التحدي الآن',
                               style: TextStyle(color: Colors.white70, fontSize: 12),
                             ),
                           ],
@@ -146,7 +146,10 @@ class MainDashboard extends StatelessWidget {
                   icon: Icons.casino,
                   color: Colors.orange,
                   onTap: () {
-                    _showGameMessage(context, 'لعبة لودو قريباً!');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => LudoGameScreen()),
+                    );
                   },
                 ),
                 GameCard(
@@ -154,7 +157,10 @@ class MainDashboard extends StatelessWidget {
                   icon: Icons.straighten,
                   color: Colors.green,
                   onTap: () {
-                    _showGameMessage(context, 'لعبة السلم والثعبان قريباً!');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => SnakesGameScreen()),
+                    );
                   },
                 ),
                 GameCard(
@@ -162,7 +168,10 @@ class MainDashboard extends StatelessWidget {
                   icon: Icons.sports_bar,
                   color: Colors.blueAccent,
                   onTap: () {
-                    _showGameMessage(context, 'لعبة البلياردو قريباً!');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => BilliardsGameScreen()),
+                    );
                   },
                 ),
                 GameCard(
@@ -170,30 +179,16 @@ class MainDashboard extends StatelessWidget {
                   icon: Icons.dashboard,
                   color: Colors.purple,
                   onTap: () {
-                    _showGameMessage(context, 'لعبة الدومينو قريباً!');
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(builder: (context) => DominoGameScreen()),
+                    );
                   },
                 ),
               ],
             ),
           ],
         ),
-      ),
-    );
-  }
-
-  void _showGameMessage(BuildContext context, String message) {
-    showDialog(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: Color(0xFF1E293B),
-        title: Text('تنبيه', style: TextStyle(color: Colors.white)),
-        content: Text(message, style: TextStyle(color: Colors.white70)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('حسناً', style: TextStyle(color: Colors.amber)),
-          ),
-        ],
       ),
     );
   }
@@ -235,6 +230,106 @@ class GameCard extends StatelessWidget {
                 fontWeight: FontWeight.bold,
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// 1. شاشة لعبة لودو
+class LudoGameScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('لعبة لودو', style: TextStyle(color: Colors.white)),
+        backgroundColor: Color(0xFF1E293B),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.casino, size: 100, color: Colors.orange),
+            SizedBox(height: 20),
+            Text('مرحباً بك في ساحة لودو', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+            SizedBox(height: 10),
+            Text('اختر اللاعبين وابدأ رمي النرد!', style: TextStyle(color: Colors.white70, fontSize: 14)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// 2. شاشة لعبة السلم والثعبان
+class SnakesGameScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('لعبة السلم والثعبان', style: TextStyle(color: Colors.white)),
+        backgroundColor: Color(0xFF1E293B),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.straighten, size: 100, color: Colors.green),
+            SizedBox(height: 20),
+            Text('مرحباً بك في السلم والثعبان', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+            SizedBox(height: 10),
+            Text('اصعد السلالم وتجنب الثعابين للفوز!', style: TextStyle(color: Colors.white70, fontSize: 14)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// 3. شاشة لعبة البلياردو
+class BilliardsGameScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('لعبة البلياردو', style: TextStyle(color: Colors.white)),
+        backgroundColor: Color(0xFF1E293B),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.sports_bar, size: 100, color: Colors.blueAccent),
+            SizedBox(height: 20),
+            Text('طاولة البلياردو جاهزة', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+            SizedBox(height: 10),
+            Text('صوب بدقة وأدخل الكرات في الجيوب!', style: TextStyle(color: Colors.white70, fontSize: 14)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// 4. شاشة لعبة الدومينو
+class DominoGameScreen extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text('لعبة الدومينو', style: TextStyle(color: Colors.white)),
+        backgroundColor: Color(0xFF1E293B),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.dashboard, size: 100, color: Colors.purple),
+            SizedBox(height: 20),
+            Text('تحدي الدومينو الذكي', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
+            SizedBox(height: 10),
+            Text('طابق القطع واهزم الخصم!', style: TextStyle(color: Colors.white70, fontSize: 14)),
           ],
         ),
       ),
@@ -301,7 +396,7 @@ class ChatScreenNode extends StatelessWidget {
               padding: EdgeInsets.all(16),
               children: [
                 ChatBubble(message: 'أهلاً بك في الدردشة!', isMe: false),
-                ChatBubble(message: 'شكراً، كيف يمكنني بدء لعب لودو؟', isMe: true),
+                ChatBubble(message: 'تم تجهيز الألعاب الأربعة بنجاح!', isMe: true),
               ],
             ),
           ),
