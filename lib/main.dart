@@ -1,6 +1,5 @@
 // المسار: lib/main.dart
 import 'package:flutter/material.dart';
-import 'game_screen.dart'; // استدعاء شاشة اللعبة
 
 void main() {
   runApp(const MyApp());
@@ -19,6 +18,7 @@ class MyApp extends StatelessWidget {
   }
 }
 
+// الشاشة الرئيسية للتطبيق
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -119,7 +119,7 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // تصميم بطاقة اللعبة الواحدة مع تفعيل الانتقال لشاشة اللعبة
+  // تصميم بطاقة اللعبة الواحدة مع تفعيل الانتقال للشاشة الداخلية
   Widget _buildGameCard(BuildContext context, String title, String points, Color color, IconData icon) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
@@ -152,7 +152,7 @@ class HomeScreen extends StatelessWidget {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
           onPressed: () {
-            // الانتقال إلى شاشة اللعبة عند الضغط
+            // الانتقال إلى شاشة اللعبة الداخلية مباشرة
             Navigator.push(
               context,
               MaterialPageRoute(
@@ -161,6 +161,55 @@ class HomeScreen extends StatelessWidget {
             );
           },
           child: const Text('العب الآن', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        ),
+      ),
+    );
+  }
+}
+
+// شاشة اللعبة الداخلية ضمن نفس الملف لمنع أخطاء الملفات المفقودة
+class GameScreen extends StatelessWidget {
+  final String gameName;
+
+  const GameScreen({Key? key, required this.gameName}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: Text(gameName),
+        backgroundColor: const Color(0xFF0F172A),
+      ),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFF0B0F19), Color(0xFF0F172A)],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+        ),
+        child: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.sports_esports, size: 80, color: Colors.amberAccent),
+              const SizedBox(height: 20),
+              Text(
+                'جاري تحميل $gameName...',
+                style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              const SizedBox(height: 20),
+              const CircularProgressIndicator(color: Colors.amberAccent),
+              const SizedBox(height: 30),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+                onPressed: () {
+                  Navigator.pop(context);
+                },
+                child: const Text('إنهاء اللعب والعودة', style: TextStyle(color: Colors.black)),
+              ),
+            ],
+          ),
         ),
       ),
     );
