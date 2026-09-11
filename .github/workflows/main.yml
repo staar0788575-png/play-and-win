@@ -25,6 +25,12 @@ jobs:
           flutter-version: '3.24.x'
           channel: 'stable'
 
+      - name: Initialize Flutter Project if Missing
+        run: |
+          if [ ! -f "pubspec.yaml" ]; then
+            flutter create . --platforms=android --org com.example.app --project-name play_and_win
+          fi
+
       - name: Fix Kotlin Version for Firebase
         run: |
           SETTINGS_FILE="android/settings.gradle"
