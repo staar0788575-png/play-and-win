@@ -25,9 +25,11 @@ jobs:
           flutter-version: '3.19.0'
           cache: true
 
-      - name: Create Clean Flutter Project with Modern Android V2
+      - name: Clean and Recreate Modern Android Project
         run: |
-          # إنشاء مشروع نظيف بالكامل في مجلد مؤقت لتلافي أي أخطاء قديمة
+          # حذف مجلدات الأندرويد القديمة المعطوبة بالكامل
+          rm -rf android ios
+          # إنشاء هيكل أندرويد حديث v2 من الصفر
           flutter create . --org com.staaR.playandwin --project-name play_and_win --platforms=android
           flutter pub get
           flutter build apk --release
