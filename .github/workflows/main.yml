@@ -25,8 +25,16 @@ jobs:
           flutter-version: '3.19.0'
           cache: true
 
-      - name: Get Flutter Packages
-        run: flutter pub get
+      - name: Fix Android Structure if Nested
+        run: |
+          if [ -d "play-and-win" ]; then
+            cd play-and-win
+          fi
+          flutter pub get
+          flutter build apk --release
 
-      - name: Build APK
-        run: flutter build apk --release
+      - name: Upload APK
+        uses: actions/upload-artifact@v3
+        with:
+          name: app-release
+          path: '**/output/flutter-apk/app-release.apk'
