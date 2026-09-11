@@ -63,7 +63,6 @@ class _HomeScreenState extends State<HomeScreen> {
                     // زر المحفظة التفاعلي الذي يعرض الرصيد الحقيقي
                     GestureDetector(
                       onTap: () async {
-                        // الانتقال إلى صفحة المحفظة عند الضغط عليها
                         await Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -255,7 +254,6 @@ class GameScreen extends StatelessWidget {
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () {
-                    // العودة وإرسال النقاط المكتسبة معها
                     Navigator.pop(context, rewardPoints);
                   },
                   child: const Text(
@@ -272,7 +270,7 @@ class GameScreen extends StatelessWidget {
   }
 }
 
-// صفحة المحفظة الراقية الجديدة
+// صفحة المحفظة الراقية
 class WalletScreen extends StatelessWidget {
   final int currentPoints;
 
@@ -341,7 +339,7 @@ class WalletScreen extends StatelessWidget {
               ),
               const SizedBox(height: 40),
 
-              // خيارات المحفظة (شحن / سحب)
+              // خيارات المحفظة
               Row(
                 children: [
                   Expanded(
@@ -352,7 +350,7 @@ class WalletScreen extends StatelessWidget {
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
                       onPressed: () {
-                        ScaffoldMessenger.showContext(context); // سيتم تفعيلها لاحقاً
+                        // زر شحن الرصيد
                       },
                       icon: const Icon(Icons.add_circle, color: Colors.white),
                       label: const Text('شحن رصيد', style: TextStyle(color: Colors.white, fontSize: 16)),
@@ -366,7 +364,9 @@ class WalletScreen extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                       ),
-                      onPressed: () {},
+                      onPressed: () {
+                        // زر سحب الأرباح
+                      },
                       icon: const Icon(Icons.money, color: Colors.white),
                       label: const Text('سحب الأرباح', style: TextStyle(color: Colors.white, fontSize: 16)),
                     ),
@@ -375,7 +375,6 @@ class WalletScreen extends StatelessWidget {
               ),
               const SizedBox(height: 30),
 
-              // سجل المعاملات أو نص إرشادي
               const Align(
                 alignment: Alignment.centerRight,
                 child: Text(
