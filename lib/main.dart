@@ -5,6 +5,15 @@ void main() {
   runApp(StaarApp());
 }
 
+// نموذج بيانات عام لمشاركة رصيد المحفظة عبر التطبيق
+class WalletData {
+  static double balance = 1250.00;
+
+  static void addEarnings(double amount) {
+    balance += amount;
+  }
+}
+
 class StaarApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -123,7 +132,7 @@ class MainDashboard extends StatelessWidget {
                             ),
                             SizedBox(height: 4),
                             Text(
-                              'اختر لعبتك المفضلة وابدأ التحدي الآن',
+                              'العب الآن واكسب أرباحاً حقيقية لمحفظتك!',
                               style: TextStyle(color: Colors.white70, fontSize: 12),
                             ),
                           ],
@@ -238,7 +247,7 @@ class GameCard extends StatelessWidget {
   }
 }
 
-// 1. شاشة لعبة لودو التفاعلية
+// 1. شاشة لودو (مرتبطة بالمحفظة)
 class LudoGameScreen extends StatefulWidget {
   @override
   _LudoGameScreenState createState() => _LudoGameScreenState();
@@ -257,7 +266,12 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
     Future.delayed(Duration(milliseconds: 300), () {
       setState(() {
         _diceValue = Random().nextInt(6) + 1;
-        _score += _diceValue * 10;
+        int earnedPoints = _diceValue * 5;
+        _score += earnedPoints;
+        
+        // اضافة جزء من الأرباح للمحفظة فوراً
+        WalletData.addEarnings(earnedPoints * 0.1);
+
         _isRolling = false;
       });
     });
@@ -267,7 +281,7 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('لعبة لودو التفاعلية', style: TextStyle(color: Colors.white)),
+        title: Text('لعبة لودو (تربح للمحفظة)', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF1E293B),
       ),
       body: Padding(
@@ -307,7 +321,7 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
             ),
             SizedBox(height: 30),
             Text(
-              _isRolling ? 'جاري رمي النرد...' : 'اضغط للرمي وحرك قطعك!',
+              _isRolling ? 'جاري رمي النرد...' : 'كل رمية تحول أرباحاً لمحفظتك!',
               style: TextStyle(color: Colors.white70, fontSize: 14),
             ),
             SizedBox(height: 40),
@@ -318,7 +332,7 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: _isRolling ? null : _rollDice,
-              child: Text('ارمِ النرد الآن', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+              child: Text('ارمِ النرد واربح', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -327,7 +341,7 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
   }
 }
 
-// 2. شاشة لعبة السلم والثعبان التفاعلية
+// 2. شاشة السلم والثعبان (مرتبطة بالمحفظة)
 class SnakesGameScreen extends StatefulWidget {
   @override
   _SnakesGameScreenState createState() => _SnakesGameScreenState();
@@ -337,7 +351,7 @@ class _SnakesGameScreenState extends State<SnakesGameScreen> {
   int _position = 1;
   int _diceValue = 1;
   bool _isRolling = false;
-  String _message = 'ابدأ اللعبة واصعد السلالم!';
+  String _message = 'اصعد السلالم واكسب أرباحاً!';
 
   void _rollAndMove() {
     setState(() {
@@ -351,15 +365,18 @@ class _SnakesGameScreenState extends State<SnakesGameScreen> {
 
         if (_position == 10) {
           _position = 25;
-          _message = 'رائع! صعدت سلماً إلى الخانة 25!';
+          _message = 'سلم ممتاز! ربحت \$5.00 إضافية لمحفظتك!';
+          WalletData.addEarnings(5.00);
         } else if (_position == 30) {
           _position = 12;
-          _message = 'أوقفك ثعبان! هبطت إلى الخانة 12!';
+          _message = 'هبطت مع الثعبان، حاول مرة أخرى!';
         } else if (_position >= 50) {
-          _message = 'تهانينا! لقد فزت في اللعبة!';
+          _message = 'تهانينا الفوز الكبير! أُضيفت \$10 للمحفظة!';
+          WalletData.addEarnings(10.00);
           _position = 50;
         } else {
-          _message = 'تقدمت إلى الخانة: $_position';
+          _message = 'تقدمت للخانة: $_position (تمت إضافة أرباح تفاعلية)';
+          WalletData.addEarnings(1.50);
         }
 
         _isRolling = false;
@@ -394,30 +411,25 @@ class _SnakesGameScreenState extends State<SnakesGameScreen> {
               ),
             ),
             SizedBox(height: 30),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Container(
-                  width: 90,
-                  height: 90,
-                  decoration: BoxDecoration(
-                    color: Colors.green.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(color: Colors.green, width: 2),
-                  ),
-                  child: Center(
-                    child: Text(
-                      _isRolling ? '...' : '$_diceValue',
-                      style: TextStyle(color: Colors.green, fontSize: 40, fontWeight: FontWeight.bold),
-                    ),
-                  ),
+            Container(
+              width: 90,
+              height: 90,
+              decoration: BoxDecoration(
+                color: Colors.green.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.green, width: 2),
+              ),
+              child: Center(
+                child: Text(
+                  _isRolling ? '...' : '$_diceValue',
+                  style: TextStyle(color: Colors.green, fontSize: 40, fontWeight: FontWeight.bold),
                 ),
-              ],
+              ),
             ),
             SizedBox(height: 20),
             Text(
               _message,
-              style: TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold),
+              style: TextStyle(color: Colors.amber, fontSize: 15, fontWeight: FontWeight.bold),
               textAlign: TextAlign.center,
             ),
             SizedBox(height: 30),
@@ -437,7 +449,7 @@ class _SnakesGameScreenState extends State<SnakesGameScreen> {
   }
 }
 
-// 3. شاشة لعبة البلياردو التفاعلية (الخطوة الثالثة - أ)
+// 3. شاشة البلياردو (مرتبطة بالمحفظة)
 class BilliardsGameScreen extends StatefulWidget {
   @override
   _BilliardsGameScreenState createState() => _BilliardsGameScreenState();
@@ -445,7 +457,7 @@ class BilliardsGameScreen extends StatefulWidget {
 
 class _BilliardsGameScreenState extends State<BilliardsGameScreen> {
   int _ballsPocketed = 0;
-  String _status = 'اضغط للتصويب وإدخال الكرات!';
+  String _status = 'صوب وأدخل الكرات لتربح رصيداً!';
   bool _isShooting = false;
 
   void _shootBall() {
@@ -458,9 +470,10 @@ class _BilliardsGameScreenState extends State<BilliardsGameScreen> {
         bool success = Random().nextBool();
         if (success) {
           _ballsPocketed += 1;
-          _status = 'رائع! دخلت الكرة في الجيب بنجاح!';
+          _status = 'دخلت الكرة! أُضيفت \$3 للمحفظة.';
+          WalletData.addEarnings(3.00);
         } else {
-          _status = 'للأسف، أخطأت التصويب هذه المرة!';
+          _status = 'خطأ في التصويب، حاول مرة أخرى!';
         }
         _isShooting = false;
       });
@@ -471,7 +484,7 @@ class _BilliardsGameScreenState extends State<BilliardsGameScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('لعبة البلياردو التفاعلية', style: TextStyle(color: Colors.white)),
+        title: Text('لعبة البلياردو', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF1E293B),
       ),
       body: Padding(
@@ -529,7 +542,7 @@ class _BilliardsGameScreenState extends State<BilliardsGameScreen> {
   }
 }
 
-// 4. شاشة لعبة الدومينو التفاعلية (الخطوة الثالثة - ب)
+// 4. شاشة الدومينو (مرتبطة بالمحفظة)
 class DominoGameScreen extends StatefulWidget {
   @override
   _DominoGameScreenState createState() => _DominoGameScreenState();
@@ -537,7 +550,7 @@ class DominoGameScreen extends StatefulWidget {
 
 class _DominoGameScreenState extends State<DominoGameScreen> {
   int _dominoScore = 0;
-  String _dominoStatus = 'اطابق القطع واحصد النقاط!';
+  String _dominoStatus = 'طابق القطع واربح مكافآت فورية!';
   bool _isPlaying = false;
 
   void _playDomino() {
@@ -547,9 +560,10 @@ class _DominoGameScreenState extends State<DominoGameScreen> {
 
     Future.delayed(Duration(milliseconds: 300), () {
       setState(() {
-        int earned = (Random().nextInt(4) + 1) * 15;
+        int earned = (Random().nextInt(4) + 1) * 10;
         _dominoScore += earned;
-        _dominoStatus = 'تمت المطابقة بنجاح! ربحت $earned نقطة';
+        WalletData.addEarnings(earned * 0.2);
+        _dominoStatus = 'تمت المطابقة! ربحت أرباحاً أضيفت لمحفظتك.';
         _isPlaying = false;
       });
     });
@@ -559,7 +573,7 @@ class _DominoGameScreenState extends State<DominoGameScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('لعبة الدومينو التفاعلية', style: TextStyle(color: Colors.white)),
+        title: Text('لعبة الدومينو الذكية', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF1E293B),
       ),
       body: Padding(
@@ -617,12 +631,18 @@ class _DominoGameScreenState extends State<DominoGameScreen> {
   }
 }
 
-class WalletScreenNode extends StatelessWidget {
+// شاشة المحفظة المحدثة والتي تعرض الرصيد المتجدد
+class WalletScreenNode extends StatefulWidget {
+  @override
+  _WalletScreenNodeState createState() => _WalletScreenNodeState();
+}
+
+class _WalletScreenNodeState extends State<WalletScreenNode> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('المحفظة والأصوات', style: TextStyle(color: Colors.white)),
+        title: Text('المحفظة والأرباح', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF1E293B),
       ),
       body: Padding(
@@ -633,14 +653,14 @@ class WalletScreenNode extends StatelessWidget {
               width: double.infinity,
               padding: EdgeInsets.all(24),
               decoration: BoxDecoration(
-                color: Color(0xFF1E293B),
+                color: Color(0xFF334155),
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
                 children: [
-                  Text('رصيدي الحالي', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  Text('رصيدي الحالي المكتسب من الألعاب', style: TextStyle(color: Colors.white70, fontSize: 14)),
                   SizedBox(height: 8),
-                  Text('\$ 1,250.00', style: TextStyle(color: Colors.amber, fontSize: 32, fontWeight: FontWeight.bold)),
+                  Text('\$ ${WalletData.balance.toStringAsFixed(2)}', style: TextStyle(color: Colors.amber, fontSize: 32, fontWeight: FontWeight.bold)),
                 ],
               ),
             ),
@@ -651,7 +671,14 @@ class WalletScreenNode extends StatelessWidget {
                 minimumSize: Size(double.infinity, 50),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
-              onPressed: () {},
+              onPressed: () {
+                setState(() {
+                  WalletData.balance += 50.0; // شحن تجريبي إضافي
+                });
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('تم شحن الرصيد بنجاح!')),
+                );
+              },
               child: Text('شحن الرصيد', style: TextStyle(fontSize: 16, color: Colors.white)),
             ),
           ],
@@ -676,7 +703,7 @@ class ChatScreenNode extends StatelessWidget {
               padding: EdgeInsets.all(16),
               children: [
                 ChatBubble(message: 'أهلاً بك في الدردشة!', isMe: false),
-                ChatBubble(message: 'تم تفعيل جميع الألعاب الأربعة بنجاح!', isMe: true),
+                ChatBubble(message: 'تم ربط أرباح جميع الألعاب بالمحفظة بنجاح!', isMe: true),
               ],
             ),
           ),
