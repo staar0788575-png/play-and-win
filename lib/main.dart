@@ -1,5 +1,6 @@
 // المسار: lib/main.dart
 import 'package:flutter/material.dart';
+import 'game_screen.dart'; // استدعاء شاشة اللعبة
 
 void main() {
   runApp(const MyApp());
@@ -103,10 +104,10 @@ class HomeScreen extends StatelessWidget {
                 Expanded(
                   child: ListView(
                     children: [
-                      _buildGameCard('لعبة لودو', '100', Colors.blueAccent, Icons.sports_esports),
-                      _buildGameCard('السلم والثعبان', '150', Colors.greenAccent, Icons.alt_route),
-                      _buildGameCard('الدومينو', '200', Colors.amber, Icons.dashboard_customize),
-                      _buildGameCard('البلياردو', '250', Colors.redAccent, Icons.fiber_manual_record),
+                      _buildGameCard(context, 'لعبة لودو', '100', Colors.blueAccent, Icons.sports_esports),
+                      _buildGameCard(context, 'السلم والثعبان', '150', Colors.greenAccent, Icons.alt_route),
+                      _buildGameCard(context, 'الدومينو', '200', Colors.amber, Icons.dashboard_customize),
+                      _buildGameCard(context, 'البلياردو', '250', Colors.redAccent, Icons.fiber_manual_record),
                     ],
                   ),
                 ),
@@ -118,8 +119,8 @@ class HomeScreen extends StatelessWidget {
     );
   }
 
-  // تصميم بطاقة اللعبة الواحدة
-  Widget _buildGameCard(String title, String points, Color color, IconData icon) {
+  // تصميم بطاقة اللعبة الواحدة مع تفعيل الانتقال لشاشة اللعبة
+  Widget _buildGameCard(BuildContext context, String title, String points, Color color, IconData icon) {
     return Container(
       margin: const EdgeInsets.only(bottom: 15),
       decoration: BoxDecoration(
@@ -151,7 +152,13 @@ class HomeScreen extends StatelessWidget {
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
           ),
           onPressed: () {
-            // سنقوم بتفعيل الضغط في الخطوة القادمة
+            // الانتقال إلى شاشة اللعبة عند الضغط
+            Navigator.push(
+              context,
+              MaterialPageRoute(
+                builder: (context) => GameScreen(gameName: title),
+              ),
+            );
           },
           child: const Text('العب الآن', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         ),
