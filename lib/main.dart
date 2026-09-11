@@ -238,7 +238,7 @@ class GameCard extends StatelessWidget {
   }
 }
 
-// 1. شاشة لعبة لودو التفاعلية (الخطوة الأولى)
+// 1. شاشة لعبة لودو التفاعلية
 class LudoGameScreen extends StatefulWidget {
   @override
   _LudoGameScreenState createState() => _LudoGameScreenState();
@@ -254,11 +254,10 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
       _isRolling = true;
     });
 
-    // محاكاة حركة النرد البصرية البسيطة
     Future.delayed(Duration(milliseconds: 300), () {
       setState(() {
         _diceValue = Random().nextInt(6) + 1;
-        _score += _diceValue * 10; // احتساب النقاط بناءً على نتيجة النرد
+        _score += _diceValue * 10;
         _isRolling = false;
       });
     });
@@ -312,7 +311,7 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
               style: TextStyle(color: Colors.white70, fontSize: 14),
             ),
             SizedBox(height: 40),
-            ElevatedButton.styleFrom != null ? ElevatedButton(
+            ElevatedButton(
               style: ElevatedButton.styleFrom(
                 backgroundColor: Colors.orange,
                 minimumSize: Size(double.infinity, 50),
@@ -320,7 +319,7 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
               ),
               onPressed: _isRolling ? null : _rollDice,
               child: Text('ارمِ النرد الآن', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
-            ) : Container(),
+            ),
           ],
         ),
       ),
@@ -328,8 +327,47 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
   }
 }
 
-// 2. شاشة لعبة السلم والثعبان
-class SnakesGameScreen extends StatelessWidget {
+// 2. شاشة لعبة السلم والثعبان التفاعلية (الخطوة الثانية)
+class SnakesGameScreen extends StatefulWidget {
+  @override
+  _SnakesGameScreenState createState() => _SnakesGameScreenState();
+}
+
+class _SnakesGameScreenState extends State<SnakesGameScreen> {
+  int _position = 1;
+  int _diceValue = 1;
+  bool _isRolling = false;
+  String _message = 'ابدأ اللعبة واصعد السلالم!';
+
+  void _rollAndMove() {
+    setState(() {
+      _isRolling = true;
+    });
+
+    Future.delayed(Duration(milliseconds: 300), () {
+      setState(() {
+        _diceValue = Random().nextInt(6) + 1;
+        _position += _diceValue;
+
+        // قواعد السلالم والثعابين المبسطة
+        if (_position == 10) {
+          _position = 25;
+          _message = 'رائع! صعدت سلماً إلى الخانة 25!';
+        } else if (_position == 30) {
+          _position = 12;
+          _message = 'أوقفك ثعبان! هبطت إلى الخانة 12!';
+        } else if (_position >= 50) {
+          _message = 'تهانينا! لقد فزت في اللعبة!';
+          _position = 50;
+        } else {
+          _message = 'تقدمت إلى الخانة: $_position';
+        }
+
+        _isRolling = false;
+      });
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -337,15 +375,62 @@ class SnakesGameScreen extends StatelessWidget {
         title: Text('لعبة السلم والثعبان', style: TextStyle(color: Colors.white)),
         backgroundColor: Color(0xFF1E293B),
       ),
-      body: Center(
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.straighten, size: 100, color: Colors.green),
+            Container(
+              padding: EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: Color(0xFF334155),
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  Text('الخانة الحالية', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  SizedBox(height: 8),
+                  Text('$_position / 50', style: TextStyle(color: Colors.greenAccent, fontSize: 28, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+            SizedBox(height: 30),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: Colors.green, width: 2),
+                  ),
+                  child: Center(
+                    child: Text(
+                      _isRolling ? '...' : '$_diceValue',
+                      style: TextStyle(color: Colors.green, fontSize: 40, fontWeight: FontWeight.bold),
+                    ),
+                  ),
+                ),
+              ],
+            ),
             SizedBox(height: 20),
-            Text('مرحباً بك في السلم والثعبان', style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold)),
-            SizedBox(height: 10),
-            Text('قريباً: تفعيل المسار والصعود والنزول!', style: TextStyle(color: Colors.white70, fontSize: 14)),
+            Text(
+              _message,
+              style: TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+            SizedBox(height: 30),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.green,
+                minimumSize: Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: _isRolling ? null : _rollAndMove,
+              child: Text('ارمِ النرد وتحرك', style: TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
           ],
         ),
       ),
@@ -462,7 +547,7 @@ class ChatScreenNode extends StatelessWidget {
               padding: EdgeInsets.all(16),
               children: [
                 ChatBubble(message: 'أهلاً بك في الدردشة!', isMe: false),
-                ChatBubble(message: 'تم تفعيل لعبة لودو بنجاح!', isMe: true),
+                ChatBubble(message: 'تم تفعيل لعبة السلم والثعبان بنجاح!', isMe: true),
               ],
             ),
           ),
