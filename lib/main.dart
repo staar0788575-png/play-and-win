@@ -141,14 +141,59 @@ class MainDashboard extends StatelessWidget {
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
               children: [
-                GameCard(title: 'لودو', icon: Icons.casino, color: Colors.orange),
-                GameCard(title: 'السلم والثعبان', icon: Icons.straighten, color: Colors.green),
-                GameCard(title: 'البلياردو', icon: Icons.sports_bar, color: Colors.blueAccent),
-                GameCard(title: 'الدومينو', icon: Icons.dashboard, color: Colors.purple),
+                GameCard(
+                  title: 'لودو',
+                  icon: Icons.casino,
+                  color: Colors.orange,
+                  onTap: () {
+                    _showGameMessage(context, 'لعبة لودو قريباً!');
+                  },
+                ),
+                GameCard(
+                  title: 'السلم والثعبان',
+                  icon: Icons.straighten,
+                  color: Colors.green,
+                  onTap: () {
+                    _showGameMessage(context, 'لعبة السلم والثعبان قريباً!');
+                  },
+                ),
+                GameCard(
+                  title: 'البلياردو',
+                  icon: Icons.sports_bar,
+                  color: Colors.blueAccent,
+                  onTap: () {
+                    _showGameMessage(context, 'لعبة البلياردو قريباً!');
+                  },
+                ),
+                GameCard(
+                  title: 'الدومينو',
+                  icon: Icons.dashboard,
+                  color: Colors.purple,
+                  onTap: () {
+                    _showGameMessage(context, 'لعبة الدومينو قريباً!');
+                  },
+                ),
               ],
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  void _showGameMessage(BuildContext context, String message) {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: Color(0xFF1E293B),
+        title: Text('تنبيه', style: TextStyle(color: Colors.white)),
+        content: Text(message, style: TextStyle(color: Colors.white70)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('حسناً', style: TextStyle(color: Colors.amber)),
+          ),
+        ],
       ),
     );
   }
@@ -158,34 +203,40 @@ class GameCard extends StatelessWidget {
   final String title;
   final IconData icon;
   final Color color;
+  final VoidCallback onTap;
 
-  GameCard({required this.title, required this.icon, required this.color});
+  GameCard({required this.title, required this.icon, required this.color, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: Color(0xFF1E293B),
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          CircleAvatar(
-            backgroundColor: color.withOpacity(0.2),
-            radius: 30,
-            child: Icon(icon, color: color, size: 30),
-          ),
-          SizedBox(height: 12),
-          Text(
-            title,
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 16,
-              fontWeight: FontWeight.bold,
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(16),
+      child: Container(
+        decoration: BoxDecoration(
+          color: Color(0xFF1E293B),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: color.withOpacity(0.3), width: 1.5),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            CircleAvatar(
+              backgroundColor: color.withOpacity(0.2),
+              radius: 30,
+              child: Icon(icon, color: color, size: 30),
             ),
-          ),
-        ],
+            SizedBox(height: 12),
+            Text(
+              title,
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
