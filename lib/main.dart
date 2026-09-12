@@ -1,16 +1,5 @@
-8import 'package:flutter/material.dart';
+import 'package:flutter/material.dart';
 import 'dart:math';
-
-/*
-  =============================================================================
-  اسم المشروع: تطبيق Play and Win الملكي (كامل متكامل)
-  أوامر البناء والنشر على GitHub Pages:
-  1. للتجربة محلياً:
-     flutter run -d chrome
-  2. لأمر البناء للويب (مع استبدال "play-and-win" باسم مستودعك على جيت هاب):
-     flutter build web --release --base-href "/play-and-win/"
-  =============================================================================
-*/
 
 void main() {
   runApp(const PlayAndWinApp());
@@ -23,9 +12,9 @@ class PlayAndWinApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Play and Win',
+      title: 'Play and Win Pro Max',
       theme: ThemeData(
-        scaffoldBackgroundColor: const Color(0xFF1E1B4B),
+        scaffoldBackgroundColor: const Color(0xFF0F172A),
         fontFamily: 'Roboto',
       ),
       home: const MainMenuScreen(),
@@ -33,12 +22,10 @@ class PlayAndWinApp extends StatelessWidget {
   }
 }
 
-// 🌐 الإعدادات العامة ونظام المستخدم (VIP، الشحن، الورد اليومي، الحظر، والأصدقاء)
 class AppSettings {
-  static bool soundEnabled = true;
-  static int userCoins = 12500;
-  static int totalRecharged = 0; 
-  static int freeRoses = 5; 
+  static int userCoins = 25000;
+  static int totalRecharged = 5000;
+  static int freeRoses = 10;
 
   static String getVipTitle() {
     if (totalRecharged >= 10000) return 'VIP 3 (ألماسي 💎)';
@@ -57,22 +44,21 @@ class AppSettings {
 
 class GlobalSocialData {
   static List<String> blockedUsers = [];
-  static List<String> friendsList = ['أحمد إبراهيم', 'محمود'];
+  static List<String> friendsList = ['أحمد إبراهيم', 'محمود', 'يوسف'];
   static List<String> friendRequests = ['سارة علي', 'خالد مصطفى'];
 }
 
-// 👑 نموذج غرفة المشاهدة العلنية الموحد لأعلى الشاشة في كل الألعاب
-class SpectatorHeaderWidget extends StatelessWidget {
+class RoomHeaderWidget extends StatelessWidget {
   final String roomTitle;
-  const SpectatorHeaderWidget({Key? key, required this.roomTitle}) : super(key: key);
+  const RoomHeaderWidget({Key? key, required this.roomTitle}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.4),
-        border: const Border(bottom: BorderSide(color: Colors.amberAccent, width: 0.5)),
+        color: Colors.black.withOpacity(0.6),
+        border: const Border(bottom: BorderSide(color: Colors.amberAccent, width: 1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -87,18 +73,12 @@ class SpectatorHeaderWidget extends StatelessWidget {
           Row(
             children: [
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.amber, width: 1)),
-                child: const Text('👑 ملك الغرفة', style: TextStyle(color: Colors.amber, fontSize: 9, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(width: 4),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-                decoration: BoxDecoration(color: Colors.cyan.withOpacity(0.2), borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.cyanAccent, width: 1)),
-                child: const Text('🎙️ المتحدث', style: TextStyle(color: Colors.cyanAccent, fontSize: 9, fontWeight: FontWeight.bold)),
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(color: Colors.amber.withOpacity(0.2), borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.amber, width: 1)),
+                child: const Text('👑 غرفة مقفولة ومؤمنة VIP', style: TextStyle(color: Colors.amber, fontSize: 9, fontWeight: FontWeight.bold)),
               ),
               const SizedBox(width: 6),
-              const Text('👁️ 1.2k', style: TextStyle(color: Colors.white70, fontSize: 10)),
+              const Text('👁️ 2.8k', style: TextStyle(color: Colors.white70, fontSize: 10)),
             ],
           ),
         ],
@@ -107,7 +87,6 @@ class SpectatorHeaderWidget extends StatelessWidget {
   }
 }
 
-// 🏠 الشاشة الرئيسية (القائمة)
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({Key? key}) : super(key: key);
 
@@ -120,24 +99,22 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF0F172A),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
         return Container(
-          padding: const EdgeInsets.all(20),
+          padding: const EdgeInsets.all(16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Text('متجر شحن العملات وترقية الـ VIP', style: TextStyle(color: Colors.amberAccent, fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 10),
-              const Text('كلما شحنت أكثر زاد مستواك وحصلت على لوجو VIP مميز!', style: TextStyle(color: Colors.white70, fontSize: 12), textAlign: TextAlign.center),
-              const SizedBox(height: 20),
+              const Text('متجر العملات وشحن الـ VIP', style: TextStyle(color: Colors.amberAccent, fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 15),
               _buildRechargeOption('باقة 500 عملة', '15 جنيه', 500),
-              const SizedBox(height: 10),
-              _buildRechargeOption('باقة 2000 عملة (ترقية VIP 1)', '50 جنيه', 2000),
-              const SizedBox(height: 10),
-              _buildRechargeOption('باقة 5000 عملة (ترقية VIP 2)', '100 جنيه', 5000),
-              const SizedBox(height: 10),
-              _buildRechargeOption('باقة 10000 عملة (ترقية VIP 3 ألماسي)', '200 جنيه', 10000),
+              const SizedBox(height: 8),
+              _buildRechargeOption('باقة 2000 عملة (VIP 1)', '50 جنيه', 2000),
+              const SizedBox(height: 8),
+              _buildRechargeOption('باقة 5000 عملة (VIP 2)', '100 جنيه', 5000),
+              const SizedBox(height: 8),
+              _buildRechargeOption('باقة 10000 عملة (VIP 3 ألماسي)', '200 جنيه', 10000),
             ],
           ),
         );
@@ -149,13 +126,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: const Color(0xFF0F172A),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
       builder: (context) {
         return DefaultTabController(
           length: 3,
           child: Container(
-            height: 400,
-            padding: const EdgeInsets.all(16),
+            height: 350,
+            padding: const EdgeInsets.all(12),
             child: Column(
               children: [
                 const TabBar(
@@ -172,9 +149,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         itemBuilder: (context, index) {
                           final friend = GlobalSocialData.friendsList[index];
                           return ListTile(
-                            title: Text(friend, style: const TextStyle(color: Colors.white)),
+                            title: Text(friend, style: const TextStyle(color: Colors.white, fontSize: 13)),
                             trailing: IconButton(
-                              icon: const Icon(Icons.block, color: Colors.redAccent, size: 20),
+                              icon: const Icon(Icons.block, color: Colors.redAccent, size: 18),
                               onPressed: () {
                                 setState(() {
                                   GlobalSocialData.friendsList.remove(friend);
@@ -191,12 +168,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         itemBuilder: (context, index) {
                           final req = GlobalSocialData.friendRequests[index];
                           return ListTile(
-                            title: Text(req, style: const TextStyle(color: Colors.white)),
+                            title: Text(req, style: const TextStyle(color: Colors.white, fontSize: 13)),
                             trailing: Row(
                               mainAxisSize: MainAxisSize.min,
                               children: [
                                 IconButton(
-                                  icon: const Icon(Icons.check, color: Colors.greenAccent),
+                                  icon: const Icon(Icons.check, color: Colors.greenAccent, size: 18),
                                   onPressed: () {
                                     setState(() {
                                       GlobalSocialData.friendRequests.remove(req);
@@ -206,11 +183,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                                   },
                                 ),
                                 IconButton(
-                                  icon: const Icon(Icons.close, color: Colors.redAccent),
+                                  icon: const Icon(Icons.close, color: Colors.redAccent, size: 18),
                                   onPressed: () {
-                                    setState(() {
-                                      GlobalSocialData.friendRequests.remove(req);
-                                    });
+                                    setState(() => GlobalSocialData.friendRequests.remove(req));
                                     Navigator.pop(context);
                                   },
                                 ),
@@ -224,9 +199,9 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         itemBuilder: (context, index) {
                           final blocked = GlobalSocialData.blockedUsers[index];
                           return ListTile(
-                            title: Text(blocked, style: const TextStyle(color: Colors.redAccent)),
+                            title: Text(blocked, style: const TextStyle(color: Colors.redAccent, fontSize: 13)),
                             trailing: TextButton(
-                              child: const Text('إلغاء الحظر', style: TextStyle(color: Colors.cyanAccent)),
+                              child: const Text('إلغاء الحظر', style: TextStyle(color: Colors.cyanAccent, fontSize: 11)),
                               onPressed: () {
                                 setState(() {
                                   GlobalSocialData.blockedUsers.remove(blocked);
@@ -249,46 +224,13 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
     );
   }
 
-  void _openSettingsDialog() {
-    showDialog(
-      context: context,
-      builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: const Color(0xFF0F172A),
-              title: const Text('إعدادات اللعبة', style: TextStyle(color: Colors.amberAccent)),
-              content: SwitchListTile(
-                title: const Text('تشغيل أصوات الألعاب والمؤثرات', style: TextStyle(color: Colors.white, fontSize: 14)),
-                value: AppSettings.soundEnabled,
-                activeColor: Colors.cyanAccent,
-                onChanged: (val) {
-                  setDialogState(() {
-                    AppSettings.soundEnabled = val;
-                  });
-                  setState(() {});
-                },
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('إغلاق', style: TextStyle(color: Colors.cyanAccent)),
-                ),
-              ],
-            );
-          },
-        );
-      },
-    );
-  }
-
   Widget _buildRechargeOption(String title, String price, int coins) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.amber.withOpacity(0.5)),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.amber.withOpacity(0.4)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -296,24 +238,22 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
-              const SizedBox(height: 4),
-              Text(price, style: const TextStyle(color: Colors.greenAccent, fontSize: 12)),
+              Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
+              const SizedBox(height: 2),
+              Text(price, style: const TextStyle(color: Colors.greenAccent, fontSize: 11)),
             ],
           ),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6)),
             onPressed: () {
               setState(() {
                 AppSettings.userCoins += coins;
                 AppSettings.totalRecharged += coins;
               });
               Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('تم الشحن بنجاح! رتبة الـ VIP الحالية: ${AppSettings.getVipTitle()}')),
-              );
+              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم الشحن بنجاح! رتبتك الحالية: ${AppSettings.getVipTitle()}')));
             },
-            child: const Text('شحن', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+            child: const Text('شحن', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 12)),
           ),
         ],
       ),
@@ -335,48 +275,44 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           child: Column(
             children: [
               Padding(
-                padding: const EdgeInsets.all(16.0),
+                padding: const EdgeInsets.all(12.0),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Row(
                       children: [
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: Colors.black.withOpacity(0.4),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.amber, width: 1.5),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: Colors.amber, width: 1.2),
                           ),
                           child: Row(
                             children: [
-                              const Icon(Icons.monetization_on, color: Colors.amber, size: 16),
-                              const SizedBox(width: 4),
-                              Text('${AppSettings.userCoins}', style: const TextStyle(color: Colors.amberAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                              const Icon(Icons.monetization_on, color: Colors.amber, size: 14),
+                              const SizedBox(width: 3),
+                              Text('${AppSettings.userCoins}', style: const TextStyle(color: Colors.amberAccent, fontSize: 11, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
                             color: Colors.black.withOpacity(0.4),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: AppSettings.getVipColor(), width: 1.5),
+                            borderRadius: BorderRadius.circular(16),
+                            border: Border.all(color: AppSettings.getVipColor(), width: 1.2),
                           ),
-                          child: Text(
-                            AppSettings.getVipTitle(),
-                            style: TextStyle(color: AppSettings.getVipColor(), fontSize: 10, fontWeight: FontWeight.bold),
-                          ),
+                          child: Text(AppSettings.getVipTitle(), style: TextStyle(color: AppSettings.getVipColor(), fontSize: 9, fontWeight: FontWeight.bold)),
                         ),
                       ],
                     ),
                     Row(
                       children: [
-                        IconButton(icon: const Icon(Icons.people, color: Colors.greenAccent, size: 24), onPressed: _openSocialHub, tooltip: 'الأصدقاء والحظر'),
-                        IconButton(icon: const Icon(Icons.settings, color: Colors.white70, size: 22), onPressed: _openSettingsDialog),
-                        IconButton(icon: const Icon(Icons.chat, color: Colors.cyanAccent, size: 22), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const GlobalChatScreen()))),
-                        IconButton(icon: const Icon(Icons.store, color: Colors.amberAccent, size: 24), onPressed: _openStore),
+                        IconButton(icon: const Icon(Icons.people, color: Colors.greenAccent, size: 20), onPressed: _openSocialHub),
+                        IconButton(icon: const Icon(Icons.chat, color: Colors.cyanAccent, size: 20), onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const GlobalChatScreen()))),
+                        IconButton(icon: const Icon(Icons.store, color: Colors.amberAccent, size: 20), onPressed: _openStore),
                       ],
                     ),
                   ],
@@ -384,15 +320,43 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
               ),
               Expanded(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 14.0),
                   child: ListView(
                     children: [
-                      const Text('اختر اللعبة للبدء:', style: TextStyle(color: Colors.amberAccent, fontSize: 18, fontWeight: FontWeight.bold)),
-                      const SizedBox(height: 15),
-                      _buildGameCard(context, 'Ludo Royal', 'غرفة ملكية فاخرة + طائرات + مايك + شات + ورد وهدايا', Icons.casino, Colors.blueAccent, const LudoExactScreen()),
-                      _buildGameCard(context, 'Snakes & Ladders', 'لعبة السلم والثعبان التنافسية بمربعات حقيقية', Icons.leaderboard, Colors.green, const SnakesLaddersScreen()),
-                      _buildGameCard(context, '8 Ball Pool', 'تحدي البلياردو الواقعي مع طاولة حقيقية وعصا تفاعلية', Icons.sports_bar, Colors.orange, const PoolGameScreen()),
-                      _buildGameCard(context, 'Dominoes', 'لعبة الدومينو الكلاسيكية الاستراتيجية وقطع الطاولة', Icons.extension, Colors.purple, const DominoesGameScreen()),
+                      const Text('اختر اللعبة للبدء والتحدي:', style: TextStyle(color: Colors.amberAccent, fontSize: 16, fontWeight: FontWeight.bold)),
+                      const SizedBox(height: 10),
+                      
+                      CardWidget(
+                        titleEn: 'Ludo Royal (4 Players)',
+                        subtitleAr: 'لودو 4 لاعبين والطيارات والمربعات الآمنة والجراج',
+                        icon: Icons.casino,
+                        color: Colors.blueAccent,
+                        targetScreen: const LudoCompleteScreen(),
+                      ),
+                      
+                      CardWidget(
+                        titleEn: 'Snakes & Ladders',
+                        subtitleAr: 'لعبة السلم والثعبان والنرد الحقيقي',
+                        icon: Icons.leaderboard,
+                        color: Colors.green,
+                        targetScreen: const SnakesLaddersCompleteScreen(),
+                      ),
+
+                      CardWidget(
+                        titleEn: '8 Ball Pool',
+                        subtitleAr: 'تحدي البلياردو والفتحات وقوة التسديد بدقة',
+                        icon: Icons.sports_bar,
+                        color: Colors.orange,
+                        targetScreen: const PoolCompleteScreen(),
+                      ),
+
+                      CardWidget(
+                        titleEn: 'Dominoes',
+                        subtitleAr: 'لعبة الدومينو الأرقام والمكعبات الحقيقية',
+                        icon: Icons.extension,
+                        color: Colors.purple,
+                        targetScreen: const DominoesCompleteScreen(),
+                      ),
                     ],
                   ),
                 ),
@@ -403,32 +367,49 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
       ),
     );
   }
+}
 
-  Widget _buildGameCard(BuildContext context, {required String titleEn, required String subtitleAr, required IconData icon, required Color color, required Widget targetScreen}) {
+class CardWidget extends StatelessWidget {
+  final String titleEn;
+  final String subtitleAr;
+  final IconData icon;
+  final Color color;
+  final Widget targetScreen;
+
+  const CardWidget({
+    Key? key,
+    required this.titleEn,
+    required this.subtitleAr,
+    required this.icon,
+    required this.color,
+    required this.targetScreen,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(vertical: 8),
+      margin: const EdgeInsets.symmetric(vertical: 6),
       decoration: BoxDecoration(
         color: Colors.white.withOpacity(0.08),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: color.withOpacity(0.6), width: 1.5),
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: color.withOpacity(0.6), width: 1.2),
       ),
       child: ListTile(
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         leading: Container(
-          padding: const EdgeInsets.all(10),
+          padding: const EdgeInsets.all(8),
           decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle),
-          child: Icon(icon, color: color, size: 26),
+          child: Icon(icon, color: color, size: 22),
         ),
-        title: Text(titleEn, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-        subtitle: Text(subtitleAr, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-        trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 16),
+        title: Text(titleEn, style: const TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold)),
+        subtitle: Text(subtitleAr, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+        trailing: const Icon(Icons.arrow_forward_ios, color: Colors.white54, size: 14),
         onTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => targetScreen)),
       ),
     );
   }
 }
 
-// 💬 شاشة الشات العام
 class GlobalChatScreen extends StatefulWidget {
   const GlobalChatScreen({Key? key}) : super(key: key);
 
@@ -438,15 +419,14 @@ class GlobalChatScreen extends StatefulWidget {
 
 class _GlobalChatScreenState extends State<GlobalChatScreen> {
   final TextEditingController _controller = TextEditingController();
-  final List<Map<String, String>> _globalMessages = [
-    {'name': 'أحمد إبراهيم', 'text': 'أهلاً بالجميع في تطبيق Play and Win!'},
-    {'name': 'محمود', 'text': 'من يوافقني في دور لودو الآن؟'},
+  final List<Map<String, String>> _messages = [
+    {'name': 'أحمد إبراهيم', 'text': 'مرحباً بكم في التطبيق الشامل!'},
   ];
 
-  void _sendGlobalMessage() {
+  void _sendMessage() {
     if (_controller.text.trim().isNotEmpty) {
       setState(() {
-        _globalMessages.add({'name': 'أنت (${AppSettings.getVipTitle()})', 'text': _controller.text.trim()});
+        _messages.add({'name': 'أنت', 'text': _controller.text.trim()});
         _controller.clear();
       });
     }
@@ -456,7 +436,7 @@ class _GlobalChatScreenState extends State<GlobalChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('الدردشة الجماعية العامة', style: TextStyle(color: Colors.amberAccent)),
+        title: const Text('الدردشة العامة', style: TextStyle(color: Colors.amberAccent, fontSize: 16)),
         backgroundColor: const Color(0xFF0F172A),
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -468,21 +448,20 @@ class _GlobalChatScreenState extends State<GlobalChatScreen> {
           children: [
             Expanded(
               child: ListView.builder(
-                padding: const EdgeInsets.all(12),
-                itemCount: _globalMessages.length,
+                padding: const EdgeInsets.all(10),
+                itemCount: _messages.length,
                 itemBuilder: (context, index) {
-                  final msg = _globalMessages[index];
-                  if (GlobalSocialData.blockedUsers.contains(msg['name'])) return const SizedBox.shrink();
+                  final msg = _messages[index];
                   return Container(
-                    margin: const EdgeInsets.symmetric(vertical: 4),
-                    padding: const EdgeInsets.all(10),
-                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.06), borderRadius: BorderRadius.circular(12)),
+                    margin: const EdgeInsets.symmetric(vertical: 3),
+                    padding: const EdgeInsets.all(8),
+                    decoration: BoxDecoration(color: Colors.white.withOpacity(0.06), borderRadius: BorderRadius.circular(10)),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(msg['name']!, style: const TextStyle(color: Colors.cyanAccent, fontSize: 12, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 4),
-                        Text(msg['text']!, style: const TextStyle(color: Colors.white, fontSize: 14)),
+                        Text(msg['name']!, style: const TextStyle(color: Colors.cyanAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                        const SizedBox(height: 2),
+                        Text(msg['text']!, style: const TextStyle(color: Colors.white, fontSize: 13)),
                       ],
                     ),
                   );
@@ -490,18 +469,18 @@ class _GlobalChatScreenState extends State<GlobalChatScreen> {
               ),
             ),
             Container(
-              padding: const EdgeInsets.all(10),
+              padding: const EdgeInsets.all(8),
               color: const Color(0xFF0F172A),
               child: Row(
                 children: [
                   Expanded(
                     child: TextField(
                       controller: _controller,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(hintText: 'اكتب رسالتك للجميع...', hintStyle: TextStyle(color: Colors.white38), border: InputBorder.none),
+                      style: const TextStyle(color: Colors.white, fontSize: 13),
+                      decoration: const InputDecoration(hintText: 'اكتب رسالة...', hintStyle: TextStyle(color: Colors.white38), border: InputBorder.none),
                     ),
                   ),
-                  IconButton(icon: const Icon(Icons.send, color: Colors.cyanAccent), onPressed: _sendGlobalMessage),
+                  IconButton(icon: const Icon(Icons.send, color: Colors.cyanAccent, size: 20), onPressed: _sendMessage),
                 ],
               ),
             ),
@@ -512,116 +491,73 @@ class _GlobalChatScreenState extends State<GlobalChatScreen> {
   }
 }
 
-// 🎲 1. شاشة Ludo Royal متكاملة
-class LudoExactScreen extends StatefulWidget {
-  const LudoExactScreen({Key? key}) : super(key: key);
+// 1. LUDO COMPLETE GAME SCREEN (4 Players, Planes, Dice control, Garage, Safe spots)
+class LudoCompleteScreen extends StatefulWidget {
+  const LudoCompleteScreen({Key? key}) : super(key: key);
 
   @override
-  State<LudoExactScreen> createState() => _LudoExactScreenState();
+  State<LudoCompleteScreen> createState() => _LudoCompleteScreenState();
 }
 
-class _LudoExactScreenState extends State<LudoExactScreen> {
+class _LudoCompleteScreenState extends State<LudoCompleteScreen> {
   int _diceValue = 6;
   bool _isRolling = false;
   bool _isMicActive = false;
-  bool _isPrivateChat = false;
   
+  // 4 Players token positions (0 = in garage/base, 1 to 50 = path, 52 = final home garage)
+  final List<int> _playerTokens = [0, 0, 0, 0];
+  int _activePlayerIndex = 0;
+  bool _isSafeSpot = false;
+
   final TextEditingController _chatController = TextEditingController();
-  final List<Map<String, String>> _roomGroupMessages = [
-    {'name': 'ابن الاكابر (VIP 2)', 'text': 'مرحباً بالجميع في غرفة اللودو الملكية!'},
-  ];
-  final List<Map<String, String>> _roomPrivateMessages = [
-    {'name': 'صديقي (خاص)', 'text': 'هل نلعب كفريق؟'},
+  final List<Map<String, String>> _roomMessages = [
+    {'name': 'المضيف', 'text': 'أهلاً بكم في غرفة اللودو الملكية لـ 4 لاعبين!'}
   ];
 
-  void _rollDice() {
+  void _rollDiceForLudo() {
     setState(() => _isRolling = true);
     Future.delayed(const Duration(milliseconds: 400), () {
       setState(() {
         _diceValue = Random().nextInt(6) + 1;
         _isRolling = false;
+
+        int currentPos = _playerTokens[_activePlayerIndex];
+
+        if (currentPos == 0) {
+          if (_diceValue == 6) {
+            _playerTokens[_activePlayerIndex] = 1; // Exit garage
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('اللاعب ${_activePlayerIndex + 1} رمى 6 وخرجت طيارته من الجراج!')));
+          } else {
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('اللاعب ${_activePlayerIndex + 1} يحتاج لرمي 6 للخروج من الجراج!')));
+          }
+        } else {
+          currentPos += _diceValue;
+          if (currentPos >= 52) {
+            _playerTokens[_activePlayerIndex] = 52;
+            ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تهانينا! طائرة اللاعب ${_activePlayerIndex + 1} وصلت لجراجها النهائي بنجاح!')));
+          } else {
+            _playerTokens[_activePlayerIndex] = currentPos;
+            _isSafeSpot = (currentPos % 8 == 0); // Safe spots check
+          }
+        }
+
+        // Switch to next player
+        _activePlayerIndex = (_activePlayerIndex + 1) % 4;
       });
     });
   }
 
-  void _sendMessage() {
+  void _sendRoomMsg() {
     if (_chatController.text.trim().isNotEmpty) {
       setState(() {
-        if (_isPrivateChat) {
-          _roomPrivateMessages.add({'name': 'أنت (خاص)', 'text': _chatController.text.trim()});
-        } else {
-          _roomGroupMessages.add({'name': 'أنت (${AppSettings.getVipTitle()})', 'text': _chatController.text.trim()});
-        }
+        _roomMessages.add({'name': 'أنت', 'text': _chatController.text.trim()});
         _chatController.clear();
       });
     }
   }
 
-  void _sendFreeRose() {
-    if (AppSettings.freeRoses > 0) {
-      setState(() => AppSettings.freeRoses--);
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم إرسال وردة مجانية! المتبقي اليوم: ${AppSettings.freeRoses}')));
-    } else {
-      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('نفدت الوردات المجانية الـ 5 اليومية!')));
-    }
-  }
-
-  void _openGiftsModal() {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF0F172A),
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
-      builder: (context) {
-        return Container(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Text('متجر الهدايا القيمة', style: TextStyle(color: Colors.amberAccent, fontSize: 18, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 20),
-              _buildGiftItem('☕ فنجان قهوة', 10),
-              const SizedBox(height: 8),
-              _buildGiftItem('🚗 سيارة رياضية', 500),
-              const SizedBox(height: 8),
-              _buildGiftItem('🏰 قصر ملكي', 5000),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _buildGiftItem(String name, int cost) {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: Colors.white.withOpacity(0.08), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.purpleAccent.withOpacity(0.5))),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.purpleAccent),
-            onPressed: () {
-              if (AppSettings.userCoins >= cost) {
-                setState(() => AppSettings.userCoins -= cost);
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم إرسال ($name) بتكلفة $cost عملة!')));
-              } else {
-                Navigator.pop(context);
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('رصيدك لا يكفي!')));
-              }
-            },
-            child: Text('إرسال ($cost)', style: const TextStyle(color: Colors.white, fontSize: 11)),
-          ),
-        ],
-      ),
-    );
-  }
-
   @override
   Widget build(BuildContext context) {
-    final currentMessages = _isPrivateChat ? _roomPrivateMessages : _roomGroupMessages;
-
     return Scaffold(
       body: Container(
         decoration: const BoxDecoration(
@@ -630,17 +566,26 @@ class _LudoExactScreenState extends State<LudoExactScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              const SpectatorHeaderWidget(roomTitle: 'غرفة لودو رويال الملكية'),
+              const RoomHeaderWidget(roomTitle: 'غرفة لودو 4 لاعبين والطيارات والجراج'),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    GestureDetector(onTap: () => Navigator.pop(context), child: const Icon(Icons.arrow_back, color: Colors.white, size: 20)),
+                    GestureDetector(onTap: () => Navigator.pop(context), child: const Icon(Icons.arrow_back, color: Colors.white, size: 18)),
                     Row(
                       children: [
-                        IconButton(icon: const Icon(Icons.local_florist, color: Colors.pinkAccent, size: 20), onPressed: _sendFreeRose, tooltip: 'وردة مجانية'),
-                        IconButton(icon: const Icon(Icons.card_giftcard, color: Colors.amberAccent, size: 20), onPressed: _openGiftsModal, tooltip: 'هدايا'),
+                        Text('دور اللاعب: ${_activePlayerIndex + 1}', style: const TextStyle(color: Colors.amberAccent, fontSize: 11, fontWeight: FontWeight.bold)),
+                        const SizedBox(width: 8),
+                        IconButton(
+                          icon: const Icon(Icons.local_florist, color: Colors.pinkAccent, size: 18),
+                          onPressed: () {
+                            if (AppSettings.freeRoses > 0) {
+                              setState(() => AppSettings.freeRoses--);
+                              ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('تم إرسال وردة للمضيف! المتبقي: ${AppSettings.freeRoses}')));
+                            }
+                          },
+                        ),
                       ],
                     ),
                   ],
@@ -652,22 +597,34 @@ class _LudoExactScreenState extends State<LudoExactScreen> {
                   child: AspectRatio(
                     aspectRatio: 1,
                     child: Container(
-                      margin: const EdgeInsets.all(8),
-                      decoration: BoxDecoration(color: const Color(0xFF1E1B4B), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.blueAccent, width: 2)),
+                      margin: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(color: const Color(0xFF1E1B4B), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.blueAccent, width: 1.5)),
                       child: Stack(
                         children: [
-                          Positioned(top: 8, left: 8, child: _buildBigBaseHouse(Colors.green)),
-                          Positioned(top: 8, right: 8, child: _buildBigBaseHouse(Colors.amber)),
-                          Positioned(bottom: 8, left: 8, child: _buildBigBaseHouse(Colors.red)),
-                          Positioned(bottom: 8, right: 8, child: _buildBigBaseHouse(Colors.blue)),
+                          Positioned(top: 6, left: 6, child: _buildPlaneBase('أخضر (1)', Colors.green, _playerTokens[0])),
+                          Positioned(top: 6, right: 6, child: _buildPlaneBase('أصفر (2)', Colors.amber, _playerTokens[1])),
+                          Positioned(bottom: 6, left: 6, child: _buildPlaneBase('أحمر (3)', Colors.red, _playerTokens[2])),
+                          Positioned(bottom: 6, right: 6, child: _buildPlaneBase('أزرق (4)', Colors.blue, _playerTokens[3])),
                           Center(
-                            child: GestureDetector(
-                              onTap: _isRolling ? null : _rollDice,
-                              child: Container(
-                                width: 80, height: 80,
-                                decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.red[700], border: Border.all(color: Colors.greenAccent, width: 4)),
-                                child: Center(child: Text(_isRolling ? '...' : '$_diceValue', style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold))),
-                              ),
+                            child: Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                if (_isSafeSpot)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(color: Colors.cyan.withOpacity(0.3), borderRadius: BorderRadius.circular(4)),
+                                    child: const Text('🛡️ منطقة آمنة تماماً', style: TextStyle(color: Colors.cyanAccent, fontSize: 9, fontWeight: FontWeight.bold)),
+                                  ),
+                                const SizedBox(height: 4),
+                                GestureDetector(
+                                  onTap: _isRolling ? null : _rollDiceForLudo,
+                                  child: Container(
+                                    width: 55, height: 55,
+                                    decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.red[700], border: Border.all(color: Colors.greenAccent, width: 2.5)),
+                                    child: Center(child: Text(_isRolling ? '...' : '$_diceValue', style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold))),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
@@ -679,32 +636,16 @@ class _LudoExactScreenState extends State<LudoExactScreen> {
               Expanded(
                 flex: 4,
                 child: Container(
-                  padding: const EdgeInsets.all(10),
-                  decoration: const BoxDecoration(color: Color(0xFF0F172A), borderRadius: BorderRadius.vertical(top: Radius.circular(20))),
+                  padding: const EdgeInsets.all(8),
+                  decoration: const BoxDecoration(color: Color(0xFF0F172A), borderRadius: BorderRadius.vertical(top: Radius.circular(16))),
                   child: Column(
                     children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          ChoiceChip(label: const Text('شات جماعي', style: TextStyle(fontSize: 10)), selected: !_isPrivateChat, onSelected: (val) => setState(() => _isPrivateChat = false)),
-                          const SizedBox(width: 8),
-                          ChoiceChip(label: const Text('شات خاص', style: TextStyle(fontSize: 10)), selected: _isPrivateChat, onSelected: (val) => setState(() => _isPrivateChat = true)),
-                        ],
-                      ),
                       Expanded(
                         child: ListView.builder(
-                          itemCount: currentMessages.length,
+                          itemCount: _roomMessages.length,
                           itemBuilder: (context, index) {
-                            final msg = currentMessages[index];
-                            return Container(
-                              margin: const EdgeInsets.symmetric(vertical: 2),
-                              child: Row(
-                                children: [
-                                  Text('${msg['name']}: ', style: const TextStyle(color: Colors.cyanAccent, fontSize: 11, fontWeight: FontWeight.bold)),
-                                  Expanded(child: Text(msg['text']!, style: const TextStyle(color: Colors.white70, fontSize: 11))),
-                                ],
-                              ),
-                            );
+                            final m = _roomMessages[index];
+                            return Text('${m['name']}: ${m['text']}', style: const TextStyle(color: Colors.white70, fontSize: 10));
                           },
                         ),
                       ),
@@ -713,12 +654,12 @@ class _LudoExactScreenState extends State<LudoExactScreen> {
                           Expanded(
                             child: TextField(
                               controller: _chatController,
-                              style: const TextStyle(color: Colors.white, fontSize: 12),
-                              decoration: const InputDecoration(hintText: 'اكتب رسالتك...', hintStyle: TextStyle(color: Colors.white38), border: InputBorder.none),
+                              style: const TextStyle(color: Colors.white, fontSize: 11),
+                              decoration: const InputDecoration(hintText: 'اكتب رسالة الغرفة...', hintStyle: TextStyle(color: Colors.white38), border: InputBorder.none),
                             ),
                           ),
-                          IconButton(icon: Icon(_isMicActive ? Icons.mic : Icons.mic_off, color: _isMicActive ? Colors.greenAccent : Colors.white, size: 18), onPressed: () => setState(() => _isMicActive = !_isMicActive)),
-                          IconButton(icon: const Icon(Icons.send_rounded, color: Colors.cyanAccent, size: 18), onPressed: _sendMessage),
+                          IconButton(icon: Icon(_isMicActive ? Icons.mic : Icons.mic_off, color: _isMicActive ? Colors.greenAccent : Colors.white, size: 16), onPressed: () => setState(() => _isMicActive = !_isMicActive)),
+                          IconButton(icon: const Icon(Icons.send, color: Colors.cyanAccent, size: 16), onPressed: _sendRoomMsg),
                         ],
                       ),
                     ],
@@ -732,51 +673,67 @@ class _LudoExactScreenState extends State<LudoExactScreen> {
     );
   }
 
-  Widget _buildBigBaseHouse(Color color) {
+  Widget _buildPlaneBase(String name, Color color, int pos) {
     return Container(
-      width: 65, height: 65,
-      decoration: BoxDecoration(color: color.withOpacity(0.25), borderRadius: BorderRadius.circular(10), border: Border.all(color: color, width: 2)),
-      child: Center(
-        child: Wrap(
-          spacing: 2, runSpacing: 2, alignment: WrapAlignment.center,
-          children: List.generate(4, (index) => Container(
-            width: 18, height: 18,
-            decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-            child: const Center(child: Icon(Icons.airplanemode_active, color: Colors.white, size: 10)),
-          )),
-        ),
+      width: 52, height: 52,
+      decoration: BoxDecoration(color: color.withOpacity(0.2), borderRadius: BorderRadius.circular(8), border: Border.all(color: color, width: 1.5)),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(Icons.airplanemode_active, color: color, size: 18),
+          const SizedBox(height: 2),
+          Text('موقع: $pos', style: TextStyle(color: color, fontSize: 8, fontWeight: FontWeight.bold)),
+        ],
       ),
     );
   }
 }
 
-// 🐍 2. شاشة Snakes & Ladders متكاملة
-class SnakesLaddersScreen extends StatefulWidget {
-  const SnakesLaddersScreen({Key? key}) : super(key: key);
+// 2. SNAKES AND LADDERS COMPLETE GAME SCREEN
+class SnakesLaddersCompleteScreen extends StatefulWidget {
+  const SnakesLaddersCompleteScreen({Key? key}) : super(key: key);
 
   @override
-  State<SnakesLaddersScreen> createState() => _SnakesLaddersScreenState();
+  State<SnakesLaddersCompleteScreen> createState() => _SnakesLaddersCompleteScreenState();
 }
 
-class _SnakesLaddersScreenState extends State<SnakesLaddersScreen> {
+class _SnakesLaddersCompleteScreenState extends State<SnakesLaddersCompleteScreen> {
   int playerPos = 1;
   int diceVal = 1;
   bool rolling = false;
+  String actionLog = 'اضغط لرمي النرد والتحرك عبر المربعات!';
 
-  final Map<int, int> snakesAndLadders = {
-    3: 22, 11: 28, 20: 45, 36: 72, 48: 80, 61: 95, 
-    27: 5, 54: 31, 66: 42, 89: 50, 98: 12 
+  final Map<int, int> snakesAndLaddersMap = {
+    3: 22,   // سلم صعود
+    11: 28,  // سلم صعود
+    20: 45,  // سلم صعود
+    36: 72,  // سلم صعود
+    48: 80,  // سلم صعود
+    27: 5,   // ثعبان نزول
+    54: 31,  // ثعبان نزول
+    66: 42,  // ثعبان نزول
+    88: 50,  // ثعبان نزول
   };
 
-  void rollTheDice() {
+  void rollDice() {
     setState(() => rolling = true);
     Future.delayed(const Duration(milliseconds: 400), () {
       setState(() {
         diceVal = Random().nextInt(6) + 1;
-        playerPos += diceVal;
-        if (playerPos > 100) playerPos = 100;
-        if (snakesAndLadders.containsKey(playerPos)) {
-          playerPos = snakesAndLadders[playerPos]!;
+        int nextPos = playerPos + diceVal;
+        if (nextPos > 100) nextPos = 100;
+
+        if (snakesAndLaddersMap.containsKey(nextPos)) {
+          int destination = snakesAndLaddersMap[nextPos]!;
+          if (destination > nextPos) {
+            actionLog = 'ممتاز! صعدت سلماً من $nextPos إلى $destination!';
+          } else {
+            actionLog = 'عفواً! أكلت ثعبان وهبطت من $nextPos إلى $destination!';
+          }
+          playerPos = destination;
+        } else {
+          playerPos = nextPos;
+          actionLog = 'تقدمت وتحركت إلى المربع $playerPos';
         }
         rolling = false;
       });
@@ -793,43 +750,44 @@ class _SnakesLaddersScreenState extends State<SnakesLaddersScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              const SpectatorHeaderWidget(roomTitle: 'غرفة السلم والثعبان التنافسية'),
+              const RoomHeaderWidget(roomTitle: 'غرفة السلم والثعبان والنرد الحقيقي'),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    GestureDetector(onTap: () => Navigator.pop(context), child: const Icon(Icons.arrow_back, color: Colors.white, size: 20)),
-                    const SizedBox(width: 12),
-                    Text('موقعك: مربع ($playerPos)', style: const TextStyle(color: Colors.greenAccent, fontSize: 13, fontWeight: FontWeight.bold)),
+                    GestureDetector(onTap: () => Navigator.pop(context), child: const Icon(Icons.arrow_back, color: Colors.white, size: 18)),
+                    Text(actionLog, style: const TextStyle(color: Colors.greenAccent, fontSize: 11, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
               Expanded(
                 child: Container(
-                  margin: const EdgeInsets.all(12),
+                  margin: const EdgeInsets.all(8),
                   padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(color: const Color(0xFF01211A), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.greenAccent, width: 2)),
+                  decoration: BoxDecoration(color: const Color(0xFF01211A), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.greenAccent, width: 1.5)),
                   child: GridView.builder(
                     itemCount: 100,
                     reverse: true,
-                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10, crossAxisSpacing: 2, mainAxisSpacing: 2),
+                    physics: const NeverScrollableScrollPhysics(),
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10, crossAxisSpacing: 1.5, mainAxisSpacing: 1.5),
                     itemBuilder: (context, index) {
                       int sqNum = index + 1;
                       bool isHere = (sqNum == playerPos);
-                      bool isLadder = snakesAndLadders.containsKey(sqNum) && snakesAndLadders[sqNum]! > sqNum;
-                      bool isSnake = snakesAndLadders.containsKey(sqNum) && snakesAndLadders[sqNum]! < sqNum;
+                      bool hasLadder = snakesAndLaddersMap.containsKey(sqNum) && snakesAndLaddersMap[sqNum]! > sqNum;
+                      bool hasSnake = snakesAndLaddersMap.containsKey(sqNum) && snakesAndLaddersMap[sqNum]! < sqNum;
 
-                      Color boxCol = Colors.white.withOpacity(0.06);
-                      if (isHere) boxCol = Colors.amber;
-                      else if (isLadder) boxCol = Colors.greenAccent.withOpacity(0.4);
-                      else if (isSnake) boxCol = Colors.redAccent.withOpacity(0.4);
+                      Color boxColor = Colors.white.withOpacity(0.06);
+                      if (hasLadder) boxColor = Colors.blue.withOpacity(0.3);
+                      if (hasSnake) boxColor = Colors.red.withOpacity(0.3);
+                      if (isHere) boxColor = Colors.amber;
 
                       return Container(
-                        decoration: BoxDecoration(color: boxCol, borderRadius: BorderRadius.circular(3)),
+                        decoration: BoxDecoration(color: boxColor, borderRadius: BorderRadius.circular(2)),
                         child: Center(
                           child: Text(
-                            isHere ? '🧑‍🦱' : '$sqNum',
-                            style: TextStyle(color: isHere ? Colors.black : Colors.white70, fontSize: isHere ? 13 : 9, fontWeight: FontWeight.bold),
+                            isHere ? '🧑' : (hasLadder ? '📈' : (hasSnake ? '🐍' : '$sqNum')),
+                            style: TextStyle(color: isHere ? Colors.black : Colors.white70, fontSize: isHere ? 10 : 7, fontWeight: FontWeight.bold),
                           ),
                         ),
                       );
@@ -838,11 +796,11 @@ class _SnakesLaddersScreenState extends State<SnakesLaddersScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.all(12),
+                padding: const EdgeInsets.all(10),
                 child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green, minimumSize: const Size(200, 42)),
-                  onPressed: rolling ? null : rollTheDice,
-                  child: Text(rolling ? 'جاري الرمي...' : 'رمي النرد ($diceVal)', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  style: ElevatedButton.styleFrom(backgroundColor: Colors.green, minimumSize: const Size(160, 36)),
+                  onPressed: rolling ? null : rollDice,
+                  child: Text(rolling ? 'جاري رمي النرد...' : 'رمي النرد ($diceVal)', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
                 ),
               ),
             ],
@@ -853,27 +811,33 @@ class _SnakesLaddersScreenState extends State<SnakesLaddersScreen> {
   }
 }
 
-// 🎱 3. شاشة 8 Ball Pool متكاملة
-class PoolGameScreen extends StatefulWidget {
-  const PoolGameScreen({Key? key}) : super(key: key);
+// 3. 8 BALL POOL COMPLETE GAME SCREEN (Cue stick, Power and Holes)
+class PoolCompleteScreen extends StatefulWidget {
+  const PoolCompleteScreen({Key? key}) : super(key: key);
 
   @override
-  State<PoolGameScreen> createState() => _PoolGameScreenState();
+  State<PoolCompleteScreen> createState() => _PoolCompleteScreenState();
 }
 
-class _PoolGameScreenState extends State<PoolGameScreen> {
-  bool shotTaken = false;
-  double power = 50.0;
-  String message = 'وجّه العصا واضبط القوة لتسديد الكرة البيضاء!';
+class _PoolCompleteScreenState extends State<PoolCompleteScreen> {
+  bool shotInProgress = false;
+  double cuePower = 60.0;
+  String poolStatus = 'اضبط قوة العصا ووجه الكرة البيضاء لفتحة الطاولة!';
+  int pocketedGoals = 0;
 
-  void shootCue() {
+  void shootCueBall() {
     setState(() {
-      shotTaken = true;
-      message = 'تمت التسديدة بقوة ${power.toInt()}% بنجاح!';
+      shotInProgress = true;
+      if (cuePower > 70) {
+        pocketedGoals++;
+        poolStatus = 'تسديدة قوية ومحترفة! دخلت الكرة في الفتحة الركنية بنجاح 🎯';
+      } else if (cuePower > 40) {
+        poolStatus = 'تسديدة متوسطة اصطدمت بالحافة ولم تنزل!';
+      } else {
+        poolStatus = 'القوة ضعيفة للغاية ولم تتحرك الكرة بالشكل المطلوب!';
+      }
     });
-    Future.delayed(const Duration(seconds: 2), () {
-      setState(() => shotTaken = false);
-    });
+    Future.delayed(const Duration(seconds: 1), () => setState(() => shotInProgress = false));
   }
 
   @override
@@ -886,37 +850,35 @@ class _PoolGameScreenState extends State<PoolGameScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              const SpectatorHeaderWidget(roomTitle: 'غرفة البلياردو الملكية'),
+              const RoomHeaderWidget(roomTitle: 'تحدي البلياردو والفتحات وقوة العصا'),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                padding: const EdgeInsets.all(8.0),
                 child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    GestureDetector(onTap: () => Navigator.pop(context), child: const Icon(Icons.arrow_back, color: Colors.white, size: 20)),
+                    GestureDetector(onTap: () => Navigator.pop(context), child: const Icon(Icons.arrow_back, color: Colors.white, size: 18)),
+                    Text('الأهداف الناجحة: $pocketedGoals', style: const TextStyle(color: Colors.amberAccent, fontSize: 11, fontWeight: FontWeight.bold)),
                   ],
                 ),
               ),
               Expanded(
                 child: Center(
                   child: Container(
-                    width: 320, height: 190,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF065F46),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.amber, width: 6),
-                    ),
+                    width: 300, height: 170,
+                    decoration: BoxDecoration(color: const Color(0xFF065F46), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.amber, width: 4)),
                     child: Stack(
                       children: [
-                        Positioned(top: 4, left: 4, child: _buildPocket()),
-                        Positioned(top: 4, right: 4, child: _buildPocket()),
-                        Positioned(bottom: 4, left: 4, child: _buildPocket()),
-                        Positioned(bottom: 4, right: 4, child: _buildPocket()),
+                        const Positioned(top: 4, left: 4, child: CircleAvatar(radius: 8, backgroundColor: Colors.black)),
+                        const Positioned(top: 4, right: 4, child: CircleAvatar(radius: 8, backgroundColor: Colors.black)),
+                        const Positioned(bottom: 4, left: 4, child: CircleAvatar(radius: 8, backgroundColor: Colors.black)),
+                        const Positioned(bottom: 4, right: 4, child: CircleAvatar(radius: 8, backgroundColor: Colors.black)),
                         Center(
                           child: Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Container(width: 16, height: 16, decoration: const BoxDecoration(color: Colors.white, shape: BoxShape.circle)),
                               const SizedBox(height: 8),
-                              Text(message, style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
+                              Text(poolStatus, style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
                             ],
                           ),
                         ),
@@ -926,16 +888,15 @@ class _PoolGameScreenState extends State<PoolGameScreen> {
                 ),
               ),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   children: [
-                    Text('قوة التسديد: ${power.toInt()}%', style: const TextStyle(color: Colors.orangeAccent, fontSize: 12)),
-                    Slider(value: power, min: 10, max: 100, activeColor: Colors.orangeAccent, onChanged: (val) => setState(() => power = val)),
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.orange),
-                      icon: const Icon(Icons.sports_bar, color: Colors.white, size: 18),
-                      label: const Text('تسديد الكرة الآن', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-                      onPressed: shotTaken ? null : shootCue,
+                    Text('مقياس قوة التسديد: ${cuePower.toInt()}%', style: const TextStyle(color: Colors.orangeAccent, fontSize: 11)),
+                    Slider(value: cuePower, min: 10, max: 100, activeColor: Colors.orangeAccent, onChanged: (v) => setState(() => cuePower = v)),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8)),
+                      onPressed: shotInProgress ? null : shootCueBall,
+                      child: const Text('تسديد العصا الآن', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12)),
                     ),
                   ],
                 ),
@@ -946,28 +907,24 @@ class _PoolGameScreenState extends State<PoolGameScreen> {
       ),
     );
   }
-
-  Widget _buildPocket() {
-    return Container(width: 14, height: 14, decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle));
-  }
 }
 
-// 🀄 4. شاشة Dominoes متكاملة
-class DominoesGameScreen extends StatefulWidget {
-  const DominoesGameScreen({Key? key}) : super(key: key);
+// 4. DOMINOES COMPLETE GAME SCREEN (Real Domino pieces & numbers)
+class DominoesCompleteScreen extends StatefulWidget {
+  const DominoesCompleteScreen({Key? key}) : super(key: key);
 
   @override
-  State<DominoesGameScreen> createState() => _DominoesGameScreenState();
+  State<DominoesCompleteScreen> createState() => _DominoesCompleteScreenState();
 }
 
-class _DominoesGameScreenState extends State<DominoesGameScreen> {
-  String status = 'دورك للعب قطعة الدومينو المناسبة';
-  final List<String> tablePieces = ['[ 6 | 6 ]', '[ 6 | 3 ]'];
+class _DominoesCompleteScreenState extends State<DominoesCompleteScreen> {
+  String dominoStatus = 'اختر قطعة دومينو متطابقة للوضع على الطاولة';
+  final List<String> tablePiecesList = ['[ 6 | 6 ]', '[ 6 | 3 ]', '[ 3 | 4 ]'];
 
-  void playPiece() {
+  void placeDominoPiece(String piece) {
     setState(() {
-      tablePieces.add('[ 3 | 1 ]');
-      status = 'تم وضع القطعة [ 3 | 1 ] على الطاولة!';
+      tablePiecesList.add(piece);
+      dominoStatus = 'تم وضع القطعة $piece على الطاولة بنجاح!';
     });
   }
 
@@ -981,46 +938,51 @@ class _DominoesGameScreenState extends State<DominoesGameScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              const SpectatorHeaderWidget(roomTitle: 'غرفة الدومينو الاستراتيجية'),
+              const RoomHeaderWidget(roomTitle: 'غرفة الدومينو بالأرقام ومكعبات الطاولة'),
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-                child: Row(
-                  children: [
-                    GestureDetector(onTap: () => Navigator.pop(context), child: const Icon(Icons.arrow_back, color: Colors.white, size: 20)),
-                  ],
-                ),
+                padding: const EdgeInsets.all(8.0),
+                child: Row(children: [GestureDetector(onTap: () => Navigator.pop(context), child: const Icon(Icons.arrow_back, color: Colors.white, size: 18))]),
               ),
               Expanded(
                 child: Center(
                   child: Container(
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF2E1065).withOpacity(0.6),
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: Colors.purpleAccent, width: 2),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: tablePieces.map((piece) => Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 16),
-                        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)),
-                        child: Text(piece, style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold)),
-                      )).toList(),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: const Color(0xFF2E1065).withOpacity(0.6), borderRadius: BorderRadius.circular(12), border: Border.all(color: Colors.purpleAccent, width: 1.5)),
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: tablePiecesList.map((p) => Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+                          decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(6)),
+                          child: Text(p, style: const TextStyle(color: Colors.black, fontSize: 14, fontWeight: FontWeight.bold)),
+                        )).toList(),
+                      ),
                     ),
                   ),
                 ),
               ),
               Container(
-                padding: const EdgeInsets.all(16),
+                padding: const EdgeInsets.all(12),
                 child: Column(
                   children: [
-                    Text(status, style: const TextStyle(color: Colors.white70, fontSize: 12)),
-                    const SizedBox(height: 12),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.purpleAccent),
-                      onPressed: playPiece,
-                      child: const Text('لعب قطعة جديدة على الطاولة', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    Text(dominoStatus, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                    const SizedBox(height: 8),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.purpleAccent),
+                          onPressed: () => placeDominoPiece('[ 4 | 2 ]'),
+                          child: const Text('[ 4 | 2 ]', style: TextStyle(color: Colors.white, fontSize: 12)),
+                        ),
+                        const SizedBox(width: 8),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: Colors.purpleAccent),
+                          onPressed: () => placeDominoPiece('[ 3 | 5 ]'),
+                          child: const Text('[ 3 | 5 ]', style: TextStyle(color: Colors.white, fontSize: 12)),
+                        ),
+                      ],
                     ),
                   ],
                 ),
