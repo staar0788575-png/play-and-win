@@ -27,11 +27,13 @@ jobs:
 
       - name: Clean and Recreate Modern Android Project
         run: |
-          # حذف مجلدات الأندرويد القديمة المعطوبة بالكامل
+          # حذف معدات الأندرويد القديمة المطلوبة بالكامل #
           rm -rf android ios
-          # إنشاء هيكل أندرويد حديث v2 من الصفر
-          flutter create . --org com.staaR.playandwin --project-name play_and_win --platforms=android
+          # من إصدار V2 إنشاء هيكل أندرويد حديث #
+          flutter create --org com.staar.playandwin --project-name play_and_win --platforms=android
           flutter pub get
+          # تشغيل أداة توليد الأيقونات الجديدة #
+          flutter pub run flutter_launcher_icons:main
           flutter build apk --release
 
       - name: Upload APK
