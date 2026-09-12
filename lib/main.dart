@@ -22,12 +22,37 @@ class MyApp extends StatelessWidget {
   }
 }
 
-// 🌐 الإعدادات العامة للصوت والمحفظة
+// 🌐 الإعدادات العامة ونظام المستخدم (VIP، الشحن، الورد اليومي، الحظر، والأصدقاء)
 class AppSettings {
   static bool soundEnabled = true;
+  static int userCoins = 12500;
+  static int totalRecharged = 0; // إجمالي ما تم شحنه لتحديد الـ VIP واللوجو
+  static int freeRoses = 5; // 5 وردات مجانية يومياً
+
+  // نظام الـ VIP واللوجو بناءً على إجمالي الشحن
+  static String getVipTitle() {
+    if (totalRecharged >= 10000) return 'VIP 3 (ألماسي 💎)';
+    if (totalRecharged >= 5000) return 'VIP 2 (ذهبي 👑)';
+    if (totalRecharged >= 1000) return 'VIP 1 (فضي ⭐)';
+    return 'مستخدم عادي';
+  }
+
+  static Color getVipColor() {
+    if (totalRecharged >= 10000) return Colors.cyanAccent;
+    if (totalRecharged >= 5000) return Colors.amberAccent;
+    if (totalRecharged >= 1000) return Colors.purpleAccent;
+    return Colors.white70;
+  }
 }
 
-// 🏠 الشاشة الرئيسية (القائمة) مع المحفظة ونظام الشحن والشات العام وزر الترس
+// قائمة المستخدمين المحظورين والأصدقاء العامين
+class GlobalSocialData {
+  static List<String> blockedUsers = [];
+  static List<String> friendsList = ['أحمد إبراهيم', 'محمود'];
+  static List<String> friendRequests = ['سارة علي', 'خالد مصطفى'];
+}
+
+// 🏠 الشاشة الرئيسية (القائمة) مع المحفظة ونظام الشحن والـ VIP
 class MainMenuScreen extends StatefulWidget {
   const MainMenuScreen({Key? key}) : super(key: key);
 
@@ -36,9 +61,8 @@ class MainMenuScreen extends StatefulWidget {
 }
 
 class _MainMenuScreenState extends State<MainMenuScreen> {
-  int userCoins = 12500;
   int userLevel = 1;
-  int kickValue = 200; // قيمة الطرد تبدأ من 200
+  int kickValue = 200;
 
   void _openStore() {
     showModalBottomSheet(
@@ -54,23 +78,141 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Text(
-                'متجر شحن العملات (كروت الرصيد العادي)',
+                'متجر شحن العملات وترقية الـ VIP',
                 style: TextStyle(color: Colors.amberAccent, fontSize: 18, fontWeight: FontWeight.bold),
               ),
               const SizedBox(height: 10),
               const Text(
-                'اشحن رصيدك حسب بلدك (مثال: 500 عملة بـ 15 جنيه)',
+                'كلما شحنت أكثر زاد مستواك وحصلت على لوجو VIP مميز!',
                 style: TextStyle(color: Colors.white70, fontSize: 12),
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: 20),
-              _buildRechargeOption('باقة 500 عملة ذهبية', '15 جنيه / يعادلها محلياً', 500),
+              _buildRechargeOption('باقة 500 عملة', '15 جنيه', 500),
               const SizedBox(height: 10),
-              _buildRechargeOption('باقة 2000 عملة ذهبية', '50 جنيه / يعادلها محلياً', 2000),
+              _buildRechargeOption('باقة 2000 عملة (ترقية VIP 1)', '50 جنيه', 2000),
               const SizedBox(height: 10),
-              _buildRechargeOption('باقة 5000 عملة ذهبية', '100 جنيه / يعادلها محلياً', 5000),
+              _buildRechargeOption('باقة 5000 عملة (ترقية VIP 2)', '100 جنيه', 5000),
+              const SizedBox(height: 10),
+              _buildRechargeOption('باقة 10000 عملة (ترقية VIP 3 ألماسي)', '200 جنيه', 10000),
               const SizedBox(height: 20),
             ],
+          ),
+        );
+      },
+    );
+  }
+
+  void _openSocialHub() {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: const Color(0xFF0F172A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (context) {
+        return DefaultTabController(
+          length: 3,
+          child: Container(
+            height: 400,
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              children: [
+                const TabBar(
+                  labelColor: Colors.amberAccent,
+                  unselectedLabelColor: Colors.white60,
+                  indicatorColor: Colors.amberAccent,
+                  tabs: [
+                    Tab(text: 'الأصدقاء'),
+                    Tab(text: 'الطلبات'),
+                    Tab(text: 'المحظورون'),
+                  ],
+                ),
+                Expanded(
+                  child: TabBarView(
+                    children: [
+                      // قائمة الأصدقاء
+                      ListView.builder(
+                        itemCount: GlobalSocialData.friendsList.length,
+                        itemBuilder: (context, index) {
+                          final friend = GlobalSocialData.friendsList[index];
+                          return ListTile(
+                            title: Text(friend, style: const TextStyle(color: Colors.white)),
+                            trailing: IconButton(
+                              icon: const Icon(Icons.block, color: Colors.redAccent, size: 20),
+                              onPressed: () {
+                                setState(() {
+                                  GlobalSocialData.friendsList.remove(friend);
+                                  GlobalSocialData.blockedUsers.add(friend);
+                                });
+                                Navigator.pop(context);
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(content: Text('تم حظر المستخدم $friend بنجاح')),
+                                );
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                      // طلبات الصداقة
+                      ListView.builder(
+                        itemCount: GlobalSocialData.friendRequests.length,
+                        itemBuilder: (context, index) {
+                          final req = GlobalSocialData.friendRequests[index];
+                          return ListTile(
+                            title: Text(req, style: const TextStyle(color: Colors.white)),
+                            trailing: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: const Icon(Icons.check, color: Colors.greenAccent),
+                                  onPressed: () {
+                                    setState(() {
+                                      GlobalSocialData.friendRequests.remove(req);
+                                      GlobalSocialData.friendsList.add(req);
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                                IconButton(
+                                  icon: const Icon(Icons.close, color: Colors.redAccent),
+                                  onPressed: () {
+                                    setState(() {
+                                      GlobalSocialData.friendRequests.remove(req);
+                                    });
+                                    Navigator.pop(context);
+                                  },
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                      // قائمة المحظورين
+                      ListView.builder(
+                        itemCount: GlobalSocialData.blockedUsers.length,
+                        itemBuilder: (context, index) {
+                          final blocked = GlobalSocialData.blockedUsers[index];
+                          return ListTile(
+                            title: Text(blocked, style: const TextStyle(color: Colors.redAccent)),
+                            trailing: TextButton(
+                              child: const Text('إلغاء الحظر', style: TextStyle(color: Colors.cyanAccent)),
+                              onPressed: () {
+                                setState(() {
+                                  GlobalSocialData.blockedUsers.remove(blocked);
+                                  GlobalSocialData.friendsList.add(blocked);
+                                });
+                                Navigator.pop(context);
+                              },
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
         );
       },
@@ -86,21 +228,16 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             return AlertDialog(
               backgroundColor: const Color(0xFF0F172A),
               title: const Text('إعدادات اللعبة', style: TextStyle(color: Colors.amberAccent)),
-              content: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  SwitchListTile(
-                    title: const Text('تشغيل أصوات الألعاب والمؤثرات', style: TextStyle(color: Colors.white, fontSize: 14)),
-                    value: AppSettings.soundEnabled,
-                    activeColor: Colors.cyanAccent,
-                    onChanged: (val) {
-                      setDialogState(() {
-                        AppSettings.soundEnabled = val;
-                      });
-                      setState(() {});
-                    },
-                  ),
-                ],
+              content: SwitchListTile(
+                title: const Text('تشغيل أصوات الألعاب والمؤثرات', style: TextStyle(color: Colors.white, fontSize: 14)),
+                value: AppSettings.soundEnabled,
+                activeColor: Colors.cyanAccent,
+                onChanged: (val) {
+                  setDialogState(() {
+                    AppSettings.soundEnabled = val;
+                  });
+                  setState(() {});
+                },
               ),
               actions: [
                 TextButton(
@@ -129,7 +266,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+              Text(title, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
               const SizedBox(height: 4),
               Text(price, style: const TextStyle(color: Colors.greenAccent, fontSize: 12)),
             ],
@@ -138,11 +275,12 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
             style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
             onPressed: () {
               setState(() {
-                userCoins += coins;
+                AppSettings.userCoins += coins;
+                AppSettings.totalRecharged += coins;
               });
               Navigator.pop(context);
               ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(content: Text('تمت إضافة $coins عملة بنجاح!', textAlign: TextAlign.right)),
+                SnackBar(content: Text('تم الشحن بنجاح! رتبة الـ VIP الحالية: ${AppSettings.getVipTitle()}')),
               );
             },
             child: const Text('شحن', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
@@ -166,7 +304,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // 💰 شريط المحفظة والعملات والليفل وزر الإعدادات (الترس)
+              // شريط المحفظة والـ VIP واللوجو والأزرار
               Padding(
                 padding: const EdgeInsets.all(16.0),
                 child: Row(
@@ -185,38 +323,38 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             children: [
                               const Icon(Icons.monetization_on, color: Colors.amber, size: 16),
                               const SizedBox(width: 4),
-                              Text('$userCoins', style: const TextStyle(color: Colors.amberAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                              Text('${AppSettings.userCoins}', style: const TextStyle(color: Colors.amberAccent, fontSize: 12, fontWeight: FontWeight.bold)),
                             ],
                           ),
                         ),
                         const SizedBox(width: 6),
                         Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
                           decoration: BoxDecoration(
                             color: Colors.black.withOpacity(0.4),
                             borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: Colors.purpleAccent, width: 1.5),
+                            border: Border.all(color: AppSettings.getVipColor(), width: 1.5),
                           ),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.star, color: Colors.purpleAccent, size: 16),
-                              const SizedBox(width: 4),
-                              Text('Lvl $userLevel (طرد: $kickValue)', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
-                            ],
+                          child: Text(
+                            AppSettings.getVipTitle(),
+                            style: TextStyle(color: AppSettings.getVipColor(), fontSize: 10, fontWeight: FontWeight.bold),
                           ),
                         ),
                       ],
                     ),
                     Row(
                       children: [
-                        // زر الترس (⚙️) للإعدادات
                         IconButton(
-                          icon: const Icon(Icons.settings, color: Colors.white70, size: 24),
+                          icon: const Icon(Icons.people, color: Colors.greenAccent, size: 24),
+                          onPressed: _openSocialHub,
+                          tooltip: 'الأصدقاء والحظر',
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.settings, color: Colors.white70, size: 22),
                           onPressed: _openSettingsDialog,
                         ),
-                        // زر الشات العام
                         IconButton(
-                          icon: const Icon(Icons.chat, color: Colors.cyanAccent, size: 24),
+                          icon: const Icon(Icons.chat, color: Colors.cyanAccent, size: 22),
                           onPressed: () {
                             Navigator.push(
                               context,
@@ -224,9 +362,8 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                             );
                           },
                         ),
-                        // زر المتجر
                         IconButton(
-                          icon: const Icon(Icons.store, color: Colors.amberAccent, size: 26),
+                          icon: const Icon(Icons.store, color: Colors.amberAccent, size: 24),
                           onPressed: _openStore,
                         ),
                       ],
@@ -235,7 +372,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                 ),
               ),
 
-              // قائمة الألعاب الأربع المهيكلة بالكامل
+              // الألعاب الأربع
               Expanded(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16.0),
@@ -247,12 +384,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                         textAlign: TextAlign.right,
                       ),
                       const SizedBox(height: 15),
-                      
-                      // 1. Ludo Royal
                       _buildGameCard(
                         context,
                         titleEn: 'Ludo Royal',
-                        subtitleAr: 'غرفة ملكية فاخرة + طائرات + مايك + شات',
+                        subtitleAr: 'غرفة ملكية فاخرة + طائرات + مايك + شات + ورد وهدايا',
                         icon: Icons.casino,
                         color: Colors.blueAccent,
                         onTap: () {
@@ -262,12 +397,10 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                           );
                         },
                       ),
-                      
-                      // 2. Snakes & Ladders
                       _buildGameCard(
                         context,
                         titleEn: 'Snakes & Ladders',
-                        subtitleAr: 'لعبة السلم والثعبان التنافسية الهادئة',
+                        subtitleAr: 'لعبة السلم والثعبان التنافسية',
                         icon: Icons.leaderboard,
                         color: Colors.green,
                         onTap: () {
@@ -277,8 +410,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                           );
                         },
                       ),
-
-                      // 3. 8 Ball Pool
                       _buildGameCard(
                         context,
                         titleEn: '8 Ball Pool',
@@ -292,8 +423,6 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
                           );
                         },
                       ),
-
-                      // 4. Dominoes
                       _buildGameCard(
                         context,
                         titleEn: 'Dominoes',
@@ -342,7 +471,7 @@ class _MainMenuScreenState extends State<MainMenuScreen> {
   }
 }
 
-// 💬 شاشة الشات العام
+// 💬 شاشة الشات العام مع حظر المستخدمين
 class GlobalChatScreen extends StatefulWidget {
   const GlobalChatScreen({Key? key}) : super(key: key);
 
@@ -360,7 +489,7 @@ class _GlobalChatScreenState extends State<GlobalChatScreen> {
   void _sendGlobalMessage() {
     if (_controller.text.trim().isNotEmpty) {
       setState(() {
-        _globalMessages.add({'name': 'أنت', 'text': _controller.text.trim()});
+        _globalMessages.add({'name': 'أنت (${AppSettings.getVipTitle()})', 'text': _controller.text.trim()});
         _controller.clear();
       });
     }
@@ -390,6 +519,9 @@ class _GlobalChatScreenState extends State<GlobalChatScreen> {
                 itemCount: _globalMessages.length,
                 itemBuilder: (context, index) {
                   final msg = _globalMessages[index];
+                  if (GlobalSocialData.blockedUsers.contains(msg['name'])) {
+                    return const SizedBox.shrink(); // إخفاء رسائل المحظورين
+                  }
                   return Container(
                     margin: const EdgeInsets.symmetric(vertical: 4),
                     padding: const EdgeInsets.all(10),
@@ -398,12 +530,30 @@ class _GlobalChatScreenState extends State<GlobalChatScreen> {
                       borderRadius: BorderRadius.circular(12),
                       border: Border.all(color: Colors.cyanAccent.withOpacity(0.3)),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(msg['name']!, style: const TextStyle(color: Colors.cyanAccent, fontSize: 12, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 4),
-                        Text(msg['text']!, style: const TextStyle(color: Colors.white, fontSize: 14)),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(msg['name']!, style: const TextStyle(color: Colors.cyanAccent, fontSize: 12, fontWeight: FontWeight.bold)),
+                              const SizedBox(height: 4),
+                              Text(msg['text']!, style: const TextStyle(color: Colors.white, fontSize: 14)),
+                            ],
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.block, color: Colors.white38, size: 16),
+                          onPressed: () {
+                            setState(() {
+                              GlobalSocialData.blockedUsers.add(msg['name']!);
+                            });
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('تم حظر المستخدم وإخفاء رسائله')),
+                            );
+                          },
+                        ),
                       ],
                     ),
                   );
@@ -440,7 +590,7 @@ class _GlobalChatScreenState extends State<GlobalChatScreen> {
   }
 }
 
-// 🎲 1. شاشة لعبة Ludo Royal الفاخرة الكاملة
+// 🎲 1. شاشة Ludo Royal مع نظام الورد المجاني والهدايا المتدرجة (10 إلى 5000 عملة)
 class LudoExactScreen extends StatefulWidget {
   const LudoExactScreen({Key? key}) : super(key: key);
 
@@ -456,7 +606,7 @@ class _LudoExactScreenState extends State<LudoExactScreen> {
   
   final TextEditingController _chatController = TextEditingController();
   final List<Map<String, String>> _roomGroupMessages = [
-    {'name': 'ابن الاكابر', 'text': 'مرحباً بالجميع في غرفة اللودو الملكية!'},
+    {'name': 'ابن الاكابر (VIP 2)', 'text': 'مرحباً بالجميع في غرفة اللودو الملكية!'},
   ];
   final List<Map<String, String>> _roomPrivateMessages = [
     {'name': 'صديقي (خاص)', 'text': 'هل نلعب كفريق؟'},
@@ -478,43 +628,99 @@ class _LudoExactScreenState extends State<LudoExactScreen> {
         if (_isPrivateChat) {
           _roomPrivateMessages.add({'name': 'أنت (خاص)', 'text': _chatController.text.trim()});
         } else {
-          _roomGroupMessages.add({'name': 'أنت', 'text': _chatController.text.trim()});
+          _roomGroupMessages.add({'name': 'أنت (${AppSettings.getVipTitle()})', 'text': _chatController.text.trim()});
         }
         _chatController.clear();
       });
     }
   }
 
-  void _openSettingsDialog() {
-    showDialog(
+  // 🌹 ميزة الورد المجاني (5 وردات تتجدد يومياً)
+  void _sendFreeRose() {
+    if (AppSettings.freeRoses > 0) {
+      setState(() {
+        AppSettings.freeRoses--;
+      });
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('تم إرسال وردة مجانية بنجاح! المتبقي اليوم: ${AppSettings.freeRoses} وردات')),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('لقد استنفذت الوردات المجانية الـ 5 اليومية! تتجدد غداً')),
+      );
+    }
+  }
+
+  // 🎁 متجر الهدايا القيمة (من 10 عملات إلى 5000 عملة)
+  void _openGiftsModal() {
+    showModalBottomSheet(
       context: context,
+      backgroundColor: const Color(0xFF0F172A),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
       builder: (context) {
-        return StatefulBuilder(
-          builder: (context, setDialogState) {
-            return AlertDialog(
-              backgroundColor: const Color(0xFF0F172A),
-              title: const Text('إعدادات اللعبة', style: TextStyle(color: Colors.amberAccent)),
-              content: SwitchListTile(
-                title: const Text('تشغيل أصوات النرد والألعاب', style: TextStyle(color: Colors.white, fontSize: 14)),
-                value: AppSettings.soundEnabled,
-                activeColor: Colors.cyanAccent,
-                onChanged: (val) {
-                  setDialogState(() {
-                    AppSettings.soundEnabled = val;
-                  });
-                  setState(() {});
-                },
+        return Container(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text(
+                'متجر الهدايا القيمة',
+                style: TextStyle(color: Colors.amberAccent, fontSize: 18, fontWeight: FontWeight.bold),
               ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.pop(context),
-                  child: const Text('إغلاق', style: TextStyle(color: Colors.cyanAccent)),
-                ),
-              ],
-            );
-          },
+              const SizedBox(height: 10),
+              const Text(
+                'أرسل هدايا مذهلة للاعبين داخل الغرفة',
+                style: TextStyle(color: Colors.white70, fontSize: 12),
+              ),
+              const SizedBox(height: 20),
+              _buildGiftItem('☕ فنجان قهوة أنيق', 10),
+              const SizedBox(height: 8),
+              _buildGiftItem('🚗 سيارة رياضية', 500),
+              const SizedBox(height: 8),
+              _buildGiftItem('🏰 قصر ملكي فاخر', 5000),
+            ],
+          ),
         );
       },
+    );
+  }
+
+  Widget _buildGiftItem(String name, int cost) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: Colors.purpleAccent.withOpacity(0.5)),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(name, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 14)),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.purpleAccent),
+            onPressed: () {
+              if (AppSettings.userCoins >= cost) {
+                setState(() {
+                  AppSettings.userCoins -= cost;
+                });
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(content: Text('تم إرسال هدية ($name) بتكلفة $cost عملة بنجاح!')),
+                );
+              } else {
+                Navigator.pop(context);
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(content: Text('رصيدك من العملات لا يكفي لشراء هذه الهدية!')),
+                );
+              }
+            },
+            child: Text('إرسال ($cost عملة)', style: const TextStyle(color: Colors.white, fontSize: 11, fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
     );
   }
 
@@ -534,7 +740,7 @@ class _LudoExactScreenState extends State<LudoExactScreen> {
         child: SafeArea(
           child: Column(
             children: [
-              // 🎛️ الشريط العلوي مع زر الترس
+              // الشريط العلوي مع إرسال الورد والهدايا
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
                 child: Row(
@@ -547,42 +753,25 @@ class _LudoExactScreenState extends State<LudoExactScreen> {
                           child: const Icon(Icons.arrow_back, color: Colors.white, size: 22),
                         ),
                         const SizedBox(width: 12),
-                        IconButton(
-                          icon: const Icon(Icons.settings, color: Colors.white70, size: 20),
-                          onPressed: _openSettingsDialog,
-                        ),
+                        Text(AppSettings.getVipTitle(), style: TextStyle(color: AppSettings.getVipColor(), fontSize: 11, fontWeight: FontWeight.bold)),
                       ],
                     ),
                     Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withOpacity(0.4),
-                            borderRadius: BorderRadius.circular(14),
-                          ),
-                          child: Row(
-                            children: const [
-                              Icon(Icons.wifi, color: Colors.greenAccent, size: 12),
-                              SizedBox(width: 4),
-                              Text('20ms', style: TextStyle(color: Colors.greenAccent, fontSize: 10, fontWeight: FontWeight.bold)),
-                            ],
-                          ),
+                        // زر الورد المجاني
+                        IconButton(
+                          icon: const Icon(Icons.local_florist, color: Colors.pinkAccent, size: 22),
+                          onPressed: _sendFreeRose,
+                          tooltip: 'إرسال وردة مجانية (${AppSettings.freeRoses} متبقية)',
+                        ),
+                        // زر متجر الهدايا
+                        IconButton(
+                          icon: const Icon(Icons.card_giftcard, color: Colors.amberAccent, size: 22),
+                          onPressed: _openGiftsModal,
+                          tooltip: 'هدايا قيمة',
                         ),
                       ],
                     ),
-                  ],
-                ),
-              ),
-
-              // 💰 معلومات المحفظة
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-                child: Row(
-                  children: [
-                    const Text('المحفظة: \$1,250.00', style: TextStyle(color: Colors.amberAccent, fontSize: 13, fontWeight: FontWeight.bold)),
-                    const Spacer(),
-                    Text(AppSettings.soundEnabled ? '🔊 الصوت مفعل' : '🔇 الصوت صامت', style: const TextStyle(color: Colors.white54, fontSize: 11)),
                   ],
                 ),
               ),
@@ -676,6 +865,9 @@ class _LudoExactScreenState extends State<LudoExactScreen> {
                           itemCount: currentMessages.length,
                           itemBuilder: (context, index) {
                             final msg = currentMessages[index];
+                            if (GlobalSocialData.blockedUsers.contains(msg['name'])) {
+                              return const SizedBox.shrink();
+                            }
                             return Container(
                               margin: const EdgeInsets.symmetric(vertical: 2),
                               child: Row(
@@ -749,7 +941,7 @@ class _LudoExactScreenState extends State<LudoExactScreen> {
   }
 }
 
-// 🐍 2. شاشة لعبة Snakes & Ladders (السلم والثعبان) المهيكلة بالكامل
+// 🐍 2. شاشة Snakes & Ladders
 class SnakesLaddersScreen extends StatefulWidget {
   const SnakesLaddersScreen({Key? key}) : super(key: key);
 
@@ -823,7 +1015,7 @@ class _SnakesLaddersScreenState extends State<SnakesLaddersScreen> {
   }
 }
 
-// 🎱 3. شاشة لعبة 8 Ball Pool (البلياردو) المهيكلة بالكامل
+// 🎱 3. شاشة 8 Ball Pool
 class PoolGameScreen extends StatefulWidget {
   const PoolGameScreen({Key? key}) : super(key: key);
 
@@ -892,7 +1084,7 @@ class _PoolGameScreenState extends State<PoolGameScreen> {
   }
 }
 
-// 🀄 4. شاشة لعبة Dominoes (الدومينو) المهيكلة بالكامل
+// 🀄 4. شاشة Dominoes
 class DominoesGameScreen extends StatefulWidget {
   const DominoesGameScreen({Key? key}) : super(key: key);
 
