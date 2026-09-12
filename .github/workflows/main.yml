@@ -25,8 +25,11 @@ jobs:
           flutter-version: '3.19.0'
           cache: true
 
-      - name: Build App with Icon
+      - name: Fix Android and Build App
         run: |
+          # حذف مجلد الأندرويد القديم بالكامل وإعادة إنشائه بالهيكل الحديث V2
+          rm -rf android
+          flutter create . --platforms=android --org com.staar --project-name play_and_win
           flutter pub get
           flutter pub run flutter_launcher_icons:main
           flutter build apk --release
