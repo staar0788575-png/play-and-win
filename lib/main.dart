@@ -42,7 +42,7 @@ class HomeScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            // زر لعبة لودو
+            // زر لعبة لودو التفاعلية
             _buildGameButton(
               context,
               'لعبة لودو الملكية',
@@ -110,7 +110,7 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// 1. شاشة لعبة لودو
+// 1. شاشة لعبة لودو التفاعلية (مع تحريك القطع)
 class LudoGameScreen extends StatefulWidget {
   const LudoGameScreen({Key? key}) : super(key: key);
 
@@ -119,15 +119,34 @@ class LudoGameScreen extends StatefulWidget {
 }
 
 class _LudoGameScreenState extends State<LudoGameScreen> {
-  int _diceValue = 1;
+  int _diceValue = 6;
+  int _tokenPosition = 0; // موقع القطعة على المسار (من 0 إلى 57)
   bool _isRolling = false;
+  String _gameMessage = 'اضغط لرمي النرد وتحريك قطعتك نحو الفوز!';
 
-  void _rollDice() {
+  void _rollAndMoveToken() {
     setState(() => _isRolling = true);
-    Future.delayed(const Duration(milliseconds: 400), () {
+    Future.delayed(const Duration(milliseconds: 500), () {
       setState(() {
         _diceValue = Random().nextInt(6) + 1;
-        WalletData.addEarnings(_diceValue * 5.0);
+        
+        if (_tokenPosition == 0 && _diceValue == 6) {
+          _tokenPosition = 1;
+          _gameMessage = 'رائع! خرجت القطعة من البيت بنجاح!';
+          WalletData.addEarnings(10.00);
+        } else if (_tokenPosition > 0) {
+          _tokenPosition += _diceValue;
+          if (_tokenPosition >= 57) {
+            _tokenPosition = 57;
+            _gameMessage = 'تهانينا! وصلت القطعة لخط النهاية وربحت \$50!';
+            WalletData.addEarnings(50.00);
+          } else {
+            _gameMessage = 'تحركت القطعة متقدمة بـ $_diceValue خطوات!';
+            WalletData.addEarnings(_diceValue * 2.0);
+          }
+        } else {
+          _gameMessage = 'تحتاج إلى ظهور رقم 6 لإخراج القطعة من البيت!';
+        }
         _isRolling = false;
       });
     });
@@ -136,24 +155,56 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('لعبة لودو', style: TextStyle(color: Colors.white)), backgroundColor: const Color(0xFF1E293B), iconTheme: const IconThemeData(color: Colors.white)),
+      appBar: AppBar(title: const Text('لعبة لودو الملكية', style: TextStyle(color: Colors.white)), backgroundColor: const Color(0xFF1E293B), iconTheme: const IconThemeData(color: Colors.white)),
       body: Padding(
         padding: const EdgeInsets.all(20.0),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Text('رصيد المحفظة: \$${WalletData.balance.toStringAsFixed(2)}', style: const TextStyle(color: Colors.amber, fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
+            // لوحة مبسطة ومحاكاة لمسار اللعبة والقطع
             Container(
-              width: 120, height: 120,
-              decoration: BoxDecoration(color: Colors.orange.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.orange, width: 2)),
-              child: Center(child: Text(_isRolling ? '...' : '$_diceValue', style: const TextStyle(color: Colors.orange, fontSize: 50, fontWeight: FontWeight.bold))),
+              height: 180,
+              decoration: BoxDecoration(color: const Color(0xFF334155), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.orange, width: 2)),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('موضع قطعتك على مسار اللودو', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  const SizedBox(height: 10),
+                  Text('الخانة: $_tokenPosition / 57', style: const TextStyle(color: Colors.orangeAccent, fontSize: 28, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 10),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(6, (index) {
+                      bool isActive = _tokenPosition > (index * 10);
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 4),
+                        width: 25, height: 25,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isActive ? Colors.orange : Colors.white24,
+                        ),
+                        child: Center(child: Text('${index + 1}', style: const TextStyle(color: Colors.white, fontSize: 10))),
+                      );
+                    }),
+                  )
+                ],
+              ),
             ),
-            const SizedBox(height: 40),
+            const SizedBox(height: 20),
+            Container(
+              width: 90, height: 90,
+              decoration: BoxDecoration(color: Colors.orange.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.orange, width: 2)),
+              child: Center(child: Text(_isRolling ? '...' : '$_diceValue', style: const TextStyle(color: Colors.orange, fontSize: 40, fontWeight: FontWeight.bold))),
+            ),
+            const SizedBox(height: 15),
+            Text(_gameMessage, style: const TextStyle(color: Colors.white, fontSize: 15), textAlign: TextAlign.center),
+            const SizedBox(height: 25),
             ElevatedButton(
               style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              onPressed: _isRolling ? null : _rollDice,
-              child: Text(_isRolling ? 'جاري رمي النرد...' : 'ارمِ النرد واربح', style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+              onPressed: _isRolling ? null : _rollAndMoveToken,
+              child: Text(_isRolling ? 'جاري اللعب...' : 'ارمِ النرد وحرك القطعة', style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
             ),
           ],
         ),
@@ -174,7 +225,7 @@ class _SnakesGameScreenState extends State<SnakesGameScreen> {
   int _position = 1;
   int _diceValue = 1;
   bool _isRolling = false;
-  String _message = 'اصعد السلالم واربح أرباحاً فورية!';
+  String _message = 'اصعد السلالم وتجنب الثعابين للوصول للنهاية!';
 
   void _rollAndMove() {
     setState(() => _isRolling = true);
@@ -183,12 +234,12 @@ class _SnakesGameScreenState extends State<SnakesGameScreen> {
         _diceValue = Random().nextInt(6) + 1;
         _position += _diceValue;
         if (_position >= 30) {
-          _message = 'تهانينا! وصلت للنهاية وربحت \$10 إضافية!';
-          WalletData.addEarnings(10.00);
+          _message = 'تهانينا! وصلت للنهاية وربحت \$20 إضافية!';
+          WalletData.addEarnings(20.00);
           _position = 30;
         } else {
           _message = 'تقدمت للخانة رقم: $_position';
-          WalletData.addEarnings(2.00);
+          WalletData.addEarnings(3.00);
         }
         _isRolling = false;
       });
@@ -246,8 +297,8 @@ class _BilliardsGameScreenState extends State<BilliardsGameScreen> {
         bool success = Random().nextBool();
         if (success) {
           _ballsPocketed += 1;
-          _status = 'رائعة! دخلت الكرة وأُضيفت \$3 للمحفظة.';
-          WalletData.addEarnings(3.00);
+          _status = 'رائعة! دخلت الكرة وأُضيفت \$5 للمحفظة.';
+          WalletData.addEarnings(5.00);
         } else {
           _status = 'خارج الجيب! حاول التركيز في التصويب القادم.';
         }
@@ -306,7 +357,7 @@ class _DominoGameScreenState extends State<DominoGameScreen> {
       setState(() {
         int earned = (Random().nextInt(5) + 1) * 5;
         _dominoScore += earned;
-        WalletData.addEarnings(earned * 0.2);
+        WalletData.addEarnings(earned * 0.5);
         _dominoStatus = 'تمت المطابقة بنجاح! تم ربح أرباح للمحفظة.';
         _isPlaying = false;
       });
