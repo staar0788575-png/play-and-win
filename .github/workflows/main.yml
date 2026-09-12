@@ -25,14 +25,9 @@ jobs:
           flutter-version: '3.19.0'
           cache: true
 
-      - name: Clean and Recreate Modern Android Project
+      - name: Build App with Icon
         run: |
-          # حذف معدات الأندرويد القديمة المطلوبة بالكامل #
-          rm -rf android ios
-          # من إصدار V2 إنشاء هيكل أندرويد حديث #
-          flutter create --org com.staar.playandwin --project-name play_and_win --platforms=android
           flutter pub get
-          # تشغيل أداة توليد الأيقونات الجديدة #
           flutter pub run flutter_launcher_icons:main
           flutter build apk --release
 
