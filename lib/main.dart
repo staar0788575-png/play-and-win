@@ -35,47 +35,44 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('العب واربح', style: TextStyle(color: Colors.white)),
+        title: const Text('العب واربح - المرحلة الأولى', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF1E293B),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            // زر لعبة لودو التفاعلية
+            // المرحلة الحالية: لعبة لودو الحقيقية
             _buildGameButton(
               context,
-              'لعبة لودو الملكية',
+              'لعبة لودو الملكية الحقيقية (المرحلة 1)',
               Icons.casino,
               Colors.orange,
-              const LudoGameScreen(),
+              const LudoRealGameScreen(),
             ),
             const SizedBox(height: 12),
-            // زر لعبة السلم والثعبان
             _buildGameButton(
               context,
-              'لعبة السلم والثعبان',
+              'لعبة السلم والثعبان (قريباً في المرحلة 2)',
               Icons.straighten,
-              Colors.green,
-              const SnakesGameScreen(),
+              Colors.grey,
+              const PlaceholderScreen(title: 'السلم والثعبان - قريباً'),
             ),
             const SizedBox(height: 12),
-            // زر لعبة البلياردو
             _buildGameButton(
               context,
-              'لعبة البلياردو الاحترافية',
+              'لعبة البلياردو الاحترافية (قريباً في المرحلة 3)',
               Icons.sports_bar,
-              Colors.blueAccent,
-              const BilliardsGameScreen(),
+              Colors.grey,
+              const PlaceholderScreen(title: 'البلياردو - قريباً'),
             ),
             const SizedBox(height: 12),
-            // زر لعبة الدومينو
             _buildGameButton(
               context,
-              'لعبة الدومينو الذكية',
+              'لعبة الدومينو الذكية (قريباً في المرحلة 4)',
               Icons.dashboard,
-              Colors.purple,
-              const DominoGameScreen(),
+              Colors.grey,
+              const PlaceholderScreen(title: 'الدومينو - قريباً'),
             ),
           ],
         ),
@@ -99,9 +96,11 @@ class HomeScreen extends StatelessWidget {
           children: [
             Icon(icon, color: color, size: 35),
             const SizedBox(width: 16),
-            Text(
-              title,
-              style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+            Expanded(
+              child: Text(
+                title,
+                style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+              ),
             ),
           ],
         ),
@@ -110,21 +109,41 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// 1. شاشة لعبة لودو التفاعلية (مع تحريك القطع)
-class LudoGameScreen extends StatefulWidget {
-  const LudoGameScreen({Key? key}) : super(key: key);
+// شاشة مؤقتة للألعاب القادمة
+class PlaceholderScreen extends StatelessWidget {
+  final String title;
+  const PlaceholderScreen({Key? key, required this.title}) : super(key: key);
 
   @override
-  State<LudoGameScreen> createState() => _LudoGameScreenState();
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text(title, style: const TextStyle(color: Colors.white)), backgroundColor: const Color(0xFF1E293B), iconTheme: const IconThemeData(color: Colors.white)),
+      body: Center(
+        child: Text(
+          'هذه اللعبة قيد التجهيز للمرحلة القادمة!',
+          style: const TextStyle(color: Colors.amber, fontSize: 18, fontWeight: FontWeight.bold),
+          textAlign: TextAlign.center,
+        ),
+      ),
+    );
+  }
 }
 
-class _LudoGameScreenState extends State<LudoGameScreen> {
-  int _diceValue = 6;
-  int _tokenPosition = 0; // موقع القطعة على المسار (من 0 إلى 57)
-  bool _isRolling = false;
-  String _gameMessage = 'اضغط لرمي النرد وتحريك قطعتك نحو الفوز!';
+// 🎲 المرحلة الأولى: شاشة لعبة لودو الحقيقية واللوحة المرئية
+class LudoRealGameScreen extends StatefulWidget {
+  const LudoRealGameScreen({Key? key}) : super(key: key);
 
-  void _rollAndMoveToken() {
+  @override
+  State<LudoRealGameScreen> createState() => _LudoRealGameScreenState();
+}
+
+class _LudoRealGameScreenState extends State<LudoRealGameScreen> {
+  int _diceValue = 6;
+  int _tokenPosition = 0; // من 0 إلى 20 كمحاكاة لمسار اللوحة المرئي
+  bool _isRolling = false;
+  String _message = 'اضغط لرمي النرد وحرك قطعة اللودو على اللوحة!';
+
+  void _rollDiceAndMove() {
     setState(() => _isRolling = true);
     Future.delayed(const Duration(milliseconds: 500), () {
       setState(() {
@@ -132,20 +151,20 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
         
         if (_tokenPosition == 0 && _diceValue == 6) {
           _tokenPosition = 1;
-          _gameMessage = 'رائع! خرجت القطعة من البيت بنجاح!';
-          WalletData.addEarnings(10.00);
+          _message = 'ممتاز! خرجت القطعة من البيت إلى اللوحة.';
+          WalletData.addEarnings(15.00);
         } else if (_tokenPosition > 0) {
           _tokenPosition += _diceValue;
-          if (_tokenPosition >= 57) {
-            _tokenPosition = 57;
-            _gameMessage = 'تهانينا! وصلت القطعة لخط النهاية وربحت \$50!';
-            WalletData.addEarnings(50.00);
+          if (_tokenPosition >= 20) {
+            _tokenPosition = 20;
+            _message = 'تهانينا! وصلت القطعة لخط النهاية وربحت \$100!';
+            WalletData.addEarnings(100.00);
           } else {
-            _gameMessage = 'تحركت القطعة متقدمة بـ $_diceValue خطوات!';
-            WalletData.addEarnings(_diceValue * 2.0);
+            _message = 'تقدمت القطعة على اللوحة بمقدار $_diceValue خطوات.';
+            WalletData.addEarnings(_diceValue * 3.0);
           }
         } else {
-          _gameMessage = 'تحتاج إلى ظهور رقم 6 لإخراج القطعة من البيت!';
+          _message = 'تحتاج إلى ظهور رقم 6 لإخراج القطعة من البيت!';
         }
         _isRolling = false;
       });
@@ -154,243 +173,4 @@ class _LudoGameScreenState extends State<LudoGameScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('لعبة لودو الملكية', style: TextStyle(color: Colors.white)), backgroundColor: const Color(0xFF1E293B), iconTheme: const IconThemeData(color: Colors.white)),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('رصيد المحفظة: \$${WalletData.balance.toStringAsFixed(2)}', style: const TextStyle(color: Colors.amber, fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
-            // لوحة مبسطة ومحاكاة لمسار اللعبة والقطع
-            Container(
-              height: 180,
-              decoration: BoxDecoration(color: const Color(0xFF334155), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.orange, width: 2)),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Text('موضع قطعتك على مسار اللودو', style: TextStyle(color: Colors.white70, fontSize: 14)),
-                  const SizedBox(height: 10),
-                  Text('الخانة: $_tokenPosition / 57', style: const TextStyle(color: Colors.orangeAccent, fontSize: 28, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 10),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(6, (index) {
-                      bool isActive = _tokenPosition > (index * 10);
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 4),
-                        width: 25, height: 25,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isActive ? Colors.orange : Colors.white24,
-                        ),
-                        child: Center(child: Text('${index + 1}', style: const TextStyle(color: Colors.white, fontSize: 10))),
-                      );
-                    }),
-                  )
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-            Container(
-              width: 90, height: 90,
-              decoration: BoxDecoration(color: Colors.orange.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.orange, width: 2)),
-              child: Center(child: Text(_isRolling ? '...' : '$_diceValue', style: const TextStyle(color: Colors.orange, fontSize: 40, fontWeight: FontWeight.bold))),
-            ),
-            const SizedBox(height: 15),
-            Text(_gameMessage, style: const TextStyle(color: Colors.white, fontSize: 15), textAlign: TextAlign.center),
-            const SizedBox(height: 25),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              onPressed: _isRolling ? null : _rollAndMoveToken,
-              child: Text(_isRolling ? 'جاري اللعب...' : 'ارمِ النرد وحرك القطعة', style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// 2. شاشة السلم والثعبان
-class SnakesGameScreen extends StatefulWidget {
-  const SnakesGameScreen({Key? key}) : super(key: key);
-
-  @override
-  State<SnakesGameScreen> createState() => _SnakesGameScreenState();
-}
-
-class _SnakesGameScreenState extends State<SnakesGameScreen> {
-  int _position = 1;
-  int _diceValue = 1;
-  bool _isRolling = false;
-  String _message = 'اصعد السلالم وتجنب الثعابين للوصول للنهاية!';
-
-  void _rollAndMove() {
-    setState(() => _isRolling = true);
-    Future.delayed(const Duration(milliseconds: 400), () {
-      setState(() {
-        _diceValue = Random().nextInt(6) + 1;
-        _position += _diceValue;
-        if (_position >= 30) {
-          _message = 'تهانينا! وصلت للنهاية وربحت \$20 إضافية!';
-          WalletData.addEarnings(20.00);
-          _position = 30;
-        } else {
-          _message = 'تقدمت للخانة رقم: $_position';
-          WalletData.addEarnings(3.00);
-        }
-        _isRolling = false;
-      });
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('لعبة السلم والثعبان', style: TextStyle(color: Colors.white)), backgroundColor: const Color(0xFF1E293B), iconTheme: const IconThemeData(color: Colors.white)),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('الخانة الحالية: $_position / 30', style: const TextStyle(color: Colors.greenAccent, fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 30),
-            Container(
-              width: 100, height: 100,
-              decoration: BoxDecoration(color: Colors.green.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.green, width: 2)),
-              child: Center(child: Text(_isRolling ? '...' : '$_diceValue', style: const TextStyle(color: Colors.green, fontSize: 40, fontWeight: FontWeight.bold))),
-            ),
-            const SizedBox(height: 20),
-            Text(_message, style: const TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.green, minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              onPressed: _isRolling ? null : _rollAndMove,
-              child: Text(_isRolling ? 'جاري التحرك...' : 'ارمِ النرد وتقدم', style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// 3. شاشة البلياردو
-class BilliardsGameScreen extends StatefulWidget {
-  const BilliardsGameScreen({Key? key}) : super(key: key);
-
-  @override
-  State<BilliardsGameScreen> createState() => _BilliardsGameScreenState();
-}
-
-class _BilliardsGameScreenState extends State<BilliardsGameScreen> {
-  int _ballsPocketed = 0;
-  String _status = 'صوب بدقة لتسجيل الكرات في الجيوب!';
-  bool _isShooting = false;
-
-  void _shootBall() {
-    setState(() => _isShooting = true);
-    Future.delayed(const Duration(milliseconds: 400), () {
-      setState(() {
-        bool success = Random().nextBool();
-        if (success) {
-          _ballsPocketed += 1;
-          _status = 'رائعة! دخلت الكرة وأُضيفت \$5 للمحفظة.';
-          WalletData.addEarnings(5.00);
-        } else {
-          _status = 'خارج الجيب! حاول التركيز في التصويب القادم.';
-        }
-        _isShooting = false;
-      });
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('لعبة البلياردو', style: TextStyle(color: Colors.white)), backgroundColor: const Color(0xFF1E293B), iconTheme: const IconThemeData(color: Colors.white)),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('الكرات المسجلة: $_ballsPocketed', style: const TextStyle(color: Colors.blueAccent, fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 30),
-            Container(
-              width: 100, height: 100,
-              decoration: BoxDecoration(color: Colors.blueAccent.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.blueAccent, width: 2)),
-              child: const Center(child: Icon(Icons.sports_bar, color: Colors.blueAccent, size: 45)),
-            ),
-            const SizedBox(height: 20),
-            Text(_status, style: const TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.blueAccent, minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              onPressed: _isShooting ? null : _shootBall,
-              child: Text(_isShooting ? 'جاري التصويب...' : 'صوب الآن واربح', style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// 4. شاشة الدومينو
-class DominoGameScreen extends StatefulWidget {
-  const DominoGameScreen({Key? key}) : super(key: key);
-
-  @override
-  State<DominoGameScreen> createState() => _DominoGameScreenState();
-}
-
-class _DominoGameScreenState extends State<DominoGameScreen> {
-  int _dominoScore = 0;
-  String _dominoStatus = 'طابق قطع الدومينو واكسب النقاط!';
-  bool _isPlaying = false;
-
-  void _playDomino() {
-    setState(() => _isPlaying = true);
-    Future.delayed(const Duration(milliseconds: 400), () {
-      setState(() {
-        int earned = (Random().nextInt(5) + 1) * 5;
-        _dominoScore += earned;
-        WalletData.addEarnings(earned * 0.5);
-        _dominoStatus = 'تمت المطابقة بنجاح! تم ربح أرباح للمحفظة.';
-        _isPlaying = false;
-      });
-    });
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: const Text('لعبة الدومينو', style: TextStyle(color: Colors.white)), backgroundColor: const Color(0xFF1E293B), iconTheme: const IconThemeData(color: Colors.white)),
-      body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text('مجموع النقاط: $_dominoScore', style: const TextStyle(color: Colors.purpleAccent, fontSize: 22, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 30),
-            Container(
-              width: 100, height: 100,
-              decoration: BoxDecoration(color: Colors.purple.withOpacity(0.2), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.purple, width: 2)),
-              child: const Center(child: Icon(Icons.dashboard, color: Colors.purple, size: 45)),
-            ),
-            const SizedBox(height: 20),
-            Text(_dominoStatus, style: const TextStyle(color: Colors.amber, fontSize: 16, fontWeight: FontWeight.bold), textAlign: TextAlign.center),
-            const SizedBox(height: 30),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(backgroundColor: Colors.purple, minimumSize: const Size(double.infinity, 50), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12))),
-              onPressed: _isPlaying ? null : _playDomino,
-              child: Text(_isPlaying ? 'جاري اللعب...' : 'العب قطعة دومينو', style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
 }
