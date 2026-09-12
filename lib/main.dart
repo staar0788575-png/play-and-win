@@ -35,7 +35,7 @@ class HomeScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('العب واربح - المرحلة الأولى', style: TextStyle(color: Colors.white)),
+        title: const Text('العب واربح - المنصة الجماعية', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF1E293B),
       ),
       body: Padding(
@@ -44,34 +44,10 @@ class HomeScreen extends StatelessWidget {
           children: [
             _buildGameButton(
               context,
-              'لعبة لودو الملكية الحقيقية (المرحلة 1)',
+              'غرفة لودو الملكية (4 لاعبين + مايك + شات + انتظار)',
               Icons.casino,
               Colors.orange,
-              const LudoRealGameScreen(),
-            ),
-            const SizedBox(height: 12),
-            _buildGameButton(
-              context,
-              'لعبة السلم والثعبان (قريباً في المرحلة 2)',
-              Icons.straighten,
-              Colors.grey,
-              const PlaceholderScreen(title: 'السلم والثعبان - قريباً'),
-            ),
-            const SizedBox(height: 12),
-            _buildGameButton(
-              context,
-              'لعبة البلياردو الاحترافية (قريباً في المرحلة 3)',
-              Icons.sports_bar,
-              Colors.grey,
-              const PlaceholderScreen(title: 'البلياردو - قريباً'),
-            ),
-            const SizedBox(height: 12),
-            _buildGameButton(
-              context,
-              'لعبة الدومينو الذكية (قريباً في المرحلة 4)',
-              Icons.dashboard,
-              Colors.grey,
-              const PlaceholderScreen(title: 'الدومينو - قريباً'),
+              const LudoRoomScreen(),
             ),
           ],
         ),
@@ -108,140 +84,220 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-class PlaceholderScreen extends StatelessWidget {
-  final String title;
-  const PlaceholderScreen({Key? key, required this.title}) : super(key: key);
+// 🎲 شاشة غرفة لودو المتكاملة (4 لاعبين + مايك + شات + غرفة انتظار)
+class LudoRoomScreen extends StatefulWidget {
+  const LudoRoomScreen({Key? key}) : super(key: key);
 
   @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(title: Text(title, style: const TextStyle(color: Colors.white)), backgroundColor: const Color(0xFF1E293B), iconTheme: const IconThemeData(color: Colors.white)),
-      body: const Center(
-        child: Text(
-          'هذه اللعبة قيد التجهيز للمرحلة القادمة!',
-          style: TextStyle(color: Colors.amber, fontSize: 18, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
-        ),
-      ),
-    );
-  }
+  State<LudoRoomScreen> createState() => _LudoRoomScreenState();
 }
 
-// 🎲 المرحلة الأولى: شاشة لعبة لودو الحقيقية واللوحة المرئية
-class LudoRealGameScreen extends StatefulWidget {
-  const LudoRealGameScreen({Key? key}) : super(key: key);
-
-  @override
-  State<LudoRealGameScreen> createState() => _LudoRealGameScreenState();
-}
-
-class _LudoRealGameScreenState extends State<LudoRealGameScreen> {
+class _LudoRoomScreenState extends State<LudoRoomScreen> {
   int _diceValue = 6;
-  int _tokenPosition = 0; 
+  int _playerPosition = 0;
   bool _isRolling = false;
-  String _message = 'اضغط لرمي النرد وحرك قطعة اللودو على اللوحة!';
+  bool _isMicActive = false; // حالة المايك للدردشة الصوتية
+  final TextEditingController _chatController = TextEditingController();
+  final List<String> _messages = ['أحمد: أهلاً بالجميع في الغرفة!', 'محمد: بالتوفيق للجميع!'];
 
-  void _rollDiceAndMove() {
+  void _rollDice() {
     setState(() => _isRolling = true);
     Future.delayed(const Duration(milliseconds: 500), () {
       setState(() {
         _diceValue = Random().nextInt(6) + 1;
-        
-        if (_tokenPosition == 0 && _diceValue == 6) {
-          _tokenPosition = 1;
-          _message = 'ممتاز! خرجت القطعة من البيت إلى اللوحة.';
-          WalletData.addEarnings(15.00);
-        } else if (_tokenPosition > 0) {
-          _tokenPosition += _diceValue;
-          if (_tokenPosition >= 20) {
-            _tokenPosition = 20;
-            _message = 'تهانينا! وصلت القطعة لخط النهاية وربحت \$100!';
-            WalletData.addEarnings(100.00);
+        if (_playerPosition == 0 && _diceValue == 6) {
+          _playerPosition = 1;
+          WalletData.addEarnings(20);
+        } else if (_playerPosition > 0) {
+          _playerPosition += _diceValue;
+          if (_playerPosition >= 15) {
+            _playerPosition = 15;
+            WalletData.addEarnings(100);
           } else {
-            _message = 'تقدمت القطعة على اللوحة بمقدار $_diceValue خطوات.';
-            WalletData.addEarnings(_diceValue * 3.0);
+            WalletData.addEarnings(10);
           }
-        } else {
-          _message = 'تحتاج إلى ظهور رقم 6 لإخراج القطعة من البيت!';
         }
         _isRolling = false;
       });
     });
   }
 
+  void _sendMessage() {
+    if (_chatController.text.trim().isNotEmpty) {
+      setState(() {
+        _messages.add('أنت: ${_chatController.text.trim()}');
+        _chatController.clear();
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('لعبة لودو الملكية الحقيقية', style: TextStyle(color: Colors.white)),
+        title: const Text('غرفة لودو - 4 لاعبين ومشاهدين', style: TextStyle(color: Colors.white)),
         backgroundColor: const Color(0xFF1E293B),
         iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          // زر المايك للدردشة الصوتية للـ 4 لاعبين
+          IconButton(
+            icon: Icon(_isMicActive ? Icons.mic : Icons.mic_off, color: _isMicActive ? Colors.greenAccent : Colors.white70),
+            onPressed: () {
+              setState(() => _isMicActive = !_isMicActive);
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(content: Text(_isMicActive ? 'تم فتح المايك (الدردشة الصوتية نشطة)' : 'تم إغلاق المايك')),
+              );
+            },
+            tooltip: 'الدردشة الصوتية للاربعة لاعبين',
+          ),
+        ],
       ),
       body: Padding(
-        padding: const EdgeInsets.all(20.0),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+        padding: const EdgeInsets.all(10.0),
+        child: ListView(
           children: [
-            Text('رصيد المحفظة: \$${WalletData.balance.toStringAsFixed(2)}', style: const TextStyle(color: Colors.amber, fontSize: 20, fontWeight: FontWeight.bold)),
-            const SizedBox(height: 20),
+            // معلومات المحفظة وغرفة الانتظار
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('المشاهدون في الانتظار: 3 أصدقاء 👁️', style: TextStyle(color: Colors.cyanAccent, fontSize: 12)),
+                Text('المحفظة: \$${WalletData.balance.toStringAsFixed(2)}', style: const TextStyle(color: Colors.amber, fontSize: 15, fontWeight: FontWeight.bold)),
+              ],
+            ),
+            const SizedBox(height: 8),
+
+            // لوحة لودو المرئية
             Container(
               height: 180,
               decoration: BoxDecoration(
-                color: const Color(0xFF334155),
-                borderRadius: BorderRadius.circular(16),
+                color: const Color(0xFF0F172A),
+                borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: Colors.orange, width: 2),
               ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Stack(
                 children: [
-                  const Text('مسار لوحة اللودو الحقيقية (4 لاعبين)', style: TextStyle(color: Colors.white70, fontSize: 14)),
-                  const SizedBox(height: 10),
-                  Text('موضع القطعة: $_tokenPosition / 20', style: const TextStyle(color: Colors.orangeAccent, fontSize: 26, fontWeight: FontWeight.bold)),
-                  const SizedBox(height: 15),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(5, (index) {
-                      bool isActive = _tokenPosition > (index * 4);
-                      return Container(
-                        margin: const EdgeInsets.symmetric(horizontal: 6),
-                        width: 30, height: 30,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: isActive ? Colors.orange : Colors.white24,
-                          border: Border.all(color: Colors.white, width: 1.5),
-                        ),
-                        child: Center(child: Text('${index + 1}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))),
-                      );
-                    }),
-                  )
+                  Positioned(top: 8, left: 8, child: _buildBase('أحمر (أنت)', Colors.red)),
+                  Positioned(top: 8, right: 8, child: _buildBase('أخضر', Colors.green)),
+                  Positioned(bottom: 8, left: 8, child: _buildBase('أزرق', Colors.blue)),
+                  Positioned(bottom: 8, right: 8, child: _buildBase('أصفر', Colors.amber)),
+                  Center(
+                    child: SizedBox(
+                      height: 40,
+                      child: ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        itemCount: 15,
+                        itemBuilder: (context, index) {
+                          bool hasToken = _playerPosition == (index + 1);
+                          return Container(
+                            width: 28,
+                            margin: const EdgeInsets.symmetric(horizontal: 2),
+                            decoration: BoxDecoration(
+                              color: hasToken ? Colors.red : const Color(0xFF334155),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
+                            child: Center(
+                              child: Text(hasToken ? '🔴' : '${index + 1}', style: TextStyle(color: Colors.white, fontSize: hasToken ? 14 : 10)),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
                 ],
               ),
             ),
-            const SizedBox(height: 20),
-            Container(
-              width: 90, height: 90,
-              decoration: BoxDecoration(
-                color: Colors.orange.withOpacity(0.2),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: Colors.orange, width: 2),
-              ),
-              child: Center(child: Text(_isRolling ? '...' : '$_diceValue', style: const TextStyle(color: Colors.orange, fontSize: 40, fontWeight: FontWeight.bold))),
+
+            const SizedBox(height: 10),
+
+            // النرد وزر التحريك
+            Row(
+              children: [
+                Container(
+                  width: 60, height: 60,
+                  decoration: BoxDecoration(
+                    color: Colors.orange.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(10),
+                    border: Border.all(color: Colors.orange),
+                  ),
+                  child: Center(child: Text(_isRolling ? '...' : '$_diceValue', style: const TextStyle(color: Colors.orange, fontSize: 26, fontWeight: FontWeight.bold))),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(backgroundColor: Colors.orange, minimumSize: const Size(double.infinity, 45)),
+                    onPressed: _isRolling ? null : _rollDice,
+                    child: Text(_isRolling ? 'جاري اللعب...' : 'ارمِ النرد وحرك القطعة', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                  ),
+                ),
+              ],
             ),
-            const SizedBox(height: 15),
-            Text(_message, style: const TextStyle(color: Colors.white, fontSize: 15), textAlign: TextAlign.center),
-            const SizedBox(height: 25),
-            ElevatedButton(
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.orange,
-                minimumSize: const Size(double.infinity, 50),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+
+            const SizedBox(height: 12),
+
+            // شات أسفل اللعبة (بين اللاعبين ومشاهدين غرفة الانتظار)
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: const Color(0xFF334155),
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: Colors.white24),
               ),
-              onPressed: _isRolling ? null : _rollDiceAndMove,
-              child: Text(_isRolling ? 'جاري التحرك...' : 'ارمِ النرد وحرك القطعة', style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const Text('💬 شات الغرفة (لاعبون + مشاهدون في الانتظار)', style: TextStyle(color: Colors.amber, fontSize: 13, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 6),
+                  SizedBox(
+                    height: 80,
+                    child: ListView.builder(
+                      itemCount: _messages.length,
+                      itemBuilder: (context, index) {
+                        return Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 2),
+                          child: Text(_messages[index], style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                        );
+                      },
+                    ),
+                  ),
+                  const Divider(color: Colors.white24),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: TextField(
+                          controller: _chatController,
+                          style: const TextStyle(color: Colors.white, fontSize: 13),
+                          decoration: const InputDecoration(
+                            hintText: 'اكتب رسالتك هنا...',
+                            hintStyle: TextStyle(color: Colors.white38),
+                            isDense: true,
+                            border: InputBorder.none,
+                          ),
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.send, color: Colors.orange, size: 20),
+                        onPressed: _sendMessage,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _buildBase(String name, Color color) {
+    return Container(
+      width: 48, height: 48,
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.3),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(color: color),
+      ),
+      child: Center(child: Text(name, style: TextStyle(color: color, fontSize: 10, fontWeight: FontWeight.bold), textAlign: TextAlign.center)),
     );
   }
 }
