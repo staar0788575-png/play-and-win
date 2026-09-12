@@ -42,7 +42,6 @@ class HomeScreen extends StatelessWidget {
         padding: const EdgeInsets.all(16.0),
         child: ListView(
           children: [
-            // المرحلة الحالية: لعبة لودو الحقيقية
             _buildGameButton(
               context,
               'لعبة لودو الملكية الحقيقية (المرحلة 1)',
@@ -109,7 +108,6 @@ class HomeScreen extends StatelessWidget {
   }
 }
 
-// شاشة مؤقتة للألعاب القادمة
 class PlaceholderScreen extends StatelessWidget {
   final String title;
   const PlaceholderScreen({Key? key, required this.title}) : super(key: key);
@@ -118,10 +116,10 @@ class PlaceholderScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: Text(title, style: const TextStyle(color: Colors.white)), backgroundColor: const Color(0xFF1E293B), iconTheme: const IconThemeData(color: Colors.white)),
-      body: Center(
+      body: const Center(
         child: Text(
           'هذه اللعبة قيد التجهيز للمرحلة القادمة!',
-          style: const TextStyle(color: Colors.amber, fontSize: 18, fontWeight: FontWeight.bold),
+          style: TextStyle(color: Colors.amber, fontSize: 18, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
       ),
@@ -139,7 +137,7 @@ class LudoRealGameScreen extends StatefulWidget {
 
 class _LudoRealGameScreenState extends State<LudoRealGameScreen> {
   int _diceValue = 6;
-  int _tokenPosition = 0; // من 0 إلى 20 كمحاكاة لمسار اللوحة المرئي
+  int _tokenPosition = 0; 
   bool _isRolling = false;
   String _message = 'اضغط لرمي النرد وحرك قطعة اللودو على اللوحة!';
 
@@ -173,4 +171,77 @@ class _LudoRealGameScreenState extends State<LudoRealGameScreen> {
 
   @override
   Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text('لعبة لودو الملكية الحقيقية', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF1E293B),
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(20.0),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Text('رصيد المحفظة: \$${WalletData.balance.toStringAsFixed(2)}', style: const TextStyle(color: Colors.amber, fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 20),
+            Container(
+              height: 180,
+              decoration: BoxDecoration(
+                color: const Color(0xFF334155),
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: Colors.orange, width: 2),
+              ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text('مسار لوحة اللودو الحقيقية (4 لاعبين)', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                  const SizedBox(height: 10),
+                  Text('موضع القطعة: $_tokenPosition / 20', style: const TextStyle(color: Colors.orangeAccent, fontSize: 26, fontWeight: FontWeight.bold)),
+                  const SizedBox(height: 15),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: List.generate(5, (index) {
+                      bool isActive = _tokenPosition > (index * 4);
+                      return Container(
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
+                        width: 30, height: 30,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: isActive ? Colors.orange : Colors.white24,
+                          border: Border.all(color: Colors.white, width: 1.5),
+                        ),
+                        child: Center(child: Text('${index + 1}', style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold))),
+                      );
+                    }),
+                  )
+                ],
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              width: 90, height: 90,
+              decoration: BoxDecoration(
+                color: Colors.orange.withOpacity(0.2),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(color: Colors.orange, width: 2),
+              ),
+              child: Center(child: Text(_isRolling ? '...' : '$_diceValue', style: const TextStyle(color: Colors.orange, fontSize: 40, fontWeight: FontWeight.bold))),
+            ),
+            const SizedBox(height: 15),
+            Text(_message, style: const TextStyle(color: Colors.white, fontSize: 15), textAlign: TextAlign.center),
+            const SizedBox(height: 25),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.orange,
+                minimumSize: const Size(double.infinity, 50),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: _isRolling ? null : _rollDiceAndMove,
+              child: Text(_isRolling ? 'جاري التحرك...' : 'ارمِ النرد وحرك القطعة', style: const TextStyle(fontSize: 18, color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
