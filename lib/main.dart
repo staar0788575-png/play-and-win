@@ -21,7 +21,6 @@ class PlayAndWinApp extends StatelessWidget {
         primarySwatch: Colors.indigo,
         scaffoldBackgroundColor: const Color(0xFF0F0B19),
       ),
-      // تشغيل واجهة لودو التي تم ربطها في القاعدة الرئيسية للتطبيق
       home: const LudoGameController(),
     );
   }
