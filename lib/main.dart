@@ -3,7 +3,7 @@
 // ==============================================================================
 
 import 'package:flutter/material.dart';
-import 'package:play_and_win/game_screen.dart';
+import 'game_screen.dart';
 
 void main() {
   runApp(const PlayAndWinApp());
