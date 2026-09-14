@@ -25,6 +25,9 @@ jobs:
           flutter-version: '3.19.0'
           cache: true
 
+      - name: Create Android Platform v2
+        run: flutter create --platforms=android --org com.staar --project-name play_and_win .
+
       - name: Build App Cleanly
         run: |
           flutter pub get
