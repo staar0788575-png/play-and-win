@@ -1,9 +1,3 @@
-plugins {
-    id "com.android.application"
-    id "kotlin-android" version "1.9.24"
-    id "dev.flutter.flutter-gradle-plugin"
-}
-
 android {
     namespace "com.example.play_and_win"
     compileSdk = 34
