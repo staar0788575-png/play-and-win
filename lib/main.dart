@@ -1,9 +1,9 @@
-// ==============================================================================
-// 📱 ملف التشغيل الرئيسي - مشروع "العب واربح" (play-and-win)
-// ==============================================================================
+// ====================================================================
+// (Main App File) - ملف التشغيل الرئيسي لمشروع "العب واربح" 🎮
+// ====================================================================
 
 import 'package:flutter/material.dart';
-import 'game_screen.dart';
+import 'game_lobby.dart'; // استيراد ملف صالة الألعاب الرئيسي
 
 void main() {
   runApp(const PlayAndWinApp());
@@ -15,13 +15,13 @@ class PlayAndWinApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      debugShowCheckedModeBanner: false,
       title: 'العب واربح',
+      debugShowCheckedModeBanner: false,
       theme: ThemeData(
         primarySwatch: Colors.indigo,
-        scaffoldBackgroundColor: const Color(0xFF0F0B19),
+        brightness: Brightness.dark,
       ),
-      home: const LudoGameController(),
+      home: const GameLobbyScreen(), // تشغيل صالة الألعاب كواجهة أولية
     );
   }
 }
