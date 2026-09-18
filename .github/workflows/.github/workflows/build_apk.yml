@@ -1,0 +1,45 @@
+name: Build Flutter Android APK
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. سحب كود المشروع من المستودع
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+إعداد بيئة الجافا المطلوبة لتشغيل فلاتر وتجميع الأندرويد
+      - name: Set up Java
+        uses: actions/setup-java@v3
+        with:
+          distribution: 'zulu'
+          java-version: '17'
+
+      # 3. إعداد وتثبيت إطار عمل Flutter
+      - name: Set up Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.19.x'
+          channel: 'stable'
+
+      # 4. جلب حزم الاعتمادات للمشروع (pubspec.yaml)
+      - name: Install dependencies
+        run: flutter pub get
+
+      # 5. بناء نسخة الـ APK بصيغة الإصدار النهائي (Release)
+      - name: Build APK Release
+        run: flutter build apk --release
+
+      # 6. رفع ملف الـ APK الناتج كـ Artifact لسهولة تحميله
+      - name: Upload APK Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: play-and-win-release
+          path: build/app/outputs/flutter-apk/app-release.apk
