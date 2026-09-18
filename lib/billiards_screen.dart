@@ -89,7 +89,7 @@ class _BiliardsGameControllerState extends State<BiliardsGameController> with Si
     double forceAmount = (powerSliderValue / 100.0) * MAX_STRIKER_FORCE;
     debugPrint("تم إطلاق المضرب في لعبة البلياردو بقوة فيزيائية: $forceAmount");
 
--   // محاكاة استقرار الأقراص بعد الحركة وإنهائها
+    // تم إزالة await الخاطئة لأن الدالة void لضمان نجاح البناء على GitHub
     awaitBoardSettlement();
   }
 
