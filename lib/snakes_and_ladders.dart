@@ -1,11 +1,13 @@
 // ====================================================================
 // (Snakes and Ladders Game Logic & UI) - لعبة السلم والثعبان 🐍🪜
-// المتوافق مع هيكل التطبيق والمنطق البرمجي الكامل
+// المتوافق مع شريط الـ VIP والورود، والدردشة الفورية عبر Firebase
 // ====================================================================
 
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
+import 'game_chat_widget.dart'; // استيراد ويدجت الدردشة المشترك المتصل بـ Firebase
+import 'game_social_bar.dart'; // استيراد شريط الميزات الاجتماعية والـ VIP والورود
 
 class Vector2 {
   double x;
@@ -23,7 +25,7 @@ class SnakesAndLaddersGameLogic extends StatefulWidget {
 }
 
 class _SnakesAndLaddersGameLogicState extends State<SnakesAndLaddersGameLogic> {
-  // --- إشارات العيد / SIGNALS ---
+  // --- إشارات اللعبة / SIGNALS ---
   Function(int resultValue)? diceRoller;
   Function(int playerId, int finalTile)? playerMoved;
   Function(String actionType, int targetPlayerId)? socialActionTriggered;
@@ -46,7 +48,6 @@ class _SnakesAndLaddersGameLogicState extends State<SnakesAndLaddersGameLogic> {
     96: 1,
   };
 
-  // --- معتادة العتاد / ONREADY VARIABLES ---
   List<Vector2> tilesCoordinates = [];
 
   // --- متغيرات حالة اللعبة / GAME STATE ---
@@ -57,9 +58,6 @@ class _SnakesAndLaddersGameLogicState extends State<SnakesAndLaddersGameLogic> {
     0: {"name": "Green Player", "current_tile": 0, "node_name": "TokenGreen"},
     1: {"name": "Yellow Player", "current_tile": 0, "node_name": "TokenYellow"},
   };
-
-  final List<String> chatMessages = [];
-  final TextEditingController chatInputController = TextEditingController();
 
   bool isMicActive = false;
   bool isSpeakerActive = false;
@@ -84,7 +82,7 @@ class _SnakesAndLaddersGameLogicState extends State<SnakesAndLaddersGameLogic> {
     for (int i = 0; i <= 101; i++) {
       tilesCoordinates.add(Vector2(50 * (i % 10).toDouble(), 600 - (50 * (i / 10).toInt()).toDouble()));
     }
-    debugPrint("تم بناء مصميفة الـ 100 مربع وتحديثها المشروع حيث حيث.");
+    debugPrint("تم بناء مصميفة الـ 100 مربع وتحديثها بنجاح.");
   }
 
   void _setupSocialConnections() {
@@ -187,17 +185,8 @@ class _SnakesAndLaddersGameLogicState extends State<SnakesAndLaddersGameLogic> {
   }
 
   // ====================================================================
-  // 4. الميزات الاجتماعية والدردشة الصوتية / (INTEGRATED SOCIAL FEATURES)
+  // 4. ميزات التحكم الصوتي
   // ====================================================================
-  void _onChatMessageSubmitted(String newText) {
-    if (newText.trim().isEmpty) return;
-    setState(() {
-      String messageText = "${playersPositions[currentPlayerTurn]!["name"]}: $newText";
-      chatMessages.add(messageText);
-      chatInputController.clear();
-    });
-  }
-
   void _onMicToggled(bool isActive) {
     setState(() {
       isMicActive = isActive;
@@ -214,9 +203,11 @@ class _SnakesAndLaddersGameLogicState extends State<SnakesAndLaddersGameLogic> {
 
   @override
   Widget build(BuildContext context) {
+    String currentName = playersPositions[currentPlayerTurn]!["name"];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('السلم والثعبان - دور: ${playersPositions[currentPlayerTurn]!["name"]}'),
+        title: Text('السلم والثعبان 🐍 - دور: $currentName'),
         backgroundColor: Colors.indigo[900],
         actions: [
           IconButton(
@@ -239,6 +230,18 @@ class _SnakesAndLaddersGameLogicState extends State<SnakesAndLaddersGameLogic> {
         ),
         child: Column(
           children: [
+            // 🌟 شريط الميزات الاجتماعية والـ VIP والورود اليومية
+            GameSocialBar(
+              isVip: true,
+              dailyFlowersCount: 5,
+              onMicToggle: (isMicOn) {
+                debugPrint(isMicOn ? "تم فتح المايك الصوتي في السلم والثعبان" : "تم كتم المايك");
+              },
+              onSendGift: () {
+                debugPrint("تم إرسال هدية أو وردة في طاولة السلم والثعبان");
+              },
+            ),
+
             // لوحة اللعب الرئيسية والنرد
             Expanded(
               flex: 4,
@@ -260,22 +263,22 @@ class _SnakesAndLaddersGameLogicState extends State<SnakesAndLaddersGameLogic> {
                       style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                     const SizedBox(height: 20),
-                    ElevatedButton.styleFrom().runtimeType == ButtonStyle
-                        ? ElevatedButton(
-                            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-                            onPressed: isRolling ? null : _onRollPressed,
-                            child: Text(isRolling ? 'جاري التحرك...' : 'رمي النرد 🎲',
-                                style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-                          )
-                        : Container(),
+                    ElevatedButton(
+                      style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+                      onPressed: isRolling ? null : _onRollPressed,
+                      child: Text(
+                        isRolling ? 'جاري التحرك...' : 'رمي النرد 🎲',
+                        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                      ),
+                    ),
                   ],
                 ),
               ),
             ),
 
-            // قسم الدردشة الاجتماعية
+            // قسم الدردشة الاجتماعية المباشرة عبر Firebase
             Expanded(
-              flex: 2,
+              flex: 3,
               child: Container(
                 margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                 padding: const EdgeInsets.all(8),
@@ -285,24 +288,20 @@ class _SnakesAndLaddersGameLogicState extends State<SnakesAndLaddersGameLogic> {
                   border: Border.all(color: Colors.white24),
                 ),
                 child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Expanded(
-                      child: ListView.builder(
-                        itemCount: chatMessages.length,
-                        itemBuilder: (context, index) {
-                          return Text(chatMessages[index], style: const TextStyle(color: Colors.white75));
-                        },
+                    const Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
+                      child: Text(
+                        '💬 دردشة طاولة السلم والثعبان:',
+                        style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 13),
                       ),
                     ),
-                    TextField(
-                      controller: chatInputController,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: const InputDecoration(
-                        hintText: 'اكتب رسالتك...',
-                        hintStyle: TextStyle(color: Colors.white54),
-                        border: InputBorder.none,
+                    const Divider(color: Colors.white24, height: 1),
+                    Expanded(
+                      child: GameChatWidget(
+                        playerName: currentName,
                       ),
-                      onSubmitted: _onChatMessageSubmitted,
                     ),
                   ],
                 ),
