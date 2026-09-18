@@ -3,10 +3,10 @@
 // ====================================================================
 
 import 'package:flutter/material.dart';
-import 'ludo_game_screen.dart'; // شاشة لعبة لودو
-import 'domino_game_screen.dart'; // شاشة لعبة الدومينو
-import 'snakes_ladders_screen.dart'; // شاشة السلم والثعبان
-import 'billiards_game_screen.dart'; // شاشة البلياردو والكيرم
+import 'game_screen.dart'; // شاشة لعبة لودو
+import 'dominoes.dart'; // ملف لعبة الدومينو الموجود لديك
+import 'snakes_and_ladders.dart'; // ملف السلم والثعبان الموجود لديك
+import 'billiards_screen.dart'; // ملف البلياردو الموجود لديك
 
 class GameLobbyScreen extends StatelessWidget {
   const GameLobbyScreen({Key? key}) : super(key: key);
@@ -55,7 +55,7 @@ class GameLobbyScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const BilliardsGameScreen()),
+                        MaterialPageRoute(builder: (context) => const BilliardsScreen()),
                       );
                     },
                   ),
@@ -68,7 +68,7 @@ class GameLobbyScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const DominoGameScreen()),
+                        MaterialPageRoute(builder: (context) => const DominoesScreen()),
                       );
                     },
                   ),
@@ -81,7 +81,7 @@ class GameLobbyScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SnakesLaddersScreen()),
+                        MaterialPageRoute(builder: (context) => const SnakesAndLaddersScreen()),
                       );
                     },
                   ),
@@ -94,7 +94,7 @@ class GameLobbyScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const LudoGameScreen()),
+                        MaterialPageRoute(builder: (context) => const LudoGameController()),
                       );
                     },
                   ),
