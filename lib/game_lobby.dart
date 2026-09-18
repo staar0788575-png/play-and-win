@@ -55,7 +55,7 @@ class GameLobbyScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const BilliardsScreen()),
+                        MaterialPageRoute(builder: (context) => const BilliardsScreen()), // تم التصحيح
                       );
                     },
                   ),
@@ -68,7 +68,7 @@ class GameLobbyScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const DominoesScreen()),
+                        MaterialPageRoute(builder: (context) => const DominoesScreen()), // تم التصحيح
                       );
                     },
                   ),
@@ -81,7 +81,7 @@ class GameLobbyScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SnakesAndLaddersScreen()),
+                        MaterialPageRoute(builder: (context) => const SnakesAndLaddersScreen()), // تم التصحيح
                       );
                     },
                   ),
