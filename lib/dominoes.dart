@@ -304,7 +304,11 @@ class _DominoesGameLogicState extends State<DominoesGameLogic> {
                       child: ListView.builder(
                         itemCount: chatMessages.length,
                         itemBuilder: (context, index) {
-                          return Text(chatMessages[index], style: const TextStyle(color: Colors.white75));
+                          return Text(
+                            chatMessages[index], 
+                            // تم التعديل هنا لضمان عمل الـ Build في جميع إصدارات Flutter
+                            style: TextStyle(color: Colors.white.withOpacity(0.75)),
+                          );
                         },
                       ),
                     ),
