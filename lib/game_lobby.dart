@@ -3,7 +3,10 @@
 // ====================================================================
 
 import 'package:flutter/material.dart';
-import 'game_screen.dart'; // استيراد شاشة لعبة لودو التي جهزناها سابقاً
+import 'ludo_game_screen.dart'; // شاشة لعبة لودو
+import 'domino_game_screen.dart'; // شاشة لعبة الدومينو
+import 'snakes_ladders_screen.dart'; // شاشة السلم والثعبان
+import 'billiards_game_screen.dart'; // شاشة البلياردو والكيرم
 
 class GameLobbyScreen extends StatelessWidget {
   const GameLobbyScreen({Key? key}) : super(key: key);
@@ -43,43 +46,55 @@ class GameLobbyScreen extends StatelessWidget {
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 children: [
+                  // 1. البلياردو والكيرم
                   _buildGameCard(
                     context,
                     title: 'البلياردو والكيرم',
                     icon: Icons.sports_esports,
                     color: Colors.teal[700]!,
                     onTap: () {
-                      debugPrint("الانتقال إلى لعبة البلياردو");
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const BilliardsGameScreen()),
+                      );
                     },
                   ),
+                  // 2. لعبة الدومينو
                   _buildGameCard(
                     context,
                     title: 'لعبة الدومينو',
                     icon: Icons.casino,
                     color: Colors.indigo[700]!,
                     onTap: () {
-                      debugPrint("الانتقال إلى لعبة الدومينو");
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const DominoGameScreen()),
+                      );
                     },
                   ),
+                  // 3. السلم والثعبان
                   _buildGameCard(
                     context,
                     title: 'السلم والثعبان',
                     icon: Icons.leaderboard,
                     color: Colors.deepOrange[700]!,
                     onTap: () {
-                      debugPrint("الانتقال إلى لعبة السلم والثعبان");
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (context) => const SnakesLaddersScreen()),
+                      );
                     },
                   ),
+                  // 4. لعبة لودو
                   _buildGameCard(
                     context,
                     title: 'لعبة لودو',
                     icon: Icons.star,
                     color: Colors.purple[700]!,
                     onTap: () {
-                      // الانتقال الفعلي لشاشة لودو التي أنشأناها
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const LudoGameController()),
+                        MaterialPageRoute(builder: (context) => const LudoGameScreen()),
                       );
                     },
                   ),
