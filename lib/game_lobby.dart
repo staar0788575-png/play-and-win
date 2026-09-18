@@ -46,7 +46,7 @@ class GameLobbyScreen extends StatelessWidget {
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 children: [
-                  // 1. البلياردو والكيرم (التصحيح إلى اسم الكلاس الحقيقي)
+                  // 1. البلياردو والكيرم
                   _buildGameCard(
                     context,
                     title: 'البلياردو والكيرم',
@@ -59,7 +59,7 @@ class GameLobbyScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  // 2. لعبة الدومينو (التصحيح إلى اسم الكلاس الحقيقي)
+                  // 2. لعبة الدومينو
                   _buildGameCard(
                     context,
                     title: 'لعبة الدومينو',
@@ -72,7 +72,7 @@ class GameLobbyScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  // 3. السلم والثعبان
+                  // 3. السلم والثعبان (التصحيح المباشر لاسم الكلاس)
                   _buildGameCard(
                     context,
                     title: 'السلم والثعبان',
@@ -81,7 +81,7 @@ class GameLobbyScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SnakesAndLaddersScreen()),
+                        MaterialPageRoute(builder: (context) => const SnakesAndLaddersGame()),
                       );
                     },
                   ),
