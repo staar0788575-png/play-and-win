@@ -72,7 +72,7 @@ class GameLobbyScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  // 3. السلم والثعبان (التصحيح المباشر لاسم الكلاس)
+                  // 3. السلم والثعبان (الاسم الصحيح والمطابق تماماً للملف)
                   _buildGameCard(
                     context,
                     title: 'السلم والثعبان',
@@ -81,7 +81,7 @@ class GameLobbyScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SnakesAndLaddersGame()),
+                        MaterialPageRoute(builder: (context) => const SnakesAndLaddersGameLogic()),
                       );
                     },
                   ),
