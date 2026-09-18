@@ -4,9 +4,9 @@
 
 import 'package:flutter/material.dart';
 import 'game_screen.dart'; // شاشة لعبة لودو
-import 'dominoes.dart'; // ملف لعبة الدومينو الموجود لديك
-import 'snakes_and_ladders.dart'; // ملف السلم والثعبان الموجود لديك
-import 'billiards_screen.dart'; // ملف البلياردو الموجود لديك
+import 'dominoes.dart'; // ملف لعبة الدومينو
+import 'snakes_and_ladders.dart'; // ملف السلم والثعبان
+import 'billiards_screen.dart'; // ملف البلياردو
 
 class GameLobbyScreen extends StatelessWidget {
   const GameLobbyScreen({Key? key}) : super(key: key);
@@ -46,7 +46,7 @@ class GameLobbyScreen extends StatelessWidget {
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
                 children: [
-                  // 1. البلياردو والكيرم
+                  // 1. البلياردو والكيرم (التصحيح إلى اسم الكلاس الحقيقي)
                   _buildGameCard(
                     context,
                     title: 'البلياردو والكيرم',
@@ -55,11 +55,11 @@ class GameLobbyScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const BilliardsScreen()), // تم التصحيح
+                        MaterialPageRoute(builder: (context) => const BiliardsGameController()),
                       );
                     },
                   ),
-                  // 2. لعبة الدومينو
+                  // 2. لعبة الدومينو (التصحيح إلى اسم الكلاس الحقيقي)
                   _buildGameCard(
                     context,
                     title: 'لعبة الدومينو',
@@ -68,7 +68,7 @@ class GameLobbyScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const DominoesScreen()), // تم التصحيح
+                        MaterialPageRoute(builder: (context) => const DominoesGameLogic()),
                       );
                     },
                   ),
@@ -81,7 +81,7 @@ class GameLobbyScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SnakesAndLaddersScreen()), // تم التصحيح
+                        MaterialPageRoute(builder: (context) => const SnakesAndLaddersScreen()),
                       );
                     },
                   ),
