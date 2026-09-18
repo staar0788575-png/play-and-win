@@ -1,6 +1,5 @@
 // ====================================================================
-// (Ludo Game Clone) - لعبة لودو الرسمية والمحسنة 🎲
-// مصمم بالكامل لمشروع "العب واربح" على Dart (Flutter)
+// (Ludo Game Controller) - لعبة لودو المصححة 🎲
 // ====================================================================
 
 import 'dart:async';
@@ -15,23 +14,19 @@ class LudoGameController extends StatefulWidget {
 
 class _LudoGameControllerState extends State<LudoGameController>
     with SingleTickerProviderStateMixin {
-  // --- الثوابت وإعدادات العتاد / CONSTANTS ---
   static const int TOTAL_CELLS = 52;
   static const int HOME_STRETCH_START = 51;
   static const int FINAL_HOME_CELL = 57;
   static const List<int> SAFE_ZONES = [0, 9, 14, 22, 27, 35, 40, 48];
   static const double TURN_TIME_LIMIT = 15.0;
 
-  // --- متغيرات حالة اللعبة / GAME STATE ---
-  int currentPlayerTurn = 0; // 0: أحمر، 1: أخضر، 2: أصفر، 3: أزرق
+  int currentPlayerTurn = 0;
   int diceValue = 1;
   bool hasRolledThisTurn = false;
   int consecutiveSixes = 0;
 
-  // إحداثيات مسار الرقعة الرئيسي
   final List<Offset> boardCoordinatesArray = [];
 
-  // بيانات اللاعبين في الدليل وخلايا المسار النهائي
   final Map<int, Map<String, dynamic>> playersData = {
     0: {"name": "Oman", "color": "Red", "tokens_pos": [-1, -1, -1, -1], "is_bot": false},
     1: {"name": "Player_2", "color": "Green", "tokens_pos": [-1, -1, -1, -1], "is_bot": true},
@@ -39,7 +34,6 @@ class _LudoGameControllerState extends State<LudoGameController>
     3: {"name": "Player_4", "color": "Blue", "tokens_pos": [-1, -1, -1, -1], "is_bot": true},
   };
 
-  // نظام الدردشة داخل اللعبة
   final List<String> chatMessages = [];
   final TextEditingController chatInputController = TextEditingController();
 
@@ -50,15 +44,11 @@ class _LudoGameControllerState extends State<LudoGameController>
     startNewGame();
   }
 
-  // ====================================================================
-  // 1. بدء اللعبة والتجهيز / (INITIALIZATION)
-  // ====================================================================
   void initializeBoardGrid() {
     boardCoordinatesArray.clear();
     for (int i = 0; i <= TOTAL_CELLS + 10; i++) {
       boardCoordinatesArray.add(const Offset(1800.0, 200.0));
     }
-    debugPrint("تم تحديث مسار الرقعة البرمجي للودو بنجاح. الإجمالي: ${boardCoordinatesArray.length}");
   }
 
   void startNewGame() {
@@ -69,9 +59,6 @@ class _LudoGameControllerState extends State<LudoGameController>
     });
   }
 
-  // ====================================================================
-  // 2. نظام الدور والميقات المركزى / (TURN & TIMER SYSTEM)
-  // ====================================================================
   void preparePlayerTurn() {
     setState(() {
       hasRolledThisTurn = false;
@@ -84,12 +71,8 @@ class _LudoGameControllerState extends State<LudoGameController>
       currentPlayerTurn = (currentPlayerTurn + 1) % 4;
       preparePlayerTurn();
     });
-    debugPrint("انتقل الدور الآن لللاعب رقم: $currentPlayerTurn");
   }
 
-  // ====================================================================
-  // 3. نظام رمي النرد المركزي / (CENTRAL DICE SYSTEM)
-  // ====================================================================
   void onDicePressed() {
     if (hasRolledThisTurn) return;
 
@@ -98,11 +81,9 @@ class _LudoGameControllerState extends State<LudoGameController>
       diceValue = 1 + (DateTime.now().millisecondsSinceEpoch % 6);
     });
 
-    // قاعدة الـ 3 مرات رقم 6 (عقوبة حرمان اللاعب من الدور)
     if (diceValue == 6) {
       consecutiveSixes++;
       if (consecutiveSixes >= 3) {
-        debugPrint("⚠️ حصل على 3 مرات رقم 6 توالياً! يتم إنهاء دوره وتخطي دوره فوراً.");
         Future.delayed(const Duration(seconds: 1), () {
           if (mounted) nextTurn();
         });
@@ -115,15 +96,11 @@ class _LudoGameControllerState extends State<LudoGameController>
     processDiceResult(currentPlayerTurn, diceValue);
   }
 
-  // ====================================================================
-  // 4. مصلح حركة القطع بالكامل / (GAMEPLAY & COLLISION LOGIC)
-  // ====================================================================
   void processDiceResult(int playerId, int steps) {
     int targetTokenId = getFirstMovableToken(playerId, steps);
     if (targetTokenId != -1) {
       moveToken(playerId, targetTokenId, steps);
     } else {
-      debugPrint("❌ لا توجد حركات قانونية متاحة.");
       Future.delayed(const Duration(seconds: 1), () {
         if (mounted) {
           if (diceValue == 6) {
@@ -171,7 +148,6 @@ class _LudoGameControllerState extends State<LudoGameController>
       }
 
       if (diceValue == 6) {
-        debugPrint("🎲 حقق رمية 6، يحق له اللعب مجدداً!");
         preparePlayerTurn();
       } else {
         nextTurn();
@@ -188,18 +164,12 @@ class _LudoGameControllerState extends State<LudoGameController>
       List<int> enemyPositions = List<int>.from(pData["tokens_pos"]);
       for (int tId = 0; tId < 4; tId++) {
         if (enemyPositions[tId] == cellIndex) {
-          debugPrint("💥 تم أكل قطعة الخصم رقم $tId لللاعب $pid!");
           setState(() {
             pData["tokens_pos"][tId] = -1;
           });
-          resetTokenToBase(pid, tId);
         }
       }
     });
-  }
-
-  void resetTokenToBase(int playerId, int tokenId) {
-    debugPrint("🔄 إعادة اللاعب $playerId القطعة tokenID $tokenId إلى القاعدة.");
   }
 
   void checkPlayerVictory(int playerId) {
@@ -207,13 +177,10 @@ class _LudoGameControllerState extends State<LudoGameController>
     int wonCount = positions.where((pos) => pos >= FINAL_HOME_CELL).length;
 
     if (wonCount == 4) {
-      debugPrint("🏆 ألف مبروك! اللاعب رقم $playerId جمع كل قطعه وفاز باللعبة 🎉");
+      debugPrint("🏆 الفائز: $playerId");
     }
   }
 
-  // ====================================================================
-  // 5. النظام الاجتماعي والشات / (SOCIAL CHAT SYSTEM)
-  // ====================================================================
   void onChatMessageSubmitted(String newText) {
     if (newText.trim().isEmpty) return;
 
@@ -222,6 +189,10 @@ class _LudoGameControllerState extends State<LudoGameController>
       chatMessages.add("$senderName: $newText");
       chatInputController.clear();
     });
+  }
+
+  String getRolledText(bool rolled) {
+    return rolled ? 'انتظر الدور القادم...' : 'رمي النرد 🎲';
   }
 
   @override
@@ -241,7 +212,6 @@ class _LudoGameControllerState extends State<LudoGameController>
         ),
         child: Column(
           children: [
-            // قسم اللعبة والنرد في الأعلى
             Expanded(
               flex: 3,
               child: Center(
@@ -259,7 +229,7 @@ class _LudoGameControllerState extends State<LudoGameController>
                       style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
                       onPressed: hasRolledThisTurn ? null : onDicePressed,
                       child: Text(
-                        hasRolrolledText(hasRolrolledThisTurn),
+                        getRolledText(hasRolledThisTurn),
                         style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
                       ),
                     ),
@@ -267,8 +237,6 @@ class _LudoGameControllerState extends State<LudoGameController>
                 ),
               ),
             ),
-
-            // قسم الشات المستمر في الأسفل
             Expanded(
               flex: 3,
               child: Container(
@@ -285,7 +253,7 @@ class _LudoGameControllerState extends State<LudoGameController>
                       child: ListView.builder(
                         itemCount: chatMessages.length,
                         itemBuilder: (context, index) {
-                          return Text(chatMessages[index], style: const TextStyle(color: Colors.white75));
+                          return Text(chatMessages[index], style: const TextStyle(color: Colors.white70));
                         },
                       ),
                     ),
@@ -307,9 +275,5 @@ class _LudoGameControllerState extends State<LudoGameController>
         ),
       ),
     );
-  }
-
-  String hasRolrolledText(bool rolled) {
-    return rolled ? 'انتظر الدور القادم...' : 'رمي النرد 🎲';
   }
 }
