@@ -1,5 +1,5 @@
 // ====================================================================
-// (Ludo Game Controller) - لعبة لودو المصححة 🎲
+// (Ludo Game Controller) - لوحة لودو الحقيقية والمرئية بالكامل 🎲
 // ====================================================================
 
 import 'dart:async';
@@ -15,23 +15,20 @@ class LudoGameController extends StatefulWidget {
 class _LudoGameControllerState extends State<LudoGameController>
     with SingleTickerProviderStateMixin {
   static const int TOTAL_CELLS = 52;
-  static const int HOME_STRETCH_START = 51;
   static const int FINAL_HOME_CELL = 57;
   static const List<int> SAFE_ZONES = [0, 9, 14, 22, 27, 35, 40, 48];
-  static const double TURN_TIME_LIMIT = 15.0;
 
   int currentPlayerTurn = 0;
   int diceValue = 1;
   bool hasRolledThisTurn = false;
   int consecutiveSixes = 0;
 
-  final List<Offset> boardCoordinatesArray = [];
-
+  // بيانات اللاعبين الأربعة بخصائصهم الكاملة
   final Map<int, Map<String, dynamic>> playersData = {
-    0: {"name": "Oman", "color": "Red", "tokens_pos": [-1, -1, -1, -1], "is_bot": false},
-    1: {"name": "Player_2", "color": "Green", "tokens_pos": [-1, -1, -1, -1], "is_bot": true},
-    2: {"name": "Player_3", "color": "Yellow", "tokens_pos": [-1, -1, -1, -1], "is_bot": true},
-    3: {"name": "Player_4", "color": "Blue", "tokens_pos": [-1, -1, -1, -1], "is_bot": true},
+    0: {"name": "Oman (الأحمر)", "color": Colors.red, "tokens_pos": [-1, -1, -1, -1], "is_bot": false},
+    1: {"name": "الأخضر", "color": Colors.green, "tokens_pos": [-1, -1, -1, -1], "is_bot": true},
+    2: {"name": "الأصفر", "color": Colors.amber, "tokens_pos": [-1, -1, -1, -1], "is_bot": true},
+    3: {"name": "الأزرق", "color": Colors.blue, "tokens_pos": [-1, -1, -1, -1], "is_bot": true},
   };
 
   final List<String> chatMessages = [];
@@ -40,15 +37,7 @@ class _LudoGameControllerState extends State<LudoGameController>
   @override
   void initState() {
     super.initState();
-    initializeBoardGrid();
     startNewGame();
-  }
-
-  void initializeBoardGrid() {
-    boardCoordinatesArray.clear();
-    for (int i = 0; i <= TOTAL_CELLS + 10; i++) {
-      boardCoordinatesArray.add(const Offset(1800.0, 200.0));
-    }
   }
 
   void startNewGame() {
@@ -192,15 +181,17 @@ class _LudoGameControllerState extends State<LudoGameController>
   }
 
   String getRolledText(bool rolled) {
-    return rolled ? 'انتظر الدور القادم...' : 'رمي النرد 🎲';
+    return rolled ? 'انتظر الدور...' : 'رمي النرد 🎲';
   }
 
   @override
   Widget build(BuildContext context) {
+    Color activeColor = playersData[currentPlayerTurn]!["color"];
+
     return Scaffold(
       appBar: AppBar(
-        title: Text('لعبة لودو - دور اللاعب: ${playersData[currentPlayerTurn]!["name"]}'),
-        backgroundColor: Colors.indigo[900],
+        title: Text('لوحة لودو الحقيقية - دور: ${playersData[currentPlayerTurn]!["name"]}'),
+        backgroundColor: activeColor,
       ),
       body: Container(
         decoration: const BoxDecoration(
@@ -212,48 +203,140 @@ class _LudoGameControllerState extends State<LudoGameController>
         ),
         child: Column(
           children: [
+            // لوحة اللعب المرئية الحقيقية (تخطيط يشبه طاولات اللودو الكلاسيكية)
             Expanded(
-              flex: 3,
-              child: Center(
+              flex: 5,
+              child: Container(
+                margin: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF151522),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: activeColor, width: 2.5),
+                ),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.casino, size: 70, color: Colors.amberAccent),
-                    const SizedBox(height: 10),
-                    Text(
-                      'نتيجة النرد: $diceValue',
-                      style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold),
+                    // شريط النرد العلوي داخل اللوحة
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            const Icon(Icons.casino, color: Colors.amberAccent, size: 28),
+                            const SizedBox(width: 8),
+                            Text(
+                              'النرد: $diceValue',
+                              style: const TextStyle(color: Colors.amberAccent, fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ],
+                        ),
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: activeColor,
+                            foregroundColor: Colors.white,
+                          ),
+                          onPressed: hasRolledThisTurn ? null : onDicePressed,
+                          child: Text(getRolledText(hasRolledThisTurn)),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-                      onPressed: hasRolledThisTurn ? null : onDicePressed,
-                      child: Text(
-                        getRolledText(hasRolledThisTurn),
-                        style: const TextStyle(color: Colors.black, fontSize: 18, fontWeight: FontWeight.bold),
+                    const Divider(color: Colors.white24, height: 12),
+                    
+                    // شبكة القواعد والبيوت الأربعة الحقيقية للعبة اللودو
+                    Expanded(
+                      child: GridView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: 4,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 2,
+                          crossAxisSpacing: 6,
+                          mainAxisSpacing: 6,
+                        ),
+                        itemBuilder: (context, playerIndex) {
+                          var player = playersData[playerIndex]!;
+                          List<int> tokens = player["tokens_pos"];
+                          Color pColor = player["color"];
+                          bool isCurrentTurn = (currentPlayerTurn == playerIndex);
+
+                          return AnimatedContainer(
+                            duration: const Duration(milliseconds: 300),
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: pColor.withOpacity(isCurrentTurn ? 0.35 : 0.12),
+                              borderRadius: BorderRadius.circular(12),
+                              border: Border.all(
+                                color: isCurrentTurn ? Colors.amberAccent : pColor,
+                                width: isCurrentTurn ? 2.5 : 1.2,
+                              ),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Text(
+                                      player["name"],
+                                      style: TextStyle(color: pColor, fontWeight: FontWeight.bold, fontSize: 13),
+                                    ),
+                                    if (isCurrentTurn)
+                                      const Icon(Icons.star, color: Colors.amber, size: 16),
+                                  ],
+                                ),
+                                const SizedBox(height: 6),
+                                // قطع اللاعب الأربعة المرئية على اللوحة
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                                  children: List.generate(4, (tokenIndex) {
+                                    int pos = tokens[tokenIndex];
+                                    return CircleAvatar(
+                                      radius: 16,
+                                      backgroundColor: pos == -1 ? Colors.grey[850] : pColor,
+                                      child: Text(
+                                        pos == -1 ? '🏠' : '$pos',
+                                        style: TextStyle(
+                                          fontSize: 10,
+                                          fontWeight: FontWeight.bold,
+                                          color: pos == -1 ? Colors.white70 : Colors.white,
+                                        ),
+                                      ),
+                                    );
+                                  }),
+                                ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],
                 ),
               ),
             ),
+
+            // صندوق الدردشة السفلي
             Expanded(
               flex: 3,
               child: Container(
-                margin: const EdgeInsets.all(16),
+                margin: const EdgeInsets.fromLTRB(10, 0, 10, 10),
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.black26,
-                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.black38,
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.white24),
                 ),
                 child: Column(
                   children: [
+                    const Text('دردشة الطاولة التفاعلية', style: TextStyle(color: Colors.white54, fontSize: 11)),
                     Expanded(
                       child: ListView.builder(
                         itemCount: chatMessages.length,
                         itemBuilder: (context, index) {
-                          return Text(chatMessages[index], style: const TextStyle(color: Colors.white70));
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Text(chatMessages[index], style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                          );
                         },
                       ),
                     ),
@@ -264,6 +347,7 @@ class _LudoGameControllerState extends State<LudoGameController>
                         hintText: 'اكتب رسالتك...',
                         hintStyle: TextStyle(color: Colors.white54),
                         border: InputBorder.none,
+                        isDense: true,
                       ),
                       onSubmitted: onChatMessageSubmitted,
                     ),
