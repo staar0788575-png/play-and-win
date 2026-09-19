@@ -1,17 +1,17 @@
-// ====================================================================
+// ---------------------------------------------------------
 // (Main App File) - ملف التشغيل الرئيسي لمشروع "العب واربح" 🎮
-// ====================================================================
+// ---------------------------------------------------------
 
 import 'package:flutter/material.dart';
-// import 'package:firebase_core/firebase_core.dart'; // قم بإلغاء التعليق عند تفعيل فايربيس
-import 'game_lobby.dart'; // استيراد ملف الشاشة الرئيسية للعبة
+import 'package:firebase_core/firebase_core.dart'; // تم إلغاء التعليق لتفعيل فايربيس
+import 'game_lobby.dart'; // استيراد ملف الواجهة الرئيسية للعبة
 
 void main() async {
-  // ضمان تهيئة الفلاتر قبل تشغيل خدمات فايربيس
+  // ضمان تهيئة الفلاتر قبل تحميل خدمات فايربيس
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // تهيئة فايربيس (قم بتفعيل السطر التالي بعد إضافة ملفات التكوين)
-  // await Firebase.initializeApp();
+
+  // تفعيل فايربيس بشكل صحيح وحل مشكلة الخطأ الظاهرة
+  await Firebase.initializeApp();
 
   runApp(const PlayAndWinApp());
 }
@@ -28,7 +28,7 @@ class PlayAndWinApp extends StatelessWidget {
         primarySwatch: Colors.indigo,
         brightness: Brightness.dark,
       ),
-      home: const GameLobbyScreen(), // تشغيل صالة الألعاب تواجه أولاً
+      home: const GameLobbyScreen(), // تشغيل صالة الألعاب بواجهة لودو أولاً
     );
   }
 }
