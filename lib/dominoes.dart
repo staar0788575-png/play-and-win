@@ -1,5 +1,5 @@
 // ====================================================================
-// (Dominoes Game Logic & UI) - لعبة الدومينو 🎲
+// (Dominoes Game Logic & UI) - لعبة الدومينو الحقيقية 🎲
 // المتوافق مع هيكل التطبيق والمنطق البرمجي الكامل
 // ====================================================================
 
@@ -25,7 +25,7 @@ class DominoesGameLogic extends StatefulWidget {
 }
 
 class _DominoesGameLogicState extends State<DominoesGameLogic> {
-  // --- إشارات العيد / SIGNALS ---
+  // --- إشارات الأحداث / SIGNALS ---
   Function(int dominoIndex, int sideChosen)? dominoPlaced;
   Function(int nextPlayerId)? turnSwitched;
   Function(int playerId)? playerPassedTurn;
@@ -67,7 +67,7 @@ class _DominoesGameLogicState extends State<DominoesGameLogic> {
   }
 
   void _initializeDominoDeck() {
-    debugPrint("تم سحب الأقطعة الكلاسيكي بنجاح لمشروع جيت هب.");
+    debugPrint("تم سحب القطع الكلاسيكي بنجاح لمشروع جيت هب.");
     var random = Random();
     for (int i = 0; i < HAND_LIMIT; i++) {
       playersHands[0]!["dominoes"].add([random.nextInt(7), random.nextInt(7)]);
@@ -188,7 +188,7 @@ class _DominoesGameLogicState extends State<DominoesGameLogic> {
     setState(() {
       isMicActive = isActive;
     });
-    debugPrint(isActive ? "تم تفعيل المايك الصوت لغرفة اللعبة." : "تم كتم المايك الشخصي.");
+    debugPrint(isActive ? "تم تفعيل المايك الصوتي لغرفة اللعبة." : "تم كتم المايك الشخصي.");
   }
 
   void _onSpeakerToggled(bool isActive) {
@@ -204,7 +204,7 @@ class _DominoesGameLogicState extends State<DominoesGameLogic> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('لعبة الدومينو - دور: ${playersHands[currentPlayerTurn]!["name"]}'),
+        title: Text('لعبة الدومينو الحقيقية - دور: ${playersHands[currentPlayerTurn]!["name"]}'),
         backgroundColor: Colors.indigo[900],
         actions: [
           IconButton(
@@ -255,10 +255,10 @@ class _DominoesGameLogicState extends State<DominoesGameLogic> {
                       label: const Text('سحب قطعة من الموزع', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
                     ),
                     const SizedBox(height: 12),
-                    const Text('قطع يد اللاعب الحالي:', style: TextStyle(color: Colors.white70, fontSize: 14)),
+                    const Text('قطع يد اللاعب الحالي (اضغط للوضع):', style: TextStyle(color: Colors.white70, fontSize: 14)),
                     const SizedBox(height: 6),
                     SizedBox(
-                      height: 50,
+                      height: 60,
                       child: ListView.builder(
                         scrollDirection: Axis.horizontal,
                         itemCount: currentHand.length,
@@ -268,14 +268,15 @@ class _DominoesGameLogicState extends State<DominoesGameLogic> {
                             onTap: () => _tryPlaceDomino(currentPlayerTurn, index, domino[0], domino[1], true),
                             child: Container(
                               margin: const EdgeInsets.symmetric(horizontal: 4),
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                               decoration: BoxDecoration(
                                 color: Colors.white,
                                 borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: Colors.amberAccent, width: 1.5),
                               ),
                               child: Center(
                                 child: Text('${domino[0]} | ${domino[1]}',
-                                    style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                                    style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 16)),
                               ),
                             ),
                           );
@@ -300,14 +301,17 @@ class _DominoesGameLogicState extends State<DominoesGameLogic> {
                 ),
                 child: Column(
                   children: [
+                    const Text('دردشة الطاولة', style: TextStyle(color: Colors.white54, fontSize: 11)),
                     Expanded(
                       child: ListView.builder(
                         itemCount: chatMessages.length,
                         itemBuilder: (context, index) {
-                          return Text(
-                            chatMessages[index], 
-                            // تم التعديل هنا لضمان عمل الـ Build في جميع إصدارات Flutter
-                            style: TextStyle(color: Colors.white.withOpacity(0.75)),
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Text(
+                              chatMessages[index], 
+                              style: TextStyle(color: Colors.white.withOpacity(0.85), fontSize: 13),
+                            ),
                           );
                         },
                       ),
@@ -316,9 +320,10 @@ class _DominoesGameLogicState extends State<DominoesGameLogic> {
                       controller: chatInputController,
                       style: const TextStyle(color: Colors.white),
                       decoration: const InputDecoration(
-                        hintText: 'اكتب رسالتك...',
+                        hintText: 'اكتب رسالتك في الدومينو...',
                         hintStyle: TextStyle(color: Colors.white54),
                         border: InputBorder.none,
+                        isDense: true,
                       ),
                       onSubmitted: _onChatMessageSubmitted,
                     ),
