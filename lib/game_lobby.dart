@@ -72,7 +72,7 @@ class GameLobbyScreen extends StatelessWidget {
                       );
                     },
                   ),
-                  // 3. السلم والثعبان (الاسم الصحيح والمطابق تماماً للملف)
+                  // 3. السلم والثعبان (التعديل هنا باستخدام الاسم الصحيح للشاشة)
                   _buildGameCard(
                     context,
                     title: 'السلم والثعبان',
@@ -81,7 +81,7 @@ class GameLobbyScreen extends StatelessWidget {
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const SnakesAndLaddersGameLogic()),
+                        MaterialPageRoute(builder: (context) => const SnakesAndLaddersGameScreen()),
                       );
                     },
                   ),
