@@ -1,63 +1,54 @@
 // ====================================================================
-// (Snakes and Ladders Game Logic & UI) - لعبة السلم والثعبان 🐍🪜
-// المتوافق مع شريط الـ VIP والورود، والدردشة الفورية عبر Firebase
+// (Snakes and Ladders Game Logic & UI) - لعبة السلم والثعبان الاحترافية 🐍🪜
+// المتوافق مع شريط الـ VIP والورود، والدردشة الفورية، ورسم لوحة الـ 100 مربع الحقيقية
 // ====================================================================
 
 import 'dart:async';
 import 'dart:math';
 import 'package:flutter/material.dart';
-import 'game_chat_widget.dart'; // استيراد ويدجت الدردشة المشترك المتصل بـ Firebase
-import 'game_social_bar.dart'; // استيراد شريط الميزات الاجتماعية والـ VIP والورود
 
-class Vector2 {
-  double x;
-  double y;
-  Vector2(this.x, this.y);
-
-  static final zero = Vector2(0.0, 0.0);
-}
-
-class SnakesAndLaddersGameLogic extends StatefulWidget {
-  const SnakesAndLaddersGameLogic({Key? key}) : super(key: key);
+class SnakesAndLaddersGameScreen extends StatefulWidget {
+  const SnakesAndLaddersGameScreen({Key? key}) : super(key: key);
 
   @override
-  State<SnakesAndLaddersGameLogic> createState() => _SnakesAndLaddersGameLogicState();
+  State<SnakesAndLaddersGameScreen> createState() => _SnakesAndLaddersGameScreenState();
 }
 
-class _SnakesAndLaddersGameLogicState extends State<SnakesAndLaddersGameLogic> {
-  // --- إشارات اللعبة / SIGNALS ---
-  Function(int resultValue)? diceRoller;
-  Function(int playerId, int finalTile)? playerMoved;
-  Function(String actionType, int targetPlayerId)? socialActionTriggered;
-  Function(int playerId)? playerWon;
-
-  // --- الإعدادات والثوابت / CONSTANTS ---
-  static const int MAX_TILES = 100; // إجمالي عدد مربعات اللوحة
-  static const double TURN_TIME_LIMIT = 15.0; // الميقاتي الدولي لكل لاعب
-
-  // قاموس السلالم والثعابين (السلم: مربع البداية -> السلم: مربع النهاية)
+class _SnakesAndLaddersGameScreenState extends State<SnakesAndLaddersGameScreen> {
+  static const int MAX_TILES = 100;
+  
+  // قاموس السلالم والثعابين الدقيق
   static const Map<int, int> LADDERS = {
     4: 18,
     20: 38,
     28: 84,
+    40: 59,
+    51: 67,
+    71: 91,
   };
 
   static const Map<int, int> SNAKES = {
     38: 27,
     83: 73,
-    96: 1,
+    96: 12,
+    54: 34,
+    62: 19,
+    88: 24,
   };
 
-  List<Vector2> tilesCoordinates = [];
-
-  // --- متغيرات حالة اللعبة / GAME STATE ---
   int currentPlayerTurn = 0;
   bool isRolling = false;
+  int lastDiceResult = 1;
 
-  Map<int, Map<String, dynamic>> playersPositions = {
-    0: {"name": "Green Player", "current_tile": 0, "node_name": "TokenGreen"},
-    1: {"name": "Yellow Player", "current_tile": 0, "node_name": "TokenYellow"},
+  final Map<int, Map<String, dynamic>> playersData = {
+    0: {"name": "اللاعب الأخضر", "color": Colors.green, "current_tile": 1},
+    1: {"name": "اللاعب الأصفر", "color": Colors.amber, "current_tile": 1},
   };
+
+  final List<String> chatMessages = [
+    "النظام: مرحباً بك في طاولة السلم والثعبان الاحترافية!",
+  ];
+  final TextEditingController chatInputController = TextEditingController();
 
   bool isMicActive = false;
   bool isSpeakerActive = false;
@@ -65,38 +56,6 @@ class _SnakesAndLaddersGameLogicState extends State<SnakesAndLaddersGameLogic> {
   @override
   void initState() {
     super.initState();
-    ready();
-  }
-
-  // ====================================================================
-  // 1. بدء اللعبة والتجهيز / (INITIALIZATION)
-  // ====================================================================
-  void ready() {
-    _generateBoardCoordinates();
-    _setupSocialConnections();
-    _startTurn();
-  }
-
-  void _generateBoardCoordinates() {
-    tilesCoordinates.clear();
-    for (int i = 0; i <= 101; i++) {
-      tilesCoordinates.add(Vector2(50 * (i % 10).toDouble(), 600 - (50 * (i / 10).toInt()).toDouble()));
-    }
-    debugPrint("تم بناء مصميفة الـ 100 مربع وتحديثها بنجاح.");
-  }
-
-  void _setupSocialConnections() {
-    debugPrint("ربط أزرار الدردشة والواجهة في واجهة المنافسة بنجاح.");
-  }
-
-  // ====================================================================
-  // 2. نظام رمي النرد / (DICE MECHANICS)
-  // ====================================================================
-  void _startTurn() {
-    setState(() {
-      isRolling = false;
-    });
-    debugPrint("Turn: ${playersPositions[currentPlayerTurn]!["name"]}");
   }
 
   void _onRollPressed() {
@@ -107,63 +66,55 @@ class _SnakesAndLaddersGameLogicState extends State<SnakesAndLaddersGameLogic> {
 
     var random = Random();
     int diceResult = random.nextInt(6) + 1;
-    
-    if (diceRoller != null) {
-      diceRoller!(diceResult);
-    }
+    lastDiceResult = diceResult;
 
     _animateDiceRoll(diceResult);
   }
 
   void _animateDiceRoll(int result) async {
-    await Future.delayed(const Duration(milliseconds: 600));
+    await Future.delayed(const Duration(milliseconds: 700));
     _movePlayerToken(currentPlayerTurn, result);
   }
 
-  // ====================================================================
-  // 3. مسار الحركة: السلالم والثعابين / (GAMEPLAY LOGIC)
-  // ====================================================================
   void _movePlayerToken(int playerId, int steps) async {
-    int oldTile = playersPositions[playerId]!["current_tile"];
+    int oldTile = playersData[playerId]!["current_tile"];
     int targetTile = oldTile + steps;
 
     if (targetTile > MAX_TILES) {
-      targetTile = oldTile;
-      debugPrint("تجاوزت السقف المربع 100. تم البقاء في المربع الحالي.");
-      _switchTurn();
-      return;
+      // الارتداد أو البقاء في حال تجاوز المربع 100
+      targetTile = MAX_TILES - (targetTile - MAX_TILES);
     }
 
+    // حركة تدريجية لكل خطوة لإظهار الاحترافية
     for (int step = oldTile + 1; step <= targetTile; step++) {
-      playersPositions[playerId]!["current_tile"] = step;
-      await _animateTokenStep(playerId, step);
+      setState(() {
+        playersData[playerId]!["current_tile"] = step;
+      });
+      await Future.delayed(const Duration(milliseconds: 120));
     }
 
     await _checkBoardModifiers(playerId, targetTile);
   }
 
-  Future<void> _animateTokenStep(int playerId, int tileIndex) async {
-    await Future.delayed(const Duration(milliseconds: 200));
-  }
-
   Future<void> _checkBoardModifiers(int playerId, int currentTile) async {
+    int finalDestination = currentTile;
+
     if (LADDERS.containsKey(currentTile)) {
-      int topTile = LADDERS[currentTile]!;
-      debugPrint("🚀 تسلقوا إلى المربع $topTile");
-      playersPositions[playerId]!["current_tile"] = topTile;
-      await _animateTokenStep(playerId, topTile);
+      finalDestination = LADDERS[currentTile]!;
+      debugPrint("🚀 تسلق سلم إلى: $finalDestination");
     } else if (SNAKES.containsKey(currentTile)) {
-      int bottomTile = SNAKES[currentTile]!;
-      debugPrint("🐍 عذرا! الهبوط إلى المربع $bottomTile");
-      playersPositions[playerId]!["current_tile"] = bottomTile;
-      await _animateTokenStep(playerId, bottomTile);
+      finalDestination = SNAKES[currentTile]!;
+      debugPrint("🐍 لدغة ثعبان إلى: $finalDestination");
     }
 
-    if (playerMoved != null) {
-      playerMoved!(playerId, playersPositions[playerId]!["current_tile"]);
+    if (finalDestination != currentTile) {
+      await Future.delayed(const Duration(milliseconds: 250));
+      setState(() {
+        playersData[playerId]!["current_tile"] = finalDestination;
+      });
     }
 
-    if (playersPositions[playerId]!["current_tile"] == MAX_TILES) {
+    if (finalDestination == MAX_TILES) {
       _declareWinner(playerId);
     } else {
       _switchTurn();
@@ -172,51 +123,65 @@ class _SnakesAndLaddersGameLogicState extends State<SnakesAndLaddersGameLogic> {
 
   void _switchTurn() {
     setState(() {
-      currentPlayerTurn = (currentPlayerTurn + 1) % playersPositions.length;
-      _startTurn();
+      isRolling = false;
+      currentPlayerTurn = (currentPlayerTurn + 1) % playersData.length;
     });
   }
 
   void _declareWinner(int playerId) {
-    debugPrint("🏆 الفائز بالمركز الأول هو ${playersPositions[playerId]!["name"]}");
-    if (playerWon != null) {
-      playerWon!(playerId);
-    }
+    String winnerName = playersData[playerId]!["name"];
+    setState(() {
+      chatMessages.add("🏆 تهانينا! الفائز بالمركز الأول هو: $winnerName");
+    });
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: const Color(0xFF172A45),
+        title: const Text('🎉 فوز مبهر!', style: TextStyle(color: Colors.amberAccent)),
+        content: Text('لقد فاز $winnerName وتصدر الطاولة بجدارة!', style: const TextStyle(color: Colors.white)),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+              setState(() {
+                playersData[0]!["current_tile"] = 1;
+                playersData[1]!["current_tile"] = 1;
+                currentPlayerTurn = 0;
+              });
+            },
+            child: const Text('لعب دور جديد', style: TextStyle(color: Colors.amber)),
+          ),
+        ],
+      ),
+    );
   }
 
-  // ====================================================================
-  // 4. ميزات التحكم الصوتي
-  // ====================================================================
-  void _onMicToggled(bool isActive) {
+  void _onChatMessageSubmitted(String text) {
+    if (text.trim().isEmpty) return;
     setState(() {
-      isMicActive = isActive;
+      String playerName = playersData[currentPlayerTurn]!["name"];
+      chatMessages.add("$playerName: $text");
+      chatInputController.clear();
     });
-    debugPrint(isActive ? "تم تفعيل المايكروفون بث الصوت لغرفة اللعبة." : "تم كتم المايكروفون الشخصي.");
-  }
-
-  void _onSpeakerToggled(bool isActive) {
-    setState(() {
-      isSpeakerActive = isActive;
-    });
-    debugPrint("مكبر الصوت معدل: $isActive");
   }
 
   @override
   Widget build(BuildContext context) {
-    String currentName = playersPositions[currentPlayerTurn]!["name"];
+    var activePlayer = playersData[currentPlayerTurn]!;
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('السلم والثعبان 🐍 - دور: $currentName'),
-        backgroundColor: Colors.indigo[900],
+        title: Text('السلم والثعبان الاحترافية - دور: ${activePlayer["name"]}'),
+        backgroundColor: const Color(0xFF0F0F19),
         actions: [
           IconButton(
-            icon: Icon(isMicActive ? Icons.mic : Icons.mic_off),
-            onPressed: () => _onMicToggled(!isMicActive),
+            icon: Icon(isMicActive ? Icons.mic : Icons.mic_off, color: isMicActive ? Colors.green : Colors.white70),
+            onPressed: () => setState(() => isMicActive = !isMicActive),
           ),
           IconButton(
-            icon: Icon(isSpeakerActive ? Icons.volume_up : Icons.volume_mute),
-            onPressed: () => _onSpeakerToggled(!isSpeakerActive),
+            icon: Icon(isSpeakerActive ? Icons.volume_up : Icons.volume_mute, color: isSpeakerActive ? Colors.amber : Colors.white70),
+            onPressed: () => setState(() => isSpeakerActive = !isSpeakerActive),
           ),
         ],
       ),
@@ -230,45 +195,123 @@ class _SnakesAndLaddersGameLogicState extends State<SnakesAndLaddersGameLogic> {
         ),
         child: Column(
           children: [
-            // 🌟 شريط الميزات الاجتماعية والـ VIP والورود اليومية
-            GameSocialBar(
-              isVip: true,
-              dailyFlowersCount: 5,
-              onMicToggle: (isMicOn) {
-                debugPrint(isMicOn ? "تم فتح المايك الصوتي في السلم والثعبان" : "تم كتم المايك");
-              },
-              onSendGift: () {
-                debugPrint("تم إرسال هدية أو وردة في طاولة السلم والثعبان");
-              },
+            // 🌟 شريط الـ VIP والورود العلوي
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              color: Colors.black26,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(
+                    children: const [
+                      Icon(Icons.workspace_premium, color: Colors.amber, size: 24),
+                      SizedBox(width: 6),
+                      Text('غرفة VIP التفاعلية', style: TextStyle(color: Colors.amberAccent, fontWeight: FontWeight.bold)),
+                    ],
+                  ),
+                  Row(
+                    children: [
+                      const Icon(Icons.local_florist, color: Colors.pinkAccent, size: 20),
+                      const SizedBox(width: 4),
+                      const Text('الورود اليومية: 5', style: TextStyle(color: Colors.white70, fontSize: 13)),
+                    ],
+                  ),
+                ],
+              ),
             ),
 
-            // لوحة اللعب الرئيسية والنرد
+            // لوحة اللعب الاحترافية (100 مربع مرئي حقيقي)
             Expanded(
-              flex: 4,
+              flex: 5,
               child: Container(
-                margin: const EdgeInsets.all(12),
-                padding: const EdgeInsets.all(12),
+                margin: const EdgeInsets.all(8),
+                padding: const EdgeInsets.all(4),
                 decoration: BoxDecoration(
-                  color: Colors.blue[900],
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.amber, width: 3),
+                  color: const Color(0xFF102030),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: activePlayer["color"], width: 2.5),
                 ),
                 child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.casino, size: 50, color: Colors.amberAccent),
-                    const SizedBox(height: 10),
-                    Text(
-                      'موقع الأخضر: ${playersPositions[0]!["current_tile"]} | موقع الأصفر: ${playersPositions[1]!["current_tile"]}',
-                      style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    // شريط النرد العلوي داخل اللوحة
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              const Icon(Icons.casino, color: Colors.amberAccent, size: 26),
+                              const SizedBox(width: 6),
+                              Text('النتيجة: $lastDiceResult', style: const TextStyle(color: Colors.amberAccent, fontSize: 16, fontWeight: FontWeight.bold)),
+                            ],
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(backgroundColor: activePlayer["color"]),
+                            onPressed: isRolling ? null : _onRollPressed,
+                            child: Text(isRolling ? 'جاري التحرك...' : 'رمي النرد 🎲', style: const TextStyle(color: Colors.white)),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 20),
-                    ElevatedButton(
-                      style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-                      onPressed: isRolling ? null : _onRollPressed,
-                      child: Text(
-                        isRolling ? 'جاري التحرك...' : 'رمي النرد 🎲',
-                        style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold),
+                    const Divider(color: Colors.white24, height: 8),
+
+                    // شبكة اللوحة الاحترافية 10×10
+                    Expanded(
+                      child: GridView.builder(
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: 100,
+                        gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                          crossAxisCount: 10,
+                          crossAxisSpacing: 2,
+                          mainAxisSpacing: 2,
+                        ),
+                        itemBuilder: (context, index) {
+                          // حساب رقم المربع بتصميم مسار تصاعدي/تنازلي احترافي
+                          int row = index ~/ 10;
+                          int col = index % 10;
+                          int tileNum = (row % 2 == 0) ? (100 - (row * 10) - col) : (100 - (row * 10) - (9 - col));
+
+                          bool isGreenHere = playersData[0]!["current_tile"] == tileNum;
+                          bool isYellowHere = playersData[1]!["current_tile"] == tileNum;
+                          bool hasLadder = LADDERS.containsKey(tileNum);
+                          bool hasSnake = SNAKES.containsKey(tileNum);
+
+                          Color tileColor = const Color(0xFF1E3A5F);
+                          if (hasLadder) tileColor = Colors.green.withOpacity(0.4);
+                          if (hasSnake) tileColor = Colors.red.withOpacity(0.4);
+
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: tileColor,
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(color: Colors.white10),
+                            ),
+                            child: Stack(
+                              alignment: Alignment.center,
+                              children: [
+                                Text(
+                                  '$tileNum',
+                                  style: TextStyle(
+                                    color: (hasLadder || hasSnake) ? Colors.white : Colors.white54,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                                if (isGreenHere || isYellowHere)
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      if (isGreenHere)
+                                        Container(width: 8, height: 8, decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.green)),
+                                      if (isYellowHere)
+                                        Container(width: 8, height: 8, decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.amber)),
+                                    ],
+                                  ),
+                              ],
+                            ),
+                          );
+                        },
                       ),
                     ),
                   ],
@@ -276,32 +319,41 @@ class _SnakesAndLaddersGameLogicState extends State<SnakesAndLaddersGameLogic> {
               ),
             ),
 
-            // قسم الدردشة الاجتماعية المباشرة عبر Firebase
+            // صندوق الدردشة السفلية
             Expanded(
               flex: 3,
               child: Container(
-                margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: Colors.black26,
-                  borderRadius: BorderRadius.circular(10),
+                  color: Colors.black38,
+                  borderRadius: BorderRadius.circular(12),
                   border: Border.all(color: Colors.white24),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Padding(
-                      padding: EdgeInsets.symmetric(horizontal: 8.0, vertical: 4),
-                      child: Text(
-                        '💬 دردشة طاولة السلم والثعبان:',
-                        style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold, fontSize: 13),
+                    const Text('دردشة الطاولة المباشرة', style: TextStyle(color: Colors.white54, fontSize: 11)),
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: chatMessages.length,
+                        itemBuilder: (context, index) {
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 2),
+                            child: Text(chatMessages[index], style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                          );
+                        },
                       ),
                     ),
-                    const Divider(color: Colors.white24, height: 1),
-                    Expanded(
-                      child: GameChatWidget(
-                        playerName: currentName,
+                    TextField(
+                      controller: chatInputController,
+                      style: const TextStyle(color: Colors.white),
+                      decoration: const InputDecoration(
+                        hintText: 'اكتب رسالتك في السلم والثعبان...',
+                        hintStyle: TextStyle(color: Colors.white54),
+                        border: InputBorder.none,
+                        isDense: true,
                       ),
+                      onSubmitted: _onChatMessageSubmitted,
                     ),
                   ],
                 ),
