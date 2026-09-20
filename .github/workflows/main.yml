@@ -28,14 +28,15 @@ jobs:
       - name: Create Android Platform v2
         run: flutter create --platforms=android --org com.staar --project-name play_and_win .
 
-      - name: Build App Cleanly
+      - name: Build Clean Release APK
         run: |
+          flutter clean
           flutter pub get
-          flutter pub run flutter_launcher_icons:main
-          flutter build apk --debug
+          flutter sub run flutter_launcher_icons:main
+          flutter build apk --release
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-debug
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          name: app-release
+          path: build/app/outputs/flutter-apk/app-release.apk
