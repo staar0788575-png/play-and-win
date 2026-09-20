@@ -1,9 +1,15 @@
+// -------------------------------------------------------------------
+// (Home Screen) - الشاشة الرئيسية لتطبيق العب واربح 🎮 (نسخة محسنة ومكتملة)
+// -------------------------------------------------------------------
+
 import 'package:flutter/material.dart';
 import 'wallet_screen.dart';
 import 'social_screen.dart';
 import 'billiards.dart';
 import 'snakes_and_ladders.dart';
 import 'dominoes.dart';
+// استيراد شاشة لعبة لودو إذا كانت موجودة لديك، يمكنك إلغاء التعليق عند إضافتها:
+// import 'game_screen.dart';
 
 class HomeScreen extends StatelessWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -32,6 +38,7 @@ class HomeScreen extends StatelessWidget {
                 border: Border.all(color: Colors.amber.withOpacity(0.5)),
               ),
               child: Row(
+                mainAxisSize: MainAxisSize.min,
                 children: const [
                   Text(
                     '2,500',
@@ -99,40 +106,62 @@ class HomeScreen extends StatelessWidget {
                   crossAxisSpacing: 16.0,
                   mainAxisSpacing: 16.0,
                   children: [
+                    // 1. لعبة البلياردو
                     _buildGameCard(
                       context,
                       title: 'لعبة البلياردو',
                       icon: Icons.sports_basketball,
                       color: Colors.green,
                       onTap: () {
-                        print("الانتقال إلى البلياردو");
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const BilliardsScreen(),
+                          ),
+                        );
                       },
                     ),
+                    // 2. السلم والثعبان
                     _buildGameCard(
                       context,
                       title: 'السلم والثعبان',
                       icon: Icons.grid_view,
                       color: Colors.orange,
                       onTap: () {
-                        print("الانتقال إلى السلم والثعبان");
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const SnakesAndLaddersScreen(),
+                          ),
+                        );
                       },
                     ),
+                    // 3. لعبة الدومينو
                     _buildGameCard(
                       context,
                       title: 'لعبة الدومينو',
                       icon: Icons.extension,
                       color: Colors.blue,
                       onTap: () {
-                        print("الانتقال إلى الدومينو");
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (context) => const DominoesScreen(),
+                          ),
+                        );
                       },
                     ),
+                    // 4. لعبة لودو
                     _buildGameCard(
                       context,
                       title: 'لعبة لودو',
                       icon: Icons.casino,
                       color: Colors.red,
                       onTap: () {
-                        print("الانتقال إلى لودو");
+                        // استبدل LudoScreen بالشاشة الخاصة بلعبة لودو عند توفرها
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('لعبة لودو قريباً!')),
+                        );
                       },
                     ),
                   ],
