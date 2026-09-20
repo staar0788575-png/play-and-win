@@ -32,7 +32,6 @@ jobs:
         run: |
           flutter clean
           flutter pub get
-          flutter sub run flutter_launcher_icons:main
           flutter build apk --release
 
       - name: Upload APK
