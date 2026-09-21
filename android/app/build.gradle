@@ -2,6 +2,7 @@ plugins {
     id "com.android.application"
     id "org.jetbrains.kotlin.android"
     id "dev.flutter.flutter-gradle-plugin"
+    id "com.google.gms.google-services"
 }
 
 android {
@@ -28,7 +29,8 @@ android {
 
     buildTypes {
         release {
-            // تم تنظيف كود التوقيع لتجنب خطأ missing signingConfigs
+            // TODO: Add your own signing config for the release build.
+            // SigningConfig signingConfigs.debug
         }
     }
 }
