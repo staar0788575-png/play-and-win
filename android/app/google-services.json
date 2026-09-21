@@ -1,1 +1,29 @@
-
+{
+  "project_info": {
+    "project_number": "608375477910",
+    "project_id": "blay-and-win.firebasestorage.app",
+    "storage_bucket": "blay-and-win.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608375477910:android:83abde8a79cf48d56494b7",
+        "android_client_info": {
+          "package_name": "com.example.play_and_win"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpzbKgYtF1noyDRL4U4q0RbUwNSUoUp8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
