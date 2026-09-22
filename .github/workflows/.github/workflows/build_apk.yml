@@ -1,15 +1,12 @@
 name: Build Flutter Android APK
-
 on:
   push:
     branches: [ main, master ]
   pull_request:
     branches: [ main, master ]
-
 jobs:
   build:
     runs-on: ubuntu-latest
-
     steps:
       - name: سحب كود المشروع من المستودع
         uses: actions/checkout@v4
@@ -27,7 +24,6 @@ jobs:
           channel: 'stable'
 
       - name: جلب حزم الاعتمادات للمشروع (pubspec.yaml)
-        uses: flutter
         run: flutter pub get
 
       - name: توليد شاشة البداية وأيقونة التطبيق تلقائياً
@@ -36,10 +32,10 @@ jobs:
           flutter pub run flutter_launcher_icons:main
 
       - name: بناء الإصدار النهائي APK (Release)
-        run: flutter build apk --release
+        run: flutter build apk --release --split-per-abi --obfuscate --split-debug-info=./symbols
 
       - name: تسهيل تحميل الملف الناتج لرفع ملف الـ APK
         uses: actions/upload-artifact@v4
         with:
           name: play-and-win-release
-          path: build/app/outputs/flutter-apk/app-release.apk
+          path: build/app/outputs/flutter-apk/app-*-release.apk
