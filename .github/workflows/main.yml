@@ -1,26 +1,13 @@
-name: Final Working Build
-on: workflow_dispatch
+name: Build APK
+on: [push]
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
-      - uses: actions/setup-java@v3
-        with: { distribution: 'zulu', java-version: '17' }
       - uses: subosito/flutter-action@v2
-        with: { flutter-version: '3.19.0' }
-      - run: flutter pub get
-      - run: |
-          keytool -genkey -v -keystore android/app/upload-keystore.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -storepass 123456 -keypass 123456 -dname "CN=PlayAndWin" || true
-          echo "storePassword=123456" > android/key.properties
-          echo "keyPassword=123456" >> android/key.properties
-          echo "keyAlias=upload" >> android/key.properties
-          echo "storeFile=upload-keystore.jks" >> android/key.properties
-          sed -i 's/com.example.play_and_win/com.playandwin.game/g' android/app/build.gradle || true
-          sed -i 's/com.example.play_and_win/com.playandwin.game/g' android/app/google-services.json || true
-          sed -i 's/com.example.play_and_win/com.playandwin.game/g' android/app/src/main/AndroidManifest.xml || true
-          flutter build apk --release
-      - uses: actions/upload-artifact@v4
         with:
-          name: FINAL-WORKING-APK
-          path: build/app/outputs/flutter-apk/app-release.apk
+          flutter-version: '3.19.0'
+      - run: flutter pub get
+      - run: flutter build apk --split-per-abi --release
+      - run: curl --upload-file build/app/outputs/flutter-apk/app-armeabi-v7a-release.apk https://transfer.sh/app.apk > link.txt && cat link.txt
