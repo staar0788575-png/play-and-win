@@ -17,7 +17,7 @@ jobs:
           flutter-version: '3.19.0'
       - run: flutter pub get
 
-      - name: Create Keystore ONCE
+      - name: Create and Save Keystore
         run: |
           if [ ! -f android/app/upload-keystore.jks ]; then
             keytool -genkey -v -keystore android/app/upload-keystore.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -storepass 123456 -keypass 123456 -dname "CN=PlayAndWin, OU=Dev, O=PlayAndWin, L=Baghdad, S=Baghdad, C=IQ"
@@ -26,6 +26,12 @@ jobs:
           echo "keyPassword=123456" >> android/key.properties
           echo "keyAlias=upload" >> android/key.properties
           echo "storeFile=upload-keystore.jks" >> android/key.properties
+          # حفظ المفتاح في الريبو عشان يفضل ثابت
+          git config user.name "keystore-bot"
+          git config user.email "bot@playandwin.com"
+          git add android/app/upload-keystore.jks android/key.properties || true
+          git commit -m "Save permanent keystore" || true
+          git push || true
 
       - name: Build Release APK arm64 only
         run: flutter build apk --release --split-per-abi
