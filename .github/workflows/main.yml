@@ -1,25 +1,107 @@
-name: Build APK Fixed
-on: [push, workflow_dispatch]
+name: Fix and Build Universal APK
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
       - uses: actions/setup-java@v3
-        with: { distribution: 'zulu', java-version: '17' }
+        with:
+          distribution: 'zulu'
+          java-version: '17'
       - uses: subosito/flutter-action@v2
-        with: { flutter-version: '3.19.0' }
+        with:
+          flutter-version: '3.19.0'
       - run: flutter pub get
-      - name: Create Keystore
+
+      - name: Fix Signing Config
         run: |
+          # انشاء المفتاح
           keytool -genkey -v -keystore android/app/upload-keystore.jks -alias upload -keyalg RSA -keysize 2048 -validity 10000 -storepass 123456 -keypass 123456 -dname "CN=PlayAndWin" || true
           echo "storePassword=123456" > android/key.properties
           echo "keyPassword=123456" >> android/key.properties
           echo "keyAlias=upload" >> android/key.properties
           echo "storeFile=upload-keystore.jks" >> android/key.properties
-      - name: Build Release
+          
+          # تصليح build.gradle عشان يقرأ التوقيع
+          cat > android/app/build.gradle << 'GRADLE'
+          def localProperties = new Properties()
+          def localPropertiesFile = rootProject.file('local.properties')
+          if (localPropertiesFile.exists()) {
+              localPropertiesFile.withReader('UTF-8') { reader ->
+                  localProperties.load(reader)
+              }
+          }
+          def flutterRoot = localProperties.getProperty('flutter.sdk')
+          if (flutterRoot == null) {
+              throw new GradleException("Flutter SDK not found.")
+          }
+          def flutterVersionCode = localProperties.getProperty('flutter.versionCode')
+          if (flutterVersionCode == null) { flutterVersionCode = '1' }
+          def flutterVersionName = localProperties.getProperty('flutter.versionName')
+          if (flutterVersionName == null) { flutterVersionName = '1.0' }
+          apply plugin: 'com.android.application'
+          apply plugin: 'kotlin-android'
+          apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
+          def keystoreProperties = new Properties()
+          def keystorePropertiesFile = rootProject.file('key.properties')
+          if (keystorePropertiesFile.exists()) {
+              keystoreProperties.load(new FileInputStream(keystorePropertiesFile))
+          }
+          android {
+              namespace "com.example.play_and_win"
+              compileSdkVersion flutter.compileSdkVersion
+              ndkVersion flutter.ndkVersion
+              compileOptions {
+                  sourceCompatibility JavaVersion.VERSION_1_8
+                  targetCompatibility JavaVersion.VERSION_1_8
+              }
+              kotlinOptions { jvmTarget = '1.8' }
+              sourceSets { main.java.srcDirs += 'src/main/kotlin' }
+              defaultConfig {
+                  applicationId "com.example.play_and_win"
+                  minSdkVersion 21
+                  targetSdkVersion flutter.targetSdkVersion
+                  versionCode flutterVersionCode.toInteger()
+                  versionName flutterVersionName
+              }
+              signingConfigs {
+                  release {
+                      keyAlias keystoreProperties['keyAlias']
+                      keyPassword keystoreProperties['keyPassword']
+                      storeFile keystoreProperties['storeFile'] ? file(keystoreProperties['storeFile']) : null
+                      storePassword keystoreProperties['storePassword']
+                  }
+              }
+              buildTypes {
+                  release {
+                      signingConfig signingConfigs.release
+                      minifyEnabled false
+                      shrinkResources false
+                  }
+              }
+          }
+          flutter { source '../..' }
+          dependencies {
+              implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk7:$kotlin_version"
+          }
+          GRADLE
+
+      - name: Build Universal Release
         run: flutter build apk --release
+
+      - name: Save Keystore Permanently
+        run: |
+          git config user.name "bot"
+          git config user.email "bot@bot.com"
+          git add android/app/upload-keystore.jks android/key.properties android/app/build.gradle || true
+          git commit -m "fix signing permanently" || true
+          git push || true
+
       - uses: actions/upload-artifact@v4
         with:
-          name: play-and-win-fixed
+          name: play-and-win-FIXED-UNIVERSAL
           path: build/app/outputs/flutter-apk/app-release.apk
