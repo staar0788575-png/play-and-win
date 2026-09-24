@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
-// ================== MAIN ==================
 void main() => runApp(const PlayAndWinApp());
 class PlayAndWinApp extends StatelessWidget {
   const PlayAndWinApp({super.key});
@@ -45,7 +44,6 @@ class Hub extends StatelessWidget {
       child: Container(decoration: BoxDecoration(gradient: LinearGradient(colors: g), borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: g.last.withOpacity(0.5), blurRadius: 10)]), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(ic, color: Colors.white, size: 40), const SizedBox(height: 6), Text(t, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))])));}
 }
 
-// ================== WIDGETS مشتركة ==================
 Widget playerAvatar(PlayerInfo p, bool isTurn){
   return Container(padding: const EdgeInsets.all(2), decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: isTurn? Colors.amber: Colors.white24, width: isTurn? 3:1)), child: Column(children: [
     CircleAvatar(radius: 18, backgroundColor: p.color, child: Text(p.avatar, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
@@ -65,7 +63,7 @@ class _ChatBoxState extends State<ChatBox> {
   }
 }
 
-// ================== 1- BILLIARD ULTRA ==================
+// ================== BILLIARD ==================
 class BallData { Offset pos; Offset vel; Color color; bool gone=false; BallData(this.pos,this.vel,this.color); }
 class BilliardUltra extends StatefulWidget { const BilliardUltra({super.key}); @override State<BilliardUltra> createState()=> _BilliardUltraState(); }
 class _BilliardUltraState extends State<BilliardUltra> with SingleTickerProviderStateMixin {
@@ -102,20 +100,18 @@ class _BilliardUltraState extends State<BilliardUltra> with SingleTickerProvider
 class BilliardUltraPainter extends CustomPainter {
   BallData cue; List<BallData> balls; double ang; BilliardUltraPainter(this.cue,this.balls,this.ang);
   @override void paint(Canvas c, Size s){
-    final pk=Paint()..color=Colors.black; for(var p in [Offset(8,8), Offset(s.width/2,8), Offset(s.width-8,8), Offset(8,s.height-8), Offset(s.width/2,s.height-8), Offset(s.width-8,s.height-8)]){ c.drawCircle(p, 12, pk); }
-    // aiming line + stick
+    final pk=Paint()..color=Colors.black; for(var p in [const Offset(8,8), Offset(s.width/2,8), Offset(s.width-8,8), const Offset(8,292), Offset(s.width/2,292), Offset(s.width-8,292)]){ c.drawCircle(p, 12, pk); }
     double rad=ang*pi/180; Offset dir=Offset(cos(rad), sin(rad));
-    Paint linePaint=Paint()..color=Colors.white38..strokeWidth=1..style=PaintingStyle.stroke;
-    Path dash=Path(); for(double i=0;i<80;i+=10){ dash.moveTo(cue.pos.dx+dir.dx*i, cue.pos.dy+dir.dy*i); dash.lineTo(cue.pos.dx+dir.dx*(i+5), cue.pos.dy+dir.dy*(i+5)); } c.drawPath(dash, linePaint);
-    // stick
-    Offset stickStart=cue.pos - dir*60; Paint stickPaint=Paint()..color=const Color(0xFFD2B48C)..strokeWidth=6..strokeCap=StrokeCap.round; c.drawLine(stickStart, cue.pos - dir*8, stickPaint);
+    Paint linePaint=Paint()..color=Colors.white38..strokeWidth=1;
+    for(double i=0;i<80;i+=10){ c.drawLine(cue.pos+dir*i, cue.pos+dir*(i+5), linePaint); }
+    Paint stickPaint=Paint()..color=const Color(0xFFD2B48C)..strokeWidth=6..strokeCap=StrokeCap.round; Offset stickStart=cue.pos - dir*60; c.drawLine(stickStart, cue.pos - dir*8, stickPaint);
     if(!cue.gone) c.drawCircle(cue.pos, 8, Paint()..color=Colors.white);
     for(var b in balls){ if(!b.gone) c.drawCircle(b.pos, 8, Paint()..color=b.color); }
   }
   @override bool shouldRepaint(covariant CustomPainter oldDelegate)=> true;
 }
 
-// ================== 2- LUDO ULTRA ==================
+// ================== LUDO - مصلح بدون اخطاء ==================
 class LudoUltra extends StatefulWidget { const LudoUltra({super.key}); @override State<LudoUltra> createState()=> _LudoUltraState(); }
 class _LudoUltraState extends State<LudoUltra> {
   List<List<int>> pos=List.generate(4, (_)=> List.filled(4, -1)); int turn=0,dice=1;
@@ -125,14 +121,17 @@ class _LudoUltraState extends State<LudoUltra> {
     return Scaffold(appBar: AppBar(title: Text("لودو 3D - دور ${gamePlayers[turn].name} نرد $dice"), backgroundColor: gamePlayers[turn].color),
       body: Column(children: [
         SizedBox(height: 70, child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: List.generate(4, (i)=> playerAvatar(gamePlayers[i], turn==i)))),
-        Expanded(flex: 6, child: Container(margin: const EdgeInsets.all(8), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF1F2937), Color(0xFF374151)], begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(16), boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 15)]), child: Stack(children: [
-          Center(child: Container(width: 280, height: 280, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.black12, width: 2)), child: GridView.count(crossAxisCount: 15, children: List.generate(225, (i){ bool isPath = (i%15==6||i%15==8||i~/15==6||i~/15==8); return Container(margin: const EdgeInsets.all(0.5), decoration: BoxDecoration(color: isPath? Colors.white: Colors.transparent, border: isPath? Border.all(color: Colors.black12):null)); }))),
-          Center(child: InkWell(onTap: roll, child: Container(width: 60, height: 60, decoration: BoxDecoration(color: Colors.amber, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 3), boxShadow: [BoxShadow(color: Colors.black45, blurRadius: 8)]), child: Center(child: Text("$dice", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)))))),
-          // homes
+        Expanded(flex: 6, child: Container(margin: const EdgeInsets.all(8), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF1F2937), Color(0xFF374151)]), borderRadius: BorderRadius.circular(16)), child: Stack(children: [
+          Center(child: Container(width: 280, height: 280, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.black12, width: 2)),
+            child: GridView.count(crossAxisCount: 15, children: List.generate(225, (i){
+              bool isPath = (i%15==6 || i%15==8 || i~/15==6 || i~/15==8);
+              return Container(margin: const EdgeInsets.all(0.5), decoration: BoxDecoration(color: isPath? Colors.white: Colors.transparent, border: isPath? Border.all(color: Colors.black12):null));
+            })))),
+          Center(child: InkWell(onTap: roll, child: Container(width: 60, height: 60, decoration: BoxDecoration(color: Colors.amber, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 3)), child: Center(child: Text("$dice", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)))))),
           Positioned(top: 10, left: 10, child: _homeBox(0)), Positioned(top: 10, right: 10, child: _homeBox(1)),
           Positioned(bottom: 10, left: 10, child: _homeBox(2)), Positioned(bottom: 10, right: 10, child: _homeBox(3)),
         ]))),
-        Expanded(flex: 4, child: ChatBox()),
+        const Expanded(flex: 4, child: ChatBox()),
       ]),
     );
   }
@@ -144,7 +143,7 @@ class _LudoUltraState extends State<LudoUltra> {
   }
 }
 
-// ================== 3- SNAKE ULTRA 4 PLAYERS ==================
+// ================== SNAKE ==================
 class SnakeUltra extends StatefulWidget { const SnakeUltra({super.key}); @override State<SnakeUltra> createState()=> _SnakeUltraState(); }
 class _SnakeUltraState extends State<SnakeUltra> {
   List<int> poses=[1,1,1,1]; int turn=0,dice=1; bool busy=false;
@@ -165,23 +164,19 @@ class SnakeUltraPainter extends CustomPainter {
   List<int> poses; Map<int,int> ladders,snakes; SnakeUltraPainter(this.poses,this.ladders,this.snakes);
   @override void paint(Canvas c, Size s){
     double cw=s.width/10, ch=s.height/10;
-    List<Offset> cellCenter(int n){ int r=(n-1)~/10; int col=(n-1)%10; int actualCol = r%2==0? col: 9-col; double x=actualCol*cw+cw/2; double y=(9-r)*ch+ch/2; return [Offset(x,y)]; }
-    // board
-    for(int n=1;n<=100;n++){ int r=(n-1)~/10; int col=(n-1)%10; int ac=r%2==0? col:9-col; double x=ac*cw, y=(9-r)*ch; Paint p=Paint()..color=Colors.white..style=PaintingStyle.fill; c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(x+2,y+2,cw-4,ch-4), const Radius.circular(6)), p); TextPainter tp=TextPainter(text: TextSpan(text: "$n", style: const TextStyle(fontSize: 7, color: Colors.black45)), textDirection: TextDirection.ltr)..layout(); tp.paint(c, Offset(x+3,y+3)); }
-    // snakes
+    Offset cellCenter(int n){ int r=(n-1)~/10; int col=(n-1)%10; int ac=r%2==0? col:9-col; double x=ac*cw+cw/2; double y=(9-r)*ch+ch/2; return Offset(x,y); }
+    for(int n=1;n<=100;n++){ int r=(n-1)~/10; int col=(n-1)%10; int ac=r%2==0? col:9-col; double x=ac*cw, y=(9-r)*ch; Paint p=Paint()..color=Colors.white; c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(x+2,y+2,cw-4,ch-4), const Radius.circular(6)), p); TextPainter tp=TextPainter(text: TextSpan(text: "$n", style: const TextStyle(fontSize: 7, color: Colors.black45)), textDirection: TextDirection.ltr)..layout(); tp.paint(c, Offset(x+3,y+3)); }
     Paint snakePaint=Paint()..color=Colors.redAccent..strokeWidth=4..style=PaintingStyle.stroke;
-    snakes.forEach((head,tail){ var h=cellCenter(head)[0]; var t=cellCenter(tail)[0]; Path path=Path()..moveTo(h.dx,h.dy)..quadraticBezierTo((h.dx+t.dx)/2+20, (h.dy+t.dy)/2, t.dx, t.dy); c.drawPath(path, snakePaint); c.drawCircle(h, 8, Paint()..color=Colors.red); c.drawCircle(t, 6, Paint()..color=Colors.redAccent.withOpacity(0.6)); });
-    // ladders
+    snakes.forEach((head,tail){ var h=cellCenter(head); var t=cellCenter(tail); Path path=Path()..moveTo(h.dx,h.dy)..quadraticBezierTo((h.dx+t.dx)/2+20, (h.dy+t.dy)/2, t.dx, t.dy); c.drawPath(path, snakePaint); c.drawCircle(h, 8, Paint()..color=Colors.red); c.drawCircle(t, 6, Paint()..color=Colors.redAccent.withOpacity(0.6)); });
     Paint ladderPaint=Paint()..color=Colors.green..strokeWidth=3..style=PaintingStyle.stroke;
-    ladders.forEach((bot,top){ var b=cellCenter(bot)[0]; var t=cellCenter(top)[0]; c.drawLine(Offset(b.dx-6,b.dy), Offset(t.dx-6,t.dy), ladderPaint); c.drawLine(Offset(b.dx+6,b.dy), Offset(t.dx+6,t.dy), ladderPaint); for(double i=0;i<1;i+=0.2){ double x1=b.dx-6+(t.dx-b.dx)*i; double y1=b.dy+(t.dy-b.dy)*i; double x2=b.dx+6+(t.dx-b.dx)*i; double y2=y1; c.drawLine(Offset(x1,y1), Offset(x2,y2), ladderPaint); }});
-    // players 4
+    ladders.forEach((bot,top){ var b=cellCenter(bot); var t=cellCenter(top); c.drawLine(Offset(b.dx-6,b.dy), Offset(t.dx-6,t.dy), ladderPaint); c.drawLine(Offset(b.dx+6,b.dy), Offset(t.dx+6,t.dy), ladderPaint); });
     List<Color> pc=[Colors.red, Colors.green, Colors.orange, Colors.blue];
-    for(int pi=0;pi<4;pi++){ int n=poses[pi]; var cc=cellCenter(n)[0]; double off=(pi-1.5)*8; c.drawCircle(Offset(cc.dx+off, cc.dy+10), 6, Paint()..color=pc[pi]); }
+    for(int pi=0;pi<4;pi++){ int n=poses[pi]; var cc=cellCenter(n); double off=(pi-1.5)*8; c.drawCircle(Offset(cc.dx+off, cc.dy+10), 6, Paint()..color=pc[pi]); }
   }
   @override bool shouldRepaint(covariant CustomPainter oldDelegate)=> true;
 }
 
-// ================== 4- DOMINO ULTRA ==================
+// ================== DOMINO ==================
 class DominoUltra extends StatefulWidget { const DominoUltra({super.key}); @override State<DominoUltra> createState()=> _DominoUltraState(); }
 class _DominoUltraState extends State<DominoUltra> {
   List<List<int>> board=[[3,2]]; List<List<int>> hand=[[0,6],[6,1],[2,5],[1,4]]; int left=3,right=2; int turn=0;
@@ -190,7 +185,7 @@ class _DominoUltraState extends State<DominoUltra> {
     return Scaffold(appBar: AppBar(title: Text("دومينو 3D [$left|$right] دور ${gamePlayers[turn].name}"), backgroundColor: const Color(0xFF451A03), foregroundColor: Colors.white),
       body: Column(children: [
         SizedBox(height: 70, child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: List.generate(4, (i)=> playerAvatar(gamePlayers[i], turn==i)))),
-        Expanded(flex: 5, child: Container(margin: const EdgeInsets.all(8), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF3E2723), Color(0xFF5D4037)]), borderRadius: BorderRadius.circular(16)), child: Center(child: SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: board.map((d)=> Container(margin: const EdgeInsets.all(4), width: 48, height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), boxShadow: [BoxShadow(color: Colors.black45, blurRadius: 4)]), child: Column(children: [Expanded(child: CustomPaint(painter: DotPainter(d[0]))), Container(height: 2, color: Colors.black), Expanded(child: CustomPaint(painter: DotPainter(d[1])))]))).toList()))))),
+        Expanded(flex: 5, child: Container(margin: const EdgeInsets.all(8), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF3E2723), Color(0xFF5D4037)]), borderRadius: BorderRadius.circular(16)), child: Center(child: SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: board.map((d)=> Container(margin: const EdgeInsets.all(4), width: 48, height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)), child: Column(children: [Expanded(child: CustomPaint(painter: DotPainter(d[0]))), Container(height: 2, color: Colors.black), Expanded(child: CustomPaint(painter: DotPainter(d[1])))]))).toList()))))),
         Container(padding: const EdgeInsets.all(8), color: Colors.black87, child: Wrap(spacing: 8, children: List.generate(hand.length, (i)=> InkWell(onTap: ()=> play(i), child: Container(width: 54, height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: gamePlayers[turn].color, width: 2)), child: Column(children: [Expanded(child: CustomPaint(painter: DotPainter(hand[i][0]))), Container(height: 2, color: Colors.black), Expanded(child: CustomPaint(painter: DotPainter(hand[i][1])))])))))),
         const Expanded(flex: 4, child: ChatBox()),
       ]),
