@@ -1,229 +1,269 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
+// ==================== APP ====================
 void main() => runApp(const PlayAndWinApp());
-
 class PlayAndWinApp extends StatelessWidget {
   const PlayAndWinApp({super.key});
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      title: 'العب واربح',
+  @override Widget build(BuildContext context) {
+    return MaterialApp(debugShowCheckedModeBanner: false, title: 'العب واربح',
       theme: ThemeData(useMaterial3: true, scaffoldBackgroundColor: const Color(0xFF0F172A)),
-      home: const GameHub(),
-    );
+      home: const GameHub());
   }
 }
 
-// ==================== الصالة ====================
-class GameHub extends StatefulWidget { const GameHub({super.key}); @override State<GameHub> createState()=> _HubState(); }
-class _HubState extends State<GameHub> {
-  String name="بطل الألعاب"; bool sound=true;
-  @override Widget build(BuildContext context){
+class GameHub extends StatelessWidget {
+  const GameHub({super.key});
+  @override Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
-      appBar: AppBar(title: const Text("العب واربح", style: TextStyle(fontWeight: FontWeight.bold)), backgroundColor: const Color(0xFF1E3A8A), foregroundColor: Colors.white, centerTitle: true,
-        actions: [IconButton(icon: const Icon(Icons.settings), onPressed: () async {
-          final res = await Navigator.push(context, MaterialPageRoute(builder: (_)=> SettingsScreen(name: name, sound: sound)));
-          if(res!=null){ setState((){ name=res[0]; sound=res[1]; });}
-        })]),
-      body: Column(children: [
-        Container(margin: const EdgeInsets.all(12), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(12)), child: Row(children: [const CircleAvatar(backgroundColor: Colors.amber, child: Icon(Icons.person)), const SizedBox(width: 8), Text("أهلا $name", style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)), const Spacer(), Icon(sound? Icons.volume_up : Icons.volume_off, color: Colors.white54)])),
-        Expanded(child: GridView.count(crossAxisCount: 2, padding: const EdgeInsets.all(16), crossAxisSpacing: 16, mainAxisSpacing: 16, children: [
-          _gameCard(context, "البلياردو", Icons.sports_basketball, [const Color(0xFF065F46), const Color(0xFF10B981)], const BilliardsFixed()),
-          _gameCard(context, "الدومينو", Icons.view_module, [const Color(0xFF78350F), const Color(0xFFF59E0B)], const DominoFixed()),
-          _gameCard(context, "السلم والثعبان", Icons.grid_on, [const Color(0xFF1E40AF), const Color(0xFF3B82F6)], const SnakesFixed()),
-          _gameCard(context, "لودو كينج", Icons.casino, [const Color(0xFF6D28D9), const Color(0xFFA78BFA)], const LudoFixed()),
-        ])),
+      appBar: AppBar(title: const Text("العب واربح - النسخة النهائية", style: TextStyle(fontWeight: FontWeight.bold)), backgroundColor: const Color(0xFF1E3A8A), foregroundColor: Colors.white, centerTitle: true),
+      body: GridView.count(crossAxisCount: 2, padding: const EdgeInsets.all(16), crossAxisSpacing: 16, mainAxisSpacing: 16, children: [
+        _card(context, "بلياردو PRO", Icons.sports_basketball, [const Color(0xFF065F46), const Color(0xFF10B981)], const BilliardReal()),
+        _card(context, "دومينو PRO", Icons.grid_view, [const Color(0xFF7C2D12), const Color(0xFFF59E0B)], const DominoReal()),
+        _card(context, "سلم وثعبان PRO", Icons.show_chart, [const Color(0xFF1E40AF), const Color(0xFF60A5FA)], const SnakeReal()),
+        _card(context, "لودو 4 لاعبين", Icons.casino, [const Color(0xFF6D28D9), const Color(0xFFEC4899)], const LudoReal4()),
       ]),
     );
   }
-  Widget _gameCard(BuildContext c, String t, IconData ic, List<Color> g, Widget page){
-    return InkWell(onTap: ()=> Navigator.push(c, MaterialPageRoute(builder: (_)=> page)),
-      child: Container(decoration: BoxDecoration(gradient: LinearGradient(colors: g, begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(22), boxShadow: [BoxShadow(color: g[1].withOpacity(0.3), blurRadius: 12, offset: const Offset(0,5))]), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(ic, size: 48, color: Colors.white), const SizedBox(height: 8), Text(t, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15))])));}
+  Widget _card(BuildContext c, String t, IconData ic, List<Color> g, Widget go) {
+    return InkWell(onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => go)),
+      child: Container(decoration: BoxDecoration(gradient: LinearGradient(colors: g, begin: Alignment.topLeft, end: Alignment.bottomRight), borderRadius: BorderRadius.circular(24), boxShadow: [BoxShadow(color: g.last.withOpacity(0.4), blurRadius: 12, offset: const Offset(0,6))]), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(ic, size: 48, color: Colors.white), const SizedBox(height: 8), Text(t, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))])));}
 }
 
-class SettingsScreen extends StatefulWidget {
-  final String name; final bool sound;
-  const SettingsScreen({super.key, required this.name, required this.sound});
-  @override State<SettingsScreen> createState()=> _SetState();
-}
-class _SetState extends State<SettingsScreen> {
-  late TextEditingController _c; late bool _s;
-  @override void initState(){ super.initState(); _c=TextEditingController(text: widget.name); _s=widget.sound; }
-  @override Widget build(BuildContext context){
-    return Scaffold(appBar: AppBar(title: const Text("الإعدادات")), body: Padding(padding: const EdgeInsets.all(20), child: Column(children: [
-      TextField(controller: _c, decoration: const InputDecoration(labelText: "اسمك", border: OutlineInputBorder())),
-      const SizedBox(height: 16), SwitchListTile(title: const Text("الصوت"), value: _s, onChanged: (v)=> setState(()=> _s=v)),
-      const SizedBox(height: 20), ElevatedButton(onPressed: ()=> Navigator.pop(context, [_c.text, _s]), style: ElevatedButton.styleFrom(minimumSize: const Size(double.infinity, 50)), child: const Text("حفظ"))
-    ])));
-  }
-}
+// ==================== 1- LUDO 4 PLAYERS REAL ====================
+class LudoReal4 extends StatefulWidget { const LudoReal4({super.key}); @override State<LudoReal4> createState()=> _Ludo4State(); }
+class _Ludo4State extends State<LudoReal4> {
+  // -1 = home, 0..51 = main track, 100..105 = home path, 200 = finished
+  List<List<int>> players = List.generate(4, (_) => List.filled(4, -1));
+  int turn = 0; int dice = 1; List<String> names = ["أحمر","أخضر","أصفر","أزرق"]; List<Color> colors = [Colors.red, Colors.green, Colors.amber, Colors.blue];
+  final List<int> startPos = [0,13,26,39]; // start positions on main track
+  final Set<int> safeSpots = {0,8,13,21,26,34,39,47};
 
-// ==================== 1- السلم والثعبان - مصلح ====================
-class SnakesFixed extends StatefulWidget { const SnakesFixed({super.key}); @override State<SnakesFixed> createState()=> _SnakesState(); }
-class _SnakesState extends State<SnakesFixed> {
-  int p1=1,p2=1,turn=1,dice=1; bool busy=false;
-  final Map<int,int> ladders={4:25,13:46,33:85,50:69,62:81,74:92};
-  final Map<int,int> snakes={99:41,89:53,76:58,66:45,54:31,43:18,27:5,40:3};
-  Future<void> roll() async {
-    if(busy) return; setState((){ busy=true; dice=Random().nextInt(6)+1; });
-    int cur=turn==1?p1:p2; int target=cur+dice; if(target>100){ setState(()=> busy=false); return;}
-    for(int i=cur+1;i<=target;i++){ await Future.delayed(const Duration(milliseconds: 180)); if(!mounted) return; setState((){ if(turn==1) p1=i; else p2=i; });}
-    int pos=turn==1?p1:p2;
-    if(ladders.containsKey(pos)){ await Future.delayed(const Duration(milliseconds: 400)); setState((){ if(turn==1) p1=ladders[pos]!; else p2=ladders[pos]!; });}
-    if(snakes.containsKey(pos)){ await Future.delayed(const Duration(milliseconds: 400)); setState((){ if(turn==1) p1=snakes[pos]!; else p2=snakes[pos]!; });}
-    int finalPos=turn==1?p1:p2;
-    if(finalPos==100){ if(!mounted) return; showDialog(context: context, builder: (_)=> AlertDialog(title: Text("🏆 فاز اللاعب $turn"), actions: [TextButton(onPressed: (){ setState((){p1=1;p2=1;}); Navigator.pop(context);}, child: const Text("اعادة"))])); }
-    setState((){ turn=turn==1?2:1; busy=false; });
+  void roll(){ setState(()=> dice = Random().nextInt(6)+1); }
+
+  void movePiece(int p, int pieceIdx){
+    int pos = players[p][pieceIdx];
+    if(pos==-1 && dice!=6) return;
+    if(pos==-1 && dice==6){ setState((){ players[p][pieceIdx]=startPos[p]; if(dice!=6) turn=(turn+1)%4; }); return; }
+    if(pos>=100){ // home path
+      int newPos = pos + dice;
+      if(newPos>105) return;
+      if(newPos==105) newPos=200;
+      setState(()=> players[p][pieceIdx]=newPos);
+    } else {
+      int newPos = (pos + dice) % 52;
+      // check enter home path
+      int homeEntry = (startPos[p] + 50) % 52;
+      // if crossed home entry
+      bool passedHome = false;
+      for(int i=1;i<=dice;i++){ if((pos+i)%52 == homeEntry) passedHome=true; }
+      if(passedHome && p==turn){ // enter home
+        int stepsPast = (pos+dice) - homeEntry;
+        if(stepsPast<0) stepsPast+=52;
+        if(stepsPast>0 && stepsPast<=5){ setState(()=> players[p][pieceIdx]=100+stepsPast); }
+        else if(stepsPast==0){ setState(()=> players[p][pieceIdx]=homeEntry); }
+        else { // normal move
+          setState(()=> players[p][pieceIdx]=newPos);
+          _checkCapture(p, newPos);
+        }
+      } else {
+        setState(()=> players[p][pieceIdx]=newPos);
+        _checkCapture(p, newPos);
+      }
+    }
+    if(players[p].every((e)=> e==200)){
+      showDialog(context: context, builder: (_)=> AlertDialog(title: Text("فاز ${names[p]} 🏆")));
+    }
+    if(dice!=6) setState(()=> turn=(turn+1)%4);
   }
+
+  void _checkCapture(int attacker, int pos){
+    if(safeSpots.contains(pos)) return;
+    for(int p=0;p<4;p++){ if(p==attacker) continue;
+      for(int i=0;i<4;i++){ if(players[p][i]==pos){ setState(()=> players[p][i]=-1); } }
+    }
+  }
+
   @override Widget build(BuildContext context){
-    return Scaffold(appBar: AppBar(title: Text("السلم والثعبان - دور: $turn | نرد: $dice"), backgroundColor: const Color(0xFF1E3A8A), foregroundColor: Colors.white),
+    return Scaffold(appBar: AppBar(title: Text("لودو - دور ${names[turn]} - نرد $dice"), backgroundColor: colors[turn], foregroundColor: Colors.white),
       body: Column(children: [
-        Expanded(child: Container(color: const Color(0xFF0F172A), padding: const EdgeInsets.all(6), child: GridView.builder(
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10, mainAxisSpacing: 4, crossAxisSpacing: 4),
-          itemCount: 100,
-          itemBuilder: (ctx, idx){
-            int row=9-idx~/10; int col=idx%10; int num = row%2==0? row*10+col+1 : row*10+(9-col)+1;
-            bool isP1=p1==num, isP2=p2==num;
-            Color bg=Colors.white; String emoji="";
-            if(ladders.containsKey(num)){ bg=const Color(0xFFBBF7D0); emoji="🪜"; }
-            if(snakes.containsKey(num)){ bg=const Color(0xFFFECACA); emoji="🐍"; }
-            return Container(decoration: BoxDecoration(color: bg, borderRadius: BorderRadius.circular(8)), child: Stack(children: [
-              Positioned(top: 2, left: 3, child: Text("$num", style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.black54))),
-              if(emoji.isNotEmpty) Center(child: Text(emoji, style: const TextStyle(fontSize: 14))),
-              if(isP1 && isP2) const Align(alignment: Alignment.bottomCenter, child: Text("🔵🟠", style: TextStyle(fontSize: 11))),
-              if(isP1 &&!isP2) const Align(alignment: Alignment.bottomCenter, child: Icon(Icons.circle, color: Colors.blue, size: 16)),
-              if(isP2 &&!isP1) const Align(alignment: Alignment.bottomCenter, child: Icon(Icons.circle, color: Colors.orange, size: 16)),
-            ]));
-          }))),
-        Container(padding: const EdgeInsets.all(12), child: ElevatedButton(onPressed: busy? null: roll, style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, foregroundColor: Colors.black, minimumSize: const Size(double.infinity, 58), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16))), child: Text(busy? "يتحرك..." : "🎲 رمي النرد - $dice", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold)))),
-      ]),
-    );
-  }
-}
-
-// ==================== 2- لودو - مصلح ====================
-class LudoFixed extends StatefulWidget { const LudoFixed({super.key}); @override State<LudoFixed> createState()=> _LudoState(); }
-class _LudoState extends State<LudoFixed> {
-  List<int> red=[-1,-1,-1,-1], green=[-1,-1,-1,-1]; int turn=0,dice=1;
-  void rollDice(){ setState(()=> dice=Random().nextInt(6)+1); }
-  void move(int player, int idx){
-    List<int> arr = player==0? red:green;
-    if(arr[idx]==-1 && dice!=6){ ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("تحتاج 6 لتخرج من البيت!"))); return; }
-    setState((){
-      if(arr[idx]==-1) arr[idx]=0; else { arr[idx]+=dice; if(arr[idx]>=57) arr[idx]=57; }
-      if(dice!=6) turn=1-turn;
-    });
-  }
-  @override Widget build(BuildContext context){
-    return Scaffold(appBar: AppBar(title: Text("لودو - دور ${turn==0?'الأحمر':'الأخضر'} | نرد $dice"), backgroundColor: Colors.deepPurple, foregroundColor: Colors.white),
-      body: Column(children: [
-        Padding(padding: const EdgeInsets.all(12), child: Row(children: [Container(padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)), child: Text("النرد: $dice", style: const TextStyle(fontWeight: FontWeight.bold))), const Spacer(), ElevatedButton.icon(onPressed: rollDice, icon: const Icon(Icons.casino), label: const Text("ارمي النرد"))])),
-        Expanded(child: Row(children: [
-          Expanded(child: _playerBox("الأحمر", Colors.red, red, 0)),
-          Expanded(child: _playerBox("الأخضر", Colors.green, green, 1)),
-        ])),
-        Container(height: 90, margin: const EdgeInsets.all(10), padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)), child: ListView.builder(scrollDirection: Axis.horizontal, itemCount: 57, itemBuilder: (_, i){
-          bool r=red.contains(i), g=green.contains(i);
-          return Container(width: 36, margin: const EdgeInsets.all(2), decoration: BoxDecoration(color: r||g? Colors.amber.shade200: Colors.grey.shade200, borderRadius: BorderRadius.circular(6), border: Border.all(color: Colors.black12)), child: Center(child: Text(r&&g? "RG": r? "R": g? "G": "$i", style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold))));
-        })),
-      ]),
-    );
-  }
-  Widget _playerBox(String name, Color c, List<int> arr, int p){
-    return Container(margin: const EdgeInsets.all(8), decoration: BoxDecoration(color: c.withOpacity(0.15), borderRadius: BorderRadius.circular(18), border: Border.all(color: c, width: 2.5)), child: Column(children: [
-      const SizedBox(height: 10), Text(name, style: TextStyle(color: c, fontWeight: FontWeight.bold, fontSize: 16)),
-      const SizedBox(height: 10),
-     ...List.generate(2, (row)=> Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: List.generate(2, (col){
-        int idx=row*2+col; return InkWell(onTap: ()=> move(p, idx), child: Container(width: 68, height: 68, margin: const EdgeInsets.all(6), decoration: BoxDecoration(color: arr[idx]==-1? Colors.black45: arr[idx]==57? Colors.amber: Colors.white, shape: BoxShape.circle, border: Border.all(color: c, width: 2)), child: Center(child: Text(arr[idx]==-1? "🏠": arr[idx]==57? "🏆": "${arr[idx]}", style: const TextStyle(fontWeight: FontWeight.bold)))));
-      }))),
-    ]));
-  }
-}
-
-// ==================== 3- بلياردو - مصلح ====================
-class BilliardsFixed extends StatefulWidget { const BilliardsFixed({super.key}); @override State<BilliardsFixed> createState()=> _BilliState(); }
-class _BilliState extends State<BilliardsFixed> {
-  double ang=0, pow=35; Offset cue=const Offset(120,200);
-  List<Offset> balls=[const Offset(250,180), const Offset(270,210), const Offset(250,240), const Offset(290,200)];
-  List<bool> gone=[false,false,false,false];
-  void shoot(){
-    double rad=ang*pi/180; Offset dir=Offset(cos(rad), sin(rad));
-    setState((){
-      cue+=dir*pow*2.2;
-      if(cue.dx<18||cue.dx>332||cue.dy<18||cue.dy>432) cue=const Offset(120,200);
-      for(int i=0;i<balls.length;i++){ if(gone[i]) continue; if((cue-balls[i]).distance<24){ balls[i]+=dir*pow*1.4; if(balls[i].dx<15||balls[i].dx>335||balls[i].dy<15||balls[i].dy>435) gone[i]=true; } }
-    });
-  }
-  void reset(){ setState((){ cue=const Offset(120,200); balls=[const Offset(250,180), const Offset(270,210), const Offset(250,240), const Offset(290,200)]; gone=[false,false,false,false]; });}
-  @override Widget build(BuildContext context){
-    return Scaffold(appBar: AppBar(title: const Text("بلياردو 8-Ball"), backgroundColor: const Color(0xFF065F46), foregroundColor: Colors.white, actions: [IconButton(onPressed: reset, icon: const Icon(Icons.refresh))]),
-      body: Column(children: [
-        Expanded(child: Container(margin: const EdgeInsets.all(10), decoration: BoxDecoration(color: const Color(0xFF0B7A4A), borderRadius: BorderRadius.circular(18), border: Border.all(color: const Color(0xFF8B4513), width: 8)), child: CustomPaint(painter: _PoolPainter(cue,balls,gone), child: const SizedBox.expand()))),
-        Container(padding: const EdgeInsets.all(14), decoration: const BoxDecoration(color: Color(0xFF1F2937), borderRadius: BorderRadius.vertical(top: Radius.circular(18))), child: Column(children: [
-          Row(children: [const Icon(Icons.screen_rotation, color: Colors.white54, size: 20), Expanded(child: Slider(value: ang, min: -90, max: 90, onChanged: (v)=> setState(()=> ang=v))), Text("${ang.toInt()}°", style: const TextStyle(color: Colors.white))]),
-          Row(children: [const Icon(Icons.flash_on, color: Colors.amber, size: 20), Expanded(child: Slider(value: pow, min: 5, max: 100, activeColor: Colors.amber, onChanged: (v)=> setState(()=> pow=v))), Text("${pow.toInt()}%", style: const TextStyle(color: Colors.white))]),
-          const SizedBox(height: 6), ElevatedButton(onPressed: shoot, style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF0D9488), minimumSize: const Size(double.infinity, 52), shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14))), child: const Text("إضرب بقوة!", style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16))),
-        ])),
+        Padding(padding: const EdgeInsets.all(10), child: Row(children: [Chip(label: Text("النرد: $dice")), const Spacer(), ElevatedButton.icon(onPressed: roll, icon: const Icon(Icons.casino), label: const Text("ارمي النرد"))])),
+        Expanded(child: CustomPaint(painter: LudoBoardPainter(players, startPos), child: Container())),
+        Container(height: 160, padding: const EdgeInsets.all(6), child: GridView.count(crossAxisCount: 4, childAspectRatio: 1.8, children: List.generate(4, (p)=> Container(margin: const EdgeInsets.all(4), decoration: BoxDecoration(color: colors[p].withOpacity(0.2), borderRadius: BorderRadius.circular(12), border: Border.all(color: colors[p], width: turn==p? 3:1)), child: Column(children: [
+          Text(names[p], style: TextStyle(color: colors[p], fontWeight: FontWeight.bold, fontSize: 11)),
+          Expanded(child: GridView.count(crossAxisCount: 2, children: List.generate(4, (i)=> InkWell(onTap: ()=> turn==p? movePiece(p,i):null, child: Container(margin: const EdgeInsets.all(2), decoration: BoxDecoration(color: players[p][i]==-1? Colors.black54: players[p][i]==200? Colors.green: Colors.white, shape: BoxShape.circle, border: Border.all(color: colors[p])), child: Center(child: Text(players[p][i]==-1? "🏠": players[p][i]==200? "✓": "${players[p][i]}", style: const TextStyle(fontSize: 9)))))))),
+        ]))))),
       ]),
     );
   }
 }
-class _PoolPainter extends CustomPainter {
-  final Offset cue; final List<Offset> balls; final List<bool> gone;
-  _PoolPainter(this.cue,this.balls,this.gone);
+
+class LudoBoardPainter extends CustomPainter {
+  final List<List<int>> players; final List<int> starts;
+  LudoBoardPainter(this.players, this.starts);
   @override void paint(Canvas c, Size s){
-    final pocket=Paint()..color=Colors.black;
-    c.drawCircle(const Offset(12,12), 14, pocket); c.drawCircle(Offset(s.width-12,12), 14, pocket);
-    c.drawCircle(const Offset(12,400-12), 14, pocket); c.drawCircle(Offset(s.width-12,400-12), 14, pocket);
-    c.drawCircle(Offset(s.width/2,10), 12, pocket); c.drawCircle(Offset(s.width/2,400-10), 12, pocket);
-    c.drawCircle(cue, 12, Paint()..color=Colors.white);
-    List<Color> cols=[Colors.red, Colors.blue, Colors.yellow, Colors.purple];
-    for(int i=0;i<balls.length;i++){ if(gone[i]) continue; c.drawCircle(balls[i], 10, Paint()..color=cols[i]); }
+    // simple 15x15 grid board background
+    final bg = Paint()..color=Colors.white;
+    c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(0,0,s.width,s.height), const Radius.circular(12)), bg);
+    // draw track as 52 small squares
+    List<Offset> path = [];
+    double w=s.width/15, h=s.height/15;
+    // create path around
+    for(int i=0;i<6;i++) path.add(Offset(6*w, i*h)); // left side up
+    for(int i=0;i<6;i++) path.add(Offset((6+i)*w, 0)); // top
+    for(int i=0;i<6;i++) path.add(Offset(14*w, (i)*h));
+    for(int i=0;i<6;i++) path.add(Offset((14-i)*w, 6*h));
+    for(int i=0;i<6;i++) path.add(Offset(14*w, (6+i)*h));
+    for(int i=0;i<6;i++) path.add(Offset((14-i)*w, 14*h));
+    for(int i=0;i<6;i++) path.add(Offset(6*w, (14-i)*h));
+    for(int i=0;i<6;i++) path.add(Offset((6-i)*w, 8*h));
+    // we need 52, truncate
+    path = path.take(52).toList();
+    for(int i=0;i<path.length;i++){
+      c.drawRect(Rect.fromCenter(center: path[i], width: w*0.9, height: h*0.9), Paint()..color= i%8==0? Colors.grey.shade300: Colors.white..style=PaintingStyle.fill);
+      c.drawRect(Rect.fromCenter(center: path[i], width: w*0.9, height: h*0.9), Paint()..color=Colors.black26..style=PaintingStyle.stroke);
+    }
+    List<Color> cols=[Colors.red, Colors.green, Colors.orange, Colors.blue];
+    for(int p=0;p<4;p++){ for(int pi=0;pi<4;pi++){ int pos=players[p][pi]; if(pos>=0 && pos<52 && pos<path.length){ c.drawCircle(path[pos], 7, Paint()..color=cols[p]); } } }
   }
   @override bool shouldRepaint(covariant CustomPainter oldDelegate)=> true;
 }
 
-// ==================== 4- دومينو - مصلح ====================
-class DominoFixed extends StatefulWidget { const DominoFixed({super.key}); @override State<DominoFixed> createState()=> _DominoState(); }
-class _DominoState extends State<DominoFixed> {
-  List<List<int>> board=[[3,2]]; List<List<int>> hand=[[0,6],[6,1],[2,5],[1,4],[4,4]]; List<List<int>> bot=[[5,3],[1,2]];
-  int left=3,right=2; String status="دورك";
-  void play(int idx){
-    var d=hand[idx]; bool canLeft=d[0]==left||d[1]==left; bool canRight=d[0]==right||d[1]==right;
-    if(!canLeft &&!canRight){ setState(()=> status="لا تناسب"); return; }
+// ==================== 2- BILLIARD REAL PHYSICS ====================
+class Ball { Offset pos; Offset vel; Color color; bool gone=false; Ball(this.pos, this.vel, this.color); }
+
+class BilliardReal extends StatefulWidget { const BilliardReal({super.key}); @override State<BilliardReal> createState()=> _BillRealState(); }
+class _BillRealState extends State<BilliardReal> with SingleTickerProviderStateMixin {
+  late AnimationController ctrl;
+  List<Ball> balls=[]; Ball cue=Ball(const Offset(100,200), Offset.zero, Colors.white);
+  double angle=0, power=40;
+  @override void initState(){
+    super.initState();
+    ctrl=AnimationController(vsync: this, duration: const Duration(seconds: 10))..addListener(_update)..repeat();
+    _reset();
+  }
+  void _reset(){ setState((){
+    cue=Ball(const Offset(80,200), Offset.zero, Colors.white);
+    balls=[Ball(const Offset(240,190), Offset.zero, Colors.red), Ball(const Offset(240,210), Offset.zero, Colors.blue), Ball(const Offset(260,200), Offset.zero, Colors.yellow), Ball(const Offset(260,180), Offset.zero, Colors.purple), Ball(const Offset(260,220), Offset.zero, Colors.black)];
+  });}
+  void _update(){
     setState((){
-      if(canLeft){ board.insert(0, d[0]==left? [d[1],d[0]]:d); left=board.first[0]; }
-      else { board.add(d[0]==right? d: [d[1],d[0]]); right=board.last[1]; }
-      hand.removeAt(idx); status="دور البوت";
-    });
-    Future.delayed(const Duration(seconds: 1), botMove);
-  }
-  void botMove(){
-    for(int i=0;i<bot.length;i++){
-      var d=bot[i]; if(d[0]==left||d[1]==left||d[0]==right||d[1]==right){
-        setState((){
-          if(d[0]==left||d[1]==left){ board.insert(0, d[0]==left? [d[1],d[0]]:d); left=board.first[0]; }
-          else { board.add(d[0]==right? d: [d[1],d[0]]); right=board.last[1]; }
-          bot.removeAt(i); status="دورك انت";
-        }); return;
+      for(var b in [cue,...balls]){ if(b.gone) continue; b.pos+=b.vel; b.vel*=0.985; if(b.vel.distance<0.1) b.vel=Offset.zero;
+        if(b.pos.dx<16||b.pos.dx>334){ b.vel=Offset(-b.vel.dx*0.8, b.vel.dy); b.pos=Offset(b.pos.dx.clamp(16,334), b.pos.dy); }
+        if(b.pos.dy<16||b.pos.dy>384){ b.vel=Offset(b.vel.dx, -b.vel.dy*0.8); b.pos=Offset(b.pos.dx, b.pos.dy.clamp(16,384)); }
+        // pockets
+        List<Offset> pockets=[const Offset(10,10), const Offset(170,10), const Offset(330,10), const Offset(10,390), const Offset(170,390), const Offset(330,390)];
+        for(var pk in pockets){ if((b.pos-pk).distance<18){ if(b!=cue) b.gone=true; else { b.pos=const Offset(80,200); b.vel=Offset.zero; } } }
       }
-    }
-    setState((){ bot.add([Random().nextInt(7), Random().nextInt(7)]); status="البوت سحب - دورك"; });
+      // ball-ball collision simple
+      List<Ball> all=[cue,...balls].where((b)=>!b.gone).toList();
+      for(int i=0;i<all.length;i++){ for(int j=i+1;j<all.length;j++){
+        double d=(all[i].pos-all[j].pos).distance; if(d<20 && d>0){ Offset n=(all[i].pos-all[j].pos)/d; double p=2*(all[i].vel.dx*n.dx+all[i].vel.dy*n.dy - all[j].vel.dx*n.dx - all[j].vel.dy*n.dy)/2;
+          all[i].vel-=n*p; all[j].vel+=n*p; // separate
+          all[i].pos+=n*1; all[j].pos-=n*1;
+        }
+      }}
+    });
   }
+  void shoot(){
+    double rad=angle*pi/180; cue.vel=Offset(cos(rad), sin(rad))*power*0.35;
+  }
+  @override void dispose(){ ctrl.dispose(); super.dispose();}
   @override Widget build(BuildContext context){
-    return Scaffold(appBar: AppBar(title: Text("دومينو [$left | $right] - $status"), backgroundColor: const Color(0xFF451A03), foregroundColor: Colors.white),
+    return Scaffold(appBar: AppBar(title: const Text("بلياردو PRO - فيزياء حقيقية"), backgroundColor: const Color(0xFF065F46), foregroundColor: Colors.white, actions: [IconButton(onPressed: _reset, icon: const Icon(Icons.refresh))]),
       body: Column(children: [
-        Container(padding: const EdgeInsets.all(10), color: Colors.black26, child: Row(children: [Text("البوت: ${bot.length} قطع", style: const TextStyle(color: Colors.white70)), const Spacer(), Text(status, style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold))])),
-        Expanded(child: Container(margin: const EdgeInsets.all(10), decoration: BoxDecoration(color: const Color(0xFF3E2723), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.amber.shade700, width: 2)), child: Center(child: SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(mainAxisAlignment: MainAxisAlignment.center, children: board.map((d)=> Container(margin: const EdgeInsets.all(4), padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.black26)), child: Column(mainAxisSize: MainAxisSize.min, children: [Text("${d[0]}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18)), Container(width: 24, height: 2, color: Colors.black), Text("${d[1]}", style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 18))]))).toList()))))),
+        Expanded(child: Container(margin: const EdgeInsets.all(10), decoration: BoxDecoration(color: const Color(0xFF0F6A4A), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFF8B4513), width: 8)), child: CustomPaint(painter: RealPoolPainter(cue,balls), child: const SizedBox.expand()))),
         Container(padding: const EdgeInsets.all(12), color: const Color(0xFF111827), child: Column(children: [
-          const Text("قطعك:", style: TextStyle(color: Colors.white54)), const SizedBox(height: 8),
-          Wrap(spacing: 8, runSpacing: 8, children: List.generate(hand.length, (i)=> InkWell(onTap: ()=> play(i), child: Container(padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10), decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.amber, width: 1.5)), child: Text("${hand[i][0]} | ${hand[i][1]}", style: const TextStyle(fontWeight: FontWeight.bold)))))),
-          const SizedBox(height: 10), ElevatedButton(onPressed: ()=> setState(()=> hand.add([Random().nextInt(7), Random().nextInt(7)])), child: const Text("اسحب قطعة")),
+          Row(children: [const Text("زاوية", style: TextStyle(color: Colors.white54)), Expanded(child: Slider(value: angle, min: -180, max: 180, onChanged: (v)=> setState(()=> angle=v))), Text("${angle.toInt()}°", style: const TextStyle(color: Colors.white))]),
+          Row(children: [const Text("قوة", style: TextStyle(color: Colors.white54)), Expanded(child: Slider(value: power, min: 5, max: 100, activeColor: Colors.amber, onChanged: (v)=> setState(()=> power=v))), Text("${power.toInt()}%", style: const TextStyle(color: Colors.white))]),
+          ElevatedButton(onPressed: shoot, style: ElevatedButton.styleFrom(backgroundColor: Colors.teal, minimumSize: const Size(double.infinity, 50)), child: const Text("اضرب!", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold))),
         ])),
       ]),
     );
   }
+}
+class RealPoolPainter extends CustomPainter {
+  Ball cue; List<Ball> balls; RealPoolPainter(this.cue,this.balls);
+  @override void paint(Canvas c, Size s){
+    final pk=Paint()..color=Colors.black; c.drawCircle(const Offset(10,10), 14, pk); c.drawCircle(Offset(s.width/2,10), 12, pk); c.drawCircle(Offset(s.width-10,10), 14, pk);
+    c.drawCircle(const Offset(10,390), 14, pk); c.drawCircle(Offset(s.width/2,390), 12, pk); c.drawCircle(Offset(s.width-10,390), 14, pk);
+    if(!cue.gone) c.drawCircle(cue.pos, 9, Paint()..color=Colors.white);
+    for(var b in balls){ if(!b.gone) c.drawCircle(b.pos, 9, Paint()..color=b.color); }
+  }
+  @override bool shouldRepaint(covariant CustomPainter oldDelegate)=> true;
+}
+
+// ==================== 3- SNAKE REAL ====================
+class SnakeReal extends StatefulWidget { const SnakeReal({super.key}); @override State<SnakeReal> createState()=> _SnakeRealState(); }
+class _SnakeRealState extends State<SnakeReal> {
+  int p1=1,p2=1,turn=1,dice=1; bool busy=false;
+  final Map<int,int> ladders={4:25,13:46,33:85,50:69,62:81,74:92}; final Map<int,int> snakes={99:41,89:53,76:58,66:45,54:31,43:18,27:5,40:3};
+  Future<void> roll() async {
+    if(busy) return; setState((){busy=true; dice=Random().nextInt(6)+1;});
+    int cur=turn==1?p1:p2; int tgt=cur+dice; if(tgt>100){ setState(()=>busy=false); return;}
+    for(int i=cur+1;i<=tgt;i++){ await Future.delayed(const Duration(milliseconds: 150)); if(!mounted) return; setState(()=> turn==1? p1=i: p2=i); }
+    int pos=turn==1?p1:p2;
+    if(ladders.containsKey(pos) || snakes.containsKey(pos)){ await Future.delayed(const Duration(milliseconds: 300)); setState(()=> turn==1? p1=(ladders[pos]??snakes[pos])!: p2=(ladders[pos]??snakes[pos])!); }
+    if((turn==1?p1:p2)==100) showDialog(context: context, builder: (_)=> AlertDialog(title: Text("فاز اللاعب $turn")));
+    setState((){turn=turn==1?2:1; busy=false;});
+  }
+  @override Widget build(BuildContext context){
+    return Scaffold(appBar: AppBar(title: Text("سلم وثعبان PRO - دور $turn نرد $dice"), backgroundColor: const Color(0xFF1E3A8A), foregroundColor: Colors.white),
+      body: Column(children: [
+        Expanded(child: Padding(padding: const EdgeInsets.all(8), child: CustomPaint(painter: SnakeBoardPainter(p1,p2,ladders,snakes), child: Container()))),
+        Padding(padding: const EdgeInsets.all(12), child: ElevatedButton(onPressed: roll, style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, minimumSize: const Size(double.infinity, 58)), child: Text("رمي النرد - $dice", style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold, fontSize: 18)))),
+      ]),
+    );
+  }
+}
+class SnakeBoardPainter extends CustomPainter {
+  int p1,p2; Map<int,int> ladders,snakes; SnakeBoardPainter(this.p1,this.p2,this.ladders,this.snakes);
+  @override void paint(Canvas c, Size s){
+    double cw=s.width/10, ch=s.height/10;
+    // cells
+    for(int r=9;r>=0;r--){ for(int col=0;col<10;col++){
+      int num = r%2==0? r*10+col+1: r*10+(9-col)+1;
+      double x = col*cw, y=(9-r)*ch;
+      Paint paint=Paint()..color= ladders.containsKey(num)? const Color(0xFFBBF7D0): snakes.containsKey(num)? const Color(0xFFFECACA): Colors.white;
+      c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(x+2,y+2,cw-4,ch-4), const Radius.circular(6)), paint);
+      TextPainter tp=TextPainter(text: TextSpan(text: "$num", style: const TextStyle(fontSize: 8, color: Colors.black54)), textDirection: TextDirection.ltr)..layout(); tp.paint(c, Offset(x+4,y+2));
+      if(ladders.containsKey(num)){ TextPainter tp2=TextPainter(text: const TextSpan(text: "🪜", style: TextStyle(fontSize: 14)), textDirection: TextDirection.ltr)..layout(); tp2.paint(c, Offset(x+cw/2-7, y+ch/2-7)); }
+      if(snakes.containsKey(num)){ TextPainter tp2=TextPainter(text: const TextSpan(text: "🐍", style: TextStyle(fontSize: 14)), textDirection: TextDirection.ltr)..layout(); tp2.paint(c, Offset(x+cw/2-7, y+ch/2-7)); }
+      if(p1==num) c.drawCircle(Offset(x+cw*0.3, y+ch*0.75), 6, Paint()..color=Colors.blue);
+      if(p2==num) c.drawCircle(Offset(x+cw*0.7, y+ch*0.75), 6, Paint()..color=Colors.orange);
+    }}
+  }
+  @override bool shouldRepaint(covariant CustomPainter oldDelegate)=> true;
+}
+
+// ==================== 4- DOMINO REAL DOTS ====================
+class DominoReal extends StatefulWidget { const DominoReal({super.key}); @override State<DominoReal> createState()=> _DominoRealState(); }
+class _DominoRealState extends State<DominoReal> {
+  List<List<int>> board=[[3,2]]; List<List<int>> hand=[[0,6],[6,1],[2,5],[1,4],[4,4],[3,3]]; List<List<int>> bot=[[1,2],[5,3]];
+  int left=3,right=2; String status="دورك";
+  void play(int idx){ var d=hand[idx]; bool cl=d[0]==left||d[1]==left, cr=d[0]==right||d[1]==right; if(!cl&&!cr){ setState(()=>status="لا تناسب"); return;} setState((){ if(cl){ board.insert(0, d[0]==left? [d[1],d[0]]:d); left=board.first[0]; } else { board.add(d[0]==right? d: [d[1],d[0]]); right=board.last[1]; } hand.removeAt(idx); status="دور البوت";}); Future.delayed(const Duration(seconds: 1), botPlay); }
+  void botPlay(){ for(int i=0;i<bot.length;i++){ var d=bot[i]; if(d[0]==left||d[1]==left||d[0]==right||d[1]==right){ setState((){ if(d[0]==left||d[1]==left){ board.insert(0, d[0]==left? [d[1],d[0]]:d); left=board.first[0];} else { board.add(d[0]==right? d:[d[1],d[0]]); right=board.last[1];} bot.removeAt(i); status="دورك";}); return;}} setState((){ bot.add([Random().nextInt(7), Random().nextInt(7)]); status="دورك";});}
+  @override Widget build(BuildContext context){
+    return Scaffold(appBar: AppBar(title: Text("دومينو [$left|$right] $status"), backgroundColor: const Color(0xFF451A03), foregroundColor: Colors.white),
+      body: Column(children: [
+        Expanded(child: Container(margin: const EdgeInsets.all(10), decoration: BoxDecoration(color: const Color(0xFF3E2723), borderRadius: BorderRadius.circular(16)), child: Center(child: SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: board.map((d)=> Container(margin: const EdgeInsets.all(5), width: 52, height: 90, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)), child: Column(children: [Expanded(child: CustomPaint(painter: DotPainter(d[0]))), Container(height: 2, color: Colors.black), Expanded(child: CustomPaint(painter: DotPainter(d[1])))]))).toList()))))),
+        Container(padding: const EdgeInsets.all(12), color: Colors.black87, child: Wrap(spacing: 8, children: List.generate(hand.length, (i)=> InkWell(onTap: ()=>play(i), child: Container(width: 60, height: 90, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: Colors.amber, width: 2)), child: Column(children: [Expanded(child: CustomPaint(painter: DotPainter(hand[i][0]))), Container(height: 2, color: Colors.black), Expanded(child: CustomPaint(painter: DotPainter(hand[i][1])))])))))),
+      ]),
+    );
+  }
+}
+class DotPainter extends CustomPainter {
+  int v; DotPainter(this.v);
+  @override void paint(Canvas c, Size s){
+    Paint p=Paint()..color=Colors.black;
+    void dot(double x,double y)=> c.drawCircle(Offset(s.width*x, s.height*y), 4, p);
+    if(v==1) dot(0.5,0.5);
+    if(v==2){ dot(0.25,0.25); dot(0.75,0.75); }
+    if(v==3){ dot(0.25,0.25); dot(0.5,0.5); dot(0.75,0.75); }
+    if(v==4){ dot(0.25,0.25); dot(0.75,0.25); dot(0.25,0.75); dot(0.75,0.75); }
+    if(v==5){ dot(0.25,0.25); dot(0.75,0.25); dot(0.5,0.5); dot(0.25,0.75); dot(0.75,0.75); }
+    if(v==6){ dot(0.25,0.2); dot(0.25,0.5); dot(0.25,0.8); dot(0.75,0.2); dot(0.75,0.5); dot(0.75,0.8); }
+  }
+  @override bool shouldRepaint(covariant CustomPainter oldDelegate)=> false;
 }
