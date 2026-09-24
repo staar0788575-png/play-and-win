@@ -1,206 +1,327 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
+import 'dart:math' as math;
 
 void main() => runApp(const PlayAndWinApp());
+
 class PlayAndWinApp extends StatelessWidget {
   const PlayAndWinApp({super.key});
-  @override Widget build(BuildContext context) {
-    return MaterialApp(debugShowCheckedModeBanner: false, home: const Hub());
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      title: 'Play And Win',
+      theme: ThemeData(fontFamily: 'Cairo'),
+      home: const LobbyScreen(),
+    );
   }
 }
 
-class PlayerInfo {
-  String name; String avatar; Color color;
-  PlayerInfo(this.name, this.avatar, this.color);
-}
+// ========== الشاشة الرئيسية - نفس ترتيب صورك ==========
+class LobbyScreen extends StatelessWidget {
+  const LobbyScreen({super.key});
 
-final List<PlayerInfo> gamePlayers = [
-  PlayerInfo("أحمد", "A", Colors.red),
-  PlayerInfo("سارة", "S", Colors.green),
-  PlayerInfo("علي", "O", Colors.amber),
-  PlayerInfo("نور", "N", Colors.blue),
-];
+  final friends = const [
+    {"name":"همام","v":"V6"},{"name":"سحاب","v":"V7"},{"name":"انا المجروح","v":"V6"},{"name":"ابن الاكابر","v":"V6"},
+  ];
 
-class Hub extends StatelessWidget {
-  const Hub({super.key});
-  @override Widget build(BuildContext context) {
+  @override
+  Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF0F172A), Color(0xFF1E3A8A)], begin: Alignment.topCenter, end: Alignment.bottomCenter)),
-        child: SafeArea(child: Column(children: [
-          const Padding(padding: EdgeInsets.all(16), child: Text("العب واربح - 3D ULTRA", style: TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.bold))),
-          Expanded(child: GridView.count(crossAxisCount: 2, padding: const EdgeInsets.all(16), crossAxisSpacing: 16, mainAxisSpacing: 16, children: [
-            _card(context, "بلياردو 3D", Icons.sports_basketball, [const Color(0xFF065F46), const Color(0xFF10B981)], const BilliardUltra()),
-            _card(context, "دومينو 3D", Icons.grid_view, [const Color(0xFF78350F), const Color(0xFFF59E0B)], const DominoUltra()),
-            _card(context, "سلم وثعبان 3D", Icons.show_chart, [const Color(0xFF1E40AF), const Color(0xFF60A5FA)], const SnakeUltra()),
-            _card(context, "لودو 4 لاعبين 3D", Icons.casino, [const Color(0xFF6D28D9), const Color(0xFFEC4899)], const LudoUltra()),
-          ])),
-        ])),
+      backgroundColor: const Color(0xFF0A1020),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // بار علوي - عملات وهدايا
+            Container(
+              padding: const EdgeInsets.all(12),
+              color: const Color(0xFF1A2332),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Row(children: [
+                    const CircleAvatar(backgroundImage: NetworkImage('https://i.pravatar.cc/100?img=12')),
+                    const SizedBox(width:8),
+                    Container(padding: const EdgeInsets.symmetric(horizontal:12,vertical:6), decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(20)), child: const Row(children: [Text("🪙 1500", style: TextStyle(color: Colors.white)), SizedBox(width:4), CircleAvatar(radius:10, backgroundColor: Colors.amber, child: Text("+", style: TextStyle(color: Colors.black, fontSize:12)))])),
+                    const SizedBox(width:6),
+                    Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(20)), child: const Text("🎁")),
+                  ]),
+                  Row(children: [
+                    _topBtn("🔍"), const SizedBox(width:6), _topBtn("👑 TOP")
+                  ])
+                ],
+              ),
+            ),
+            // ألعاب عادية
+            Expanded(
+              child: SingleChildScrollView(
+                child: Column(
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.all(14),
+                      child: Column(
+                        children: [
+                          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text("ألعاب عادية", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize:18)), Container(padding: const EdgeInsets.symmetric(horizontal:12,vertical:6), decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(20)), child: const Text("غرفة خاصة +", style: TextStyle(color: Colors.white, fontSize:12))) ]),
+                          const SizedBox(height:12),
+                          GridView.count(
+                            shrinkWrap: true,
+                            physics: const NeverScrollableScrollPhysics(),
+                            crossAxisCount: 2, childAspectRatio: 1.2, mainAxisSpacing:12, crossAxisSpacing:12,
+                            children: [
+                              _gameCard(context, "كيرم / بلياردو", const [Color(0xFF8B5A2B), Color(0xFF4A2C0A)], "🎯", const BilliardScreen()),
+                              _gameCard(context, "دومينو 50", const [Color(0xFF4CAF50), Color(0xFF1B5E20)], "🀄", const DominoScreen()),
+                              _gameCard(context, "لودو", const [Color(0xFF2979FF), Color(0xFF0D47A1)], "🎲", const LudoScreen()),
+                              _gameCard(context, "السلم والثعبان", const [Color(0xFFAB47BC), Color(0xFF4A148C)], "🐍", const SnakeScreen()),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                    // غرفة الانتظار - أصدقاء الأصدقاء
+                    Container(
+                      decoration: const BoxDecoration(color: Color(0xFF0E172A), borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+                      padding: const EdgeInsets.all(16),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          const Text("ابحث عن صديق - غرفة الانتظار", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                          const SizedBox(height:12),
+                         ...friends.map((f) => Container(
+                            margin: const EdgeInsets.only(bottom:10),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(color: const Color(0xFF1C2A45), borderRadius: BorderRadius.circular(16)),
+                            child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
+                              Row(children: [
+                                const CircleAvatar(radius:22, backgroundImage: NetworkImage('https://i.pravatar.cc/100?img=3')),
+                                const SizedBox(width:10),
+                                Column(crossAxisAlignment: CrossAxisAlignment.start, children: [Row(children: [Text(f["name"]!, style: const TextStyle(color: Colors.white, fontSize:13, fontWeight: FontWeight.bold)), const SizedBox(width:6), Container(padding: const EdgeInsets.symmetric(horizontal:4), decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(4)), child: Text(f["v"]!, style: const TextStyle(fontSize:9, color: Colors.black)))]), const Text("يشاهد اللعب - في الانتظار", style: TextStyle(color: Colors.white54, fontSize:11))])
+                              ]),
+                              Container(padding: const EdgeInsets.symmetric(horizontal:18,vertical:6), decoration: BoxDecoration(color: const Color(0xFF22C55E), borderRadius: BorderRadius.circular(20)), child: const Text("إنضم", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize:12)))
+                            ]),
+                          )),
+                        ],
+                      ),
+                    )
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
-  Widget _card(BuildContext c, String t, IconData ic, List<Color> g, Widget go){
-    return InkWell(onTap: ()=> Navigator.push(c, MaterialPageRoute(builder: (_)=> go)),
-      child: Container(decoration: BoxDecoration(gradient: LinearGradient(colors: g), borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: g.last.withOpacity(0.5), blurRadius: 10)]), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Icon(ic, color: Colors.white, size: 40), const SizedBox(height: 6), Text(t, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))])));}
+
+  Widget _topBtn(String t) => Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(20)), child: Text(t, style: const TextStyle(color: Colors.white, fontSize:12)));
+  Widget _gameCard(BuildContext c, String title, List<Color> colors, String emoji, Widget page) => GestureDetector(
+    onTap: () => Navigator.push(c, MaterialPageRoute(builder: (_) => page)),
+    child: Container(decoration: BoxDecoration(gradient: LinearGradient(colors: colors), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.amber.withOpacity(0.3))), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text(emoji, style: const TextStyle(fontSize:38)), const SizedBox(height:8), Container(padding: const EdgeInsets.symmetric(horizontal:12,vertical:4), decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(20)), child: Text(title, style: const TextStyle(color: Colors.white, fontSize:12, fontWeight: FontWeight.bold)))])),
+  );
 }
 
-Widget playerAvatar(PlayerInfo p, bool isTurn){
-  return Container(padding: const EdgeInsets.all(2), decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: isTurn? Colors.amber: Colors.white24, width: isTurn? 3:1)), child: Column(children: [
-    CircleAvatar(radius: 18, backgroundColor: p.color, child: Text(p.avatar, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
-    const SizedBox(height: 2), Text(p.name, style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: isTurn? FontWeight.bold: FontWeight.normal)),
-  ]));
-}
-
-class ChatBox extends StatefulWidget { const ChatBox({super.key}); @override State<ChatBox> createState()=> _ChatBoxState(); }
-class _ChatBoxState extends State<ChatBox> {
-  List<String> msgs=["أحمد: يلا نلعب","سارة: جاهزة!"]; TextEditingController ctrl=TextEditingController();
-  @override Widget build(BuildContext context){
-    return Container(decoration: const BoxDecoration(color: Color(0xFF111827), borderRadius: BorderRadius.vertical(top: Radius.circular(16))), child: Column(children: [
-      Container(padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), child: Row(children: [const Icon(Icons.chat_bubble, color: Colors.white54, size: 16), const Text(" الدردشة", style: TextStyle(color: Colors.white54, fontSize: 12)), const Spacer(), InkWell(onTap: ()=> ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text("🎁 تم إرسال هدية!"))), child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: Colors.pink, borderRadius: BorderRadius.circular(12)), child: const Text("🎁 هدية", style: TextStyle(color: Colors.white, fontSize: 12))))])),
-      SizedBox(height: 60, child: ListView(children: msgs.map((m)=> Padding(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2), child: Text(m, style: const TextStyle(color: Colors.white70, fontSize: 12)))).toList())),
-      Padding(padding: const EdgeInsets.all(6), child: Row(children: [Expanded(child: TextField(controller: ctrl, style: const TextStyle(color: Colors.white, fontSize: 12), decoration: InputDecoration(hintText: "اكتب رسالة...", hintStyle: const TextStyle(color: Colors.white24, fontSize: 12), filled: true, fillColor: Colors.white10, contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6), border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none)))), IconButton(icon: const Icon(Icons.send, color: Colors.tealAccent, size: 20), onPressed: (){ if(ctrl.text.isNotEmpty){ setState(()=> msgs.add("${gamePlayers[0].name}: ${ctrl.text}")); ctrl.clear(); }})])),
-    ]));
+// ========== بار انتظار مصغر يظهر فوق كل لعبة بدل اسم اللعبة ==========
+class WaitingMini extends StatelessWidget {
+  const WaitingMini({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Row(children: [
+     ...List.generate(3, (i) => const Padding(padding: EdgeInsets.only(right:4), child: CircleAvatar(radius:12, backgroundImage: NetworkImage('https://i.pravatar.cc/100?img=8')))),
+      const SizedBox(width:6),
+      const Text("غرفة الانتظار (4)", style: TextStyle(color: Colors.white70, fontSize:12))
+    ]);
   }
 }
 
-// ================== BILLIARD ==================
-class BallData { Offset pos; Offset vel; Color color; bool gone=false; BallData(this.pos,this.vel,this.color); }
-class BilliardUltra extends StatefulWidget { const BilliardUltra({super.key}); @override State<BilliardUltra> createState()=> _BilliardUltraState(); }
-class _BilliardUltraState extends State<BilliardUltra> with SingleTickerProviderStateMixin {
-  late AnimationController anim; BallData cue=BallData(const Offset(80,150), Offset.zero, Colors.white); List<BallData> balls=[]; double angle=0, power=35; int turn=0;
-  @override void initState(){ super.initState(); anim=AnimationController(vsync: this, duration: const Duration(days: 1))..addListener(_tick)..repeat(); _reset(); }
-  void _reset(){ cue=BallData(const Offset(80,150), Offset.zero, Colors.white); balls=[BallData(const Offset(200,140), Offset.zero, Colors.red), BallData(const Offset(200,160), Offset.zero, Colors.blue), BallData(const Offset(220,150), Offset.zero, Colors.yellow), BallData(const Offset(220,130), Offset.zero, Colors.purple)]; }
-  void _tick(){
-    setState((){
-      for(var b in [cue,...balls]){ if(b.gone) continue; b.pos+=b.vel; b.vel*=0.983; if(b.vel.distance<0.08) b.vel=Offset.zero;
-        if(b.pos.dx<14||b.pos.dx>306){ b.vel=Offset(-b.vel.dx*0.85, b.vel.dy); b.pos=Offset(b.pos.dx.clamp(14,306), b.pos.dy); }
-        if(b.pos.dy<14||b.pos.dy>286){ b.vel=Offset(b.vel.dx, -b.vel.dy*0.85); b.pos=Offset(b.pos.dx, b.pos.dy.clamp(14,286)); }
-        for(var pk in [const Offset(8,8), const Offset(160,8), const Offset(312,8), const Offset(8,292), const Offset(160,292), const Offset(312,292)]){ if((b.pos-pk).distance<18){ if(b==cue){ b.pos=const Offset(80,150); b.vel=Offset.zero; } else b.gone=true; } }
+// ========== 1- البلياردو - سحب في أي مكان بدون زر ==========
+class BilliardScreen extends StatefulWidget {
+  const BilliardScreen({super.key});
+  @override
+  State<BilliardScreen> createState() => _BilliardScreenState();
+}
+class _BilliardScreenState extends State<BilliardScreen> with SingleTickerProviderStateMixin {
+  Offset? start, current;
+  double power = 0;
+  Offset striker = const Offset(200, 320);
+  Offset vel = Offset.zero;
+  List<Offset> coins = [const Offset(200,180), const Offset(180,160), const Offset(220,160), const Offset(200,200)];
+
+  @override
+  void initState() {
+    super.initState();
+    Ticker(tick).start();
+  }
+  void tick(Duration _) {
+    if (vel!= Offset.zero) {
+      setState(() {
+        striker += vel;
+        vel *= 0.97;
+        if (vel.distance < 0.1) vel = Offset.zero;
+        if (striker.dx < 20 || striker.dx > 380) vel = Offset(-vel.dx, vel.dy);
+        if (striker.dy < 20 || striker.dy > 380) vel = Offset(vel.dx, -vel.dy);
+      });
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0A1020),
+      appBar: AppBar(backgroundColor: const Color(0xFF1A2332), title: const WaitingMini(), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: () => Navigator.pop(context))),
+      body: Column(children: [
+        const Padding(padding: EdgeInsets.all(8), child: Text("اسحب في أي مكان والقوة حسب طول السحبة - ارفع إصبعك تنطلق", style: TextStyle(color: Colors.white70, fontSize:12))),
+        LinearProgressIndicator(value: power/100, color: Colors.amber, backgroundColor: Colors.white12),
+        Expanded(child: GestureDetector(
+          onPanStart: (d){ start = d.localPosition; },
+          onPanUpdate: (d){ setState(() { current = d.localPosition; power = (start! - current!).distance.clamp(0, 100); }); },
+          onPanEnd: (_){ if (start!=null && current!=null){ final dir = start! - current!; setState(() { vel = dir * 0.12; power=0; start=null; current=null; }); } },
+          child: CustomPaint(painter: CarromPainter(striker, coins, start, current), size: const Size(400,400)),
+        )),
+        // لاعبين بسكور 0 وشات
+        Container(padding: const EdgeInsets.all(10), color: const Color(0xFF1A2332), child: Column(children: [
+          Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: List.generate(4, (i) => Column(children: [CircleAvatar(backgroundImage: NetworkImage('https://i.pravatar.cc/100?img=${i+1}')), const Text("0", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))]))),
+          const SizedBox(height:8),
+          Row(children: [const Text("💬 59", style: TextStyle(color: Colors.white)), const SizedBox(width:8), const Text("🎁", style: TextStyle(color: Colors.white)), const SizedBox(width:8), Expanded(child: Container(padding: const EdgeInsets.symmetric(horizontal:12,vertical:8), decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(20)), child: const Text("قل شيئا", style: TextStyle(color: Colors.white54, fontSize:12))))]),
+        ]))
+      ]),
+    );
+  }
+}
+class CarromPainter extends CustomPainter {
+  final Offset striker; final List<Offset> coins; final Offset? s,c;
+  CarromPainter(this.striker, this.coins, this.s, this.c);
+  @override
+  void paint(Canvas canvas, Size size){
+    final wood = Paint()..color = const Color(0xFFE8C49A);
+    canvas.drawRect(Rect.fromLTWH(0,0,size.width,size.height), wood);
+    final border = Paint()..color = const Color(0xFF8B5A2B)..style=PaintingStyle.stroke..strokeWidth=12;
+    canvas.drawRect(Rect.fromLTWH(0,0,size.width,size.height), border);
+    // جيوب
+    final pocket = Paint()..color=Colors.black;
+    for (var p in [const Offset(0,0), const Offset(400,0), const Offset(0,400), const Offset(400,400)]) { canvas.drawCircle(p, 18, pocket); }
+    // عملات
+    for (var o in coins) { canvas.drawCircle(o, 12, Paint()..color=Colors.black87); canvas.drawCircle(o, 10, Paint()..color=Colors.white); }
+    // المضرب
+    canvas.drawCircle(striker, 14, Paint()..color=Colors.white..style=PaintingStyle.fill);
+    canvas.drawCircle(striker, 14, Paint()..color=Colors.black..style=PaintingStyle.stroke..strokeWidth=2);
+    if (s!=null && c!=null){ final p=Paint()..color=Colors.yellow..strokeWidth=2..style=PaintingStyle.stroke; canvas.drawLine(striker, striker+(s!-c!)*1.2, p); }
+  }
+  @override bool shouldRepaint(covariant CustomPainter oldDelegate)=>true;
+}
+
+// ========== 2- دومينو واقعي 100% ==========
+class DominoScreen extends StatelessWidget {
+  const DominoScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    final tiles = [[2,5],[6,6],[1,3],[4,4],[0,2],[3,5]];
+    return Scaffold(
+      backgroundColor: const Color(0xFF3A8A3A),
+      appBar: AppBar(backgroundColor: const Color(0xFF1A2332), title: const WaitingMini(), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: ()=>Navigator.pop(context))),
+      body: Column(children: [
+        Container(padding: const EdgeInsets.all(12), color: const Color(0xFF5DB85D), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [const Text("🪙 1500 LV.0", style: TextStyle(color: Colors.white)), Row(children: [ _iconBox("🏪"), _iconBox("🎯"), _iconBox("👑")])])),
+        const SizedBox(height:10),
+        Container(padding: const EdgeInsets.symmetric(horizontal:20,vertical:8), decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(20)), child: const Text("دومينو 50", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+        const SizedBox(height:10),
+        Row(mainAxisAlignment: MainAxisAlignment.center, children: [ _btn("ترفيهي", Colors.amber), const SizedBox(width:8), _btn("معركة", Colors.green), const SizedBox(width:8), _btn("إنشاء", Colors.purple)]),
+        const SizedBox(height:20),
+        // رص واقعي
+        Wrap(spacing:6, runSpacing:8, children: tiles.map((t)=> Container(width:54, height:88, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), boxShadow: [BoxShadow(color: Colors.black45, blurRadius:4, offset: const Offset(2,2))], border: Border.all(color: Colors.black12)), child: Column(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: [ _dots(t[0]), Container(height:1, color: Colors.black26, margin: const EdgeInsets.symmetric(horizontal:8)), _dots(t[1])]))).toList()),
+        const Spacer(),
+        Container(padding: const EdgeInsets.all(8), color: const Color(0xFF1A2332), child: Row(children: [const Text("الغرفة الموصى بها: ملتقى آل سلاطين (14) ", style: TextStyle(color: Colors.white, fontSize:11)), Expanded(child: Container(padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(20)), child: const Text("قل شيئا", style: TextStyle(color: Colors.white54))))]))
+      ]),
+    );
+  }
+  Widget _iconBox(String e)=>Container(margin: const EdgeInsets.only(left:6), padding: const EdgeInsets.all(8), decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(12)), child: Text(e));
+  Widget _btn(String t, Color c)=>Container(padding: const EdgeInsets.symmetric(horizontal:18,vertical:10), decoration: BoxDecoration(gradient: LinearGradient(colors:[c, c.withOpacity(0.6)]), borderRadius: BorderRadius.circular(20), boxShadow: [BoxShadow(color: Colors.black45, offset: const Offset(0,3))]), child: Text(t, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize:12)));
+  Widget _dots(int n)=>Wrap(spacing:2, runSpacing:2, alignment: WrapAlignment.center, children: List.generate(n, (i)=> Container(width:8,height:8, decoration: const BoxDecoration(color: Colors.black, shape: BoxShape.circle))));
+}
+
+// ========== 3- لودو بألوان 3D أجمل ==========
+class LudoScreen extends StatelessWidget {
+  const LudoScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0F2A66),
+      appBar: AppBar(backgroundColor: const Color(0xFF1A2332), title: const WaitingMini(), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: ()=>Navigator.pop(context))),
+      body: Container(
+        decoration: const BoxDecoration(gradient: LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter, colors:[Color(0xFF2A6EDB), Color(0xFF0F2A66)])),
+        child: Column(children: [
+          const SizedBox(height:10),
+          Container(padding: const EdgeInsets.symmetric(horizontal:20,vertical:8), decoration: BoxDecoration(color: Colors.black45, borderRadius: BorderRadius.circular(20)), child: const Text("لودو", style: TextStyle(color: Colors.white))),
+          const SizedBox(height:6),
+          const Text("اللعبة علي وشك البدء 7", style: TextStyle(color: Colors.white70, fontSize:12)),
+          const SizedBox(height:12),
+          Container(padding: const EdgeInsets.symmetric(horizontal:36,vertical:12), decoration: BoxDecoration(gradient: const LinearGradient(colors:[Color(0xFF4ADE80), Color(0xFF16A34A)]), borderRadius: BorderRadius.circular(30), boxShadow: [BoxShadow(color: Colors.black45, offset: Offset(0,4))]), child: const Text("العب مع الأصدقاء", style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
+          const SizedBox(height:20),
+          Expanded(child: GridView.count(crossAxisCount:2, padding: const EdgeInsets.all(16), mainAxisSpacing:16, crossAxisSpacing:16, children: [
+            _ludoHouse(Colors.red, "🛩️"), _ludoHouse(Colors.green, "🛩️"), _ludoHouse(Colors.amber, "🛩️"), _ludoHouse(Colors.blue, "🛩️"),
+          ])),
+          Padding(padding: const EdgeInsets.all(12), child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: List.generate(4, (i)=> Column(children: [CircleAvatar(radius:20, backgroundImage: NetworkImage('https://i.pravatar.cc/100?img=${i+5}')), Text(["همام","سحاب","المجروح","الاكابر"][i], style: const TextStyle(color: Colors.white, fontSize:10))])))),
+        ]),
+      ),
+    );
+  }
+  Widget _ludoHouse(Color c, String e)=>Container(decoration: BoxDecoration(color: c.withOpacity(0.85), borderRadius: BorderRadius.circular(16), border: Border.all(color: Colors.white, width:3), boxShadow: [BoxShadow(color: Colors.black45, blurRadius:6)]), child: Center(child: Text(e, style: const TextStyle(fontSize:40))));
+}
+
+// ========== 4- السلم والثعبان بثعابين حقيقية ==========
+class SnakeScreen extends StatelessWidget {
+  const SnakeScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFFFEF3C7),
+      appBar: AppBar(backgroundColor: const Color(0xFF1A2332), title: const WaitingMini(), leading: IconButton(icon: const Icon(Icons.arrow_back), onPressed: ()=>Navigator.pop(context))),
+      body: Column(children: [
+        Expanded(child: Padding(padding: const EdgeInsets.all(8), child: CustomPaint(painter: SnakeBoardPainter(), child: Container()))),
+        Container(padding: const EdgeInsets.all(12), child: Row(mainAxisAlignment: MainAxisAlignment.center, children: [Container(width:70,height:70, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12), border: Border.all(width:2), boxShadow: [BoxShadow(color: Colors.black26, blurRadius:6)]), child: const Center(child: Text("🎲", style: TextStyle(fontSize:36))))])),
+      ]),
+    );
+  }
+}
+class SnakeBoardPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width / 10;
+    final h = size.height / 10;
+    final colors = [Colors.red, Colors.green, Colors.blue, Colors.orange, Colors.yellow];
+    int num = 100;
+    for (int r=0; r<10; r++){
+      for (int c=0; c<10; c++){
+        int col = r%2==0? c : 9-c;
+        final rect = Rect.fromLTWH(col*w, r*h, w, h);
+        final paint = Paint()..color = (r+c)%2==0? Colors.white : colors[(num%5)].withOpacity(0.8);
+        canvas.drawRect(rect, paint);
+        canvas.drawRect(rect, Paint()..color=Colors.black..style=PaintingStyle.stroke..strokeWidth=0.5);
+        final tp = TextPainter(text: TextSpan(text: "$num", style: TextStyle(fontSize:10, fontWeight: FontWeight.bold, color: (r+c)%2==0?Colors.black:Colors.white)), textDirection: TextDirection.ltr)..layout();
+        tp.paint(canvas, Offset(rect.left+4, rect.top+2));
+        num--;
       }
-      var all=[cue,...balls].where((b)=>!b.gone).toList();
-      for(int i=0;i<all.length;i++) for(int j=i+1;j<all.length;j++){ double d=(all[i].pos-all[j].pos).distance; if(d<18 && d>0){ Offset n=(all[i].pos-all[j].pos)/d; double p=2*(all[i].vel.dx*n.dx+all[i].vel.dy*n.dy - all[j].vel.dx*n.dx - all[j].vel.dy*n.dy)/2; all[i].vel-=n*p; all[j].vel+=n*p; all[i].pos+=n*0.5; all[j].pos-=n*0.5; } }
-    });
+    }
+    // ثعابين ملونة بعيون
+    void drawSnake(Offset start, Offset end, Color col){
+      final path = Path()..moveTo(start.dx, start.dy)..cubicTo(start.dx+30, start.dy+80, end.dx-30, end.dy-80, end.dx, end.dy);
+      canvas.drawPath(path, Paint()..color=col..style=PaintingStyle.stroke..strokeWidth=8..strokeCap=StrokeCap.round);
+      canvas.drawCircle(start, 8, Paint()..color=col);
+      canvas.drawCircle(start.translate(3, -2), 2, Paint()..color=Colors.white);
+      canvas.drawCircle(start.translate(3, -2), 1, Paint()..color=Colors.black);
+    }
+    drawSnake(Offset(2*w,1*h), Offset(1.5*w,5*h), Colors.amber);
+    drawSnake(Offset(5*w,0.5*h), Offset(5.5*w,3*h), Colors.pink);
+    drawSnake(Offset(6*w,2*h), Offset(3*w,6*h), Colors.green);
+    drawSnake(Offset(1*w,3*h), Offset(2.5*w,8*h), Colors.blue);
+    drawSnake(Offset(7*w,4*h), Offset(6*w,6.5*h), Colors.purple);
+    drawSnake(Offset(2*w,6.5*h), Offset(5*w,9*h), Colors.deepPurple);
+    // سلالم بيضاء
+    final ladderPaint = Paint()..color=Colors.white..style=PaintingStyle.stroke..strokeWidth=3;
+    void drawLadder(Offset a, Offset b){
+      canvas.drawLine(a, b, ladderPaint);
+      canvas.drawLine(a.translate(10,0), b.translate(10,0), ladderPaint);
+      for(double t=0.2; t<0.8; t+=0.15){ canvas.drawLine(Offset(a.dx + (b.dx-a.dx)*t, a.dy + (b.dy-a.dy)*t), Offset(a.dx + (b.dx-a.dx)*t+10, a.dy + (b.dy-a.dy)*t), ladderPaint); }
+    }
+    drawLadder(Offset(0.5*w,0.5*h), Offset(0.2*w,2.5*h));
+    drawLadder(Offset(3*w,1.2*h), Offset(5*w,4.5*h));
+    drawLadder(Offset(7*w,2.8*h), Offset(9*w,3.5*h));
   }
-  void shoot(){ double rad=angle*pi/180; cue.vel=Offset(cos(rad), sin(rad))*power*0.4; setState(()=> turn=(turn+1)%4); }
-  @override void dispose(){ anim.dispose(); super.dispose();}
-  @override Widget build(BuildContext context){
-    return Scaffold(appBar: AppBar(title: const Text("بلياردو 3D - 4 لاعبين"), backgroundColor: const Color(0xFF065F46), foregroundColor: Colors.white),
-      body: Column(children: [
-        SizedBox(height: 80, child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: List.generate(4, (i)=> playerAvatar(gamePlayers[i], turn==i)))),
-        Expanded(flex: 5, child: Container(margin: const EdgeInsets.all(8), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0A5C36), Color(0xFF10B981)]), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFF8B4513), width: 6)), child: CustomPaint(painter: BilliardUltraPainter(cue,balls,angle), child: const SizedBox.expand()))),
-        Container(padding: const EdgeInsets.all(8), color: const Color(0xFF111827), child: Column(children: [
-          Row(children: [const Icon(Icons.rotate_right, color: Colors.white54, size: 18), Expanded(child: Slider(value: angle, min: -180, max: 180, onChanged: (v)=> setState(()=> angle=v))), Text("${angle.toInt()}°", style: const TextStyle(color: Colors.white, fontSize: 12))]),
-          Row(children: [const Icon(Icons.bolt, color: Colors.amber, size: 18), Expanded(child: Slider(value: power, min: 5, max: 100, activeColor: Colors.amber, onChanged: (v)=> setState(()=> power=v))), ElevatedButton(onPressed: shoot, style: ElevatedButton.styleFrom(backgroundColor: Colors.teal), child: const Text("إضرب بعصاية"))]),
-        ])),
-        const Expanded(flex: 4, child: ChatBox()),
-      ]),
-    );
-  }
-}
-class BilliardUltraPainter extends CustomPainter {
-  BallData cue; List<BallData> balls; double ang; BilliardUltraPainter(this.cue,this.balls,this.ang);
-  @override void paint(Canvas c, Size s){
-    final pk=Paint()..color=Colors.black; for(var p in [const Offset(8,8), Offset(s.width/2,8), Offset(s.width-8,8), const Offset(8,292), Offset(s.width/2,292), Offset(s.width-8,292)]){ c.drawCircle(p, 12, pk); }
-    double rad=ang*pi/180; Offset dir=Offset(cos(rad), sin(rad));
-    Paint linePaint=Paint()..color=Colors.white38..strokeWidth=1;
-    for(double i=0;i<80;i+=10){ c.drawLine(cue.pos+dir*i, cue.pos+dir*(i+5), linePaint); }
-    Paint stickPaint=Paint()..color=const Color(0xFFD2B48C)..strokeWidth=6..strokeCap=StrokeCap.round; Offset stickStart=cue.pos - dir*60; c.drawLine(stickStart, cue.pos - dir*8, stickPaint);
-    if(!cue.gone) c.drawCircle(cue.pos, 8, Paint()..color=Colors.white);
-    for(var b in balls){ if(!b.gone) c.drawCircle(b.pos, 8, Paint()..color=b.color); }
-  }
-  @override bool shouldRepaint(covariant CustomPainter oldDelegate)=> true;
-}
-
-// ================== LUDO - مصلح بدون اخطاء ==================
-class LudoUltra extends StatefulWidget { const LudoUltra({super.key}); @override State<LudoUltra> createState()=> _LudoUltraState(); }
-class _LudoUltraState extends State<LudoUltra> {
-  List<List<int>> pos=List.generate(4, (_)=> List.filled(4, -1)); int turn=0,dice=1;
-  void roll(){ setState(()=> dice=Random().nextInt(6)+1); }
-  void move(int p, int idx){ if(pos[p][idx]==-1 && dice!=6) return; setState((){ if(pos[p][idx]==-1) pos[p][idx]=0; else { pos[p][idx]+=dice; if(pos[p][idx]>57) pos[p][idx]=57; } if(dice!=6) turn=(turn+1)%4; }); }
-  @override Widget build(BuildContext context){
-    return Scaffold(appBar: AppBar(title: Text("لودو 3D - دور ${gamePlayers[turn].name} نرد $dice"), backgroundColor: gamePlayers[turn].color),
-      body: Column(children: [
-        SizedBox(height: 70, child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: List.generate(4, (i)=> playerAvatar(gamePlayers[i], turn==i)))),
-        Expanded(flex: 6, child: Container(margin: const EdgeInsets.all(8), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF1F2937), Color(0xFF374151)]), borderRadius: BorderRadius.circular(16)), child: Stack(children: [
-          Center(child: Container(width: 280, height: 280, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.black12, width: 2)),
-            child: GridView.count(crossAxisCount: 15, children: List.generate(225, (i){
-              bool isPath = (i%15==6 || i%15==8 || i~/15==6 || i~/15==8);
-              return Container(margin: const EdgeInsets.all(0.5), decoration: BoxDecoration(color: isPath? Colors.white: Colors.transparent, border: isPath? Border.all(color: Colors.black12):null));
-            })))),
-          Center(child: InkWell(onTap: roll, child: Container(width: 60, height: 60, decoration: BoxDecoration(color: Colors.amber, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 3)), child: Center(child: Text("$dice", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)))))),
-          Positioned(top: 10, left: 10, child: _homeBox(0)), Positioned(top: 10, right: 10, child: _homeBox(1)),
-          Positioned(bottom: 10, left: 10, child: _homeBox(2)), Positioned(bottom: 10, right: 10, child: _homeBox(3)),
-        ]))),
-        const Expanded(flex: 4, child: ChatBox()),
-      ]),
-    );
-  }
-  Widget _homeBox(int p){
-    return Container(width: 110, height: 110, decoration: BoxDecoration(color: gamePlayers[p].color.withOpacity(0.25), borderRadius: BorderRadius.circular(14), border: Border.all(color: gamePlayers[p].color, width: 2)), child: Column(children: [
-      Text(gamePlayers[p].name, style: TextStyle(color: gamePlayers[p].color, fontWeight: FontWeight.bold, fontSize: 10)),
-      Expanded(child: GridView.count(crossAxisCount: 2, children: List.generate(4, (i)=> InkWell(onTap: ()=> turn==p? move(p,i):null, child: Container(margin: const EdgeInsets.all(3), decoration: BoxDecoration(color: pos[p][i]==-1? Colors.black45: Colors.white, shape: BoxShape.circle), child: Center(child: Text(pos[p][i]==-1? "🏠": "${pos[p][i]}", style: const TextStyle(fontSize: 9)))))))),
-    ]));
-  }
-}
-
-// ================== SNAKE ==================
-class SnakeUltra extends StatefulWidget { const SnakeUltra({super.key}); @override State<SnakeUltra> createState()=> _SnakeUltraState(); }
-class _SnakeUltraState extends State<SnakeUltra> {
-  List<int> poses=[1,1,1,1]; int turn=0,dice=1; bool busy=false;
-  Map<int,int> ladders={4:25,13:46,33:85,50:69,62:81,74:92}; Map<int,int> snakes={99:41,89:53,76:58,66:45,54:31,43:18,27:5,40:3};
-  Future<void> roll() async { if(busy) return; setState((){busy=true; dice=Random().nextInt(6)+1;}); int cur=poses[turn]; int tgt=cur+dice; if(tgt>100){ setState(()=>busy=false); return;} for(int i=cur+1;i<=tgt;i++){ await Future.delayed(const Duration(milliseconds: 120)); if(!mounted) return; setState(()=> poses[turn]=i);} int pos=poses[turn]; if(ladders.containsKey(pos)||snakes.containsKey(pos)){ await Future.delayed(const Duration(milliseconds: 300)); setState(()=> poses[turn]=ladders[pos]??snakes[pos]!);} setState((){turn=(turn+1)%4; busy=false;});}
-  @override Widget build(BuildContext context){
-    return Scaffold(appBar: AppBar(title: Text("سلم وثعبان 3D - دور ${gamePlayers[turn].name}"), backgroundColor: const Color(0xFF1E3A8A), foregroundColor: Colors.white),
-      body: Column(children: [
-        SizedBox(height: 60, child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: List.generate(4, (i)=> playerAvatar(gamePlayers[i], turn==i)))),
-        Expanded(flex: 6, child: Container(margin: const EdgeInsets.all(8), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF0F172A), Color(0xFF1E293B)]), borderRadius: BorderRadius.circular(16)), child: CustomPaint(painter: SnakeUltraPainter(poses,ladders,snakes), child: const SizedBox.expand()))),
-        Padding(padding: const EdgeInsets.all(8), child: ElevatedButton(onPressed: roll, style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, minimumSize: const Size(double.infinity, 48)), child: Text("رمي النرد - $dice", style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)))),
-        const Expanded(flex: 4, child: ChatBox()),
-      ]),
-    );
-  }
-}
-class SnakeUltraPainter extends CustomPainter {
-  List<int> poses; Map<int,int> ladders,snakes; SnakeUltraPainter(this.poses,this.ladders,this.snakes);
-  @override void paint(Canvas c, Size s){
-    double cw=s.width/10, ch=s.height/10;
-    Offset cellCenter(int n){ int r=(n-1)~/10; int col=(n-1)%10; int ac=r%2==0? col:9-col; double x=ac*cw+cw/2; double y=(9-r)*ch+ch/2; return Offset(x,y); }
-    for(int n=1;n<=100;n++){ int r=(n-1)~/10; int col=(n-1)%10; int ac=r%2==0? col:9-col; double x=ac*cw, y=(9-r)*ch; Paint p=Paint()..color=Colors.white; c.drawRRect(RRect.fromRectAndRadius(Rect.fromLTWH(x+2,y+2,cw-4,ch-4), const Radius.circular(6)), p); TextPainter tp=TextPainter(text: TextSpan(text: "$n", style: const TextStyle(fontSize: 7, color: Colors.black45)), textDirection: TextDirection.ltr)..layout(); tp.paint(c, Offset(x+3,y+3)); }
-    Paint snakePaint=Paint()..color=Colors.redAccent..strokeWidth=4..style=PaintingStyle.stroke;
-    snakes.forEach((head,tail){ var h=cellCenter(head); var t=cellCenter(tail); Path path=Path()..moveTo(h.dx,h.dy)..quadraticBezierTo((h.dx+t.dx)/2+20, (h.dy+t.dy)/2, t.dx, t.dy); c.drawPath(path, snakePaint); c.drawCircle(h, 8, Paint()..color=Colors.red); c.drawCircle(t, 6, Paint()..color=Colors.redAccent.withOpacity(0.6)); });
-    Paint ladderPaint=Paint()..color=Colors.green..strokeWidth=3..style=PaintingStyle.stroke;
-    ladders.forEach((bot,top){ var b=cellCenter(bot); var t=cellCenter(top); c.drawLine(Offset(b.dx-6,b.dy), Offset(t.dx-6,t.dy), ladderPaint); c.drawLine(Offset(b.dx+6,b.dy), Offset(t.dx+6,t.dy), ladderPaint); });
-    List<Color> pc=[Colors.red, Colors.green, Colors.orange, Colors.blue];
-    for(int pi=0;pi<4;pi++){ int n=poses[pi]; var cc=cellCenter(n); double off=(pi-1.5)*8; c.drawCircle(Offset(cc.dx+off, cc.dy+10), 6, Paint()..color=pc[pi]); }
-  }
-  @override bool shouldRepaint(covariant CustomPainter oldDelegate)=> true;
-}
-
-// ================== DOMINO ==================
-class DominoUltra extends StatefulWidget { const DominoUltra({super.key}); @override State<DominoUltra> createState()=> _DominoUltraState(); }
-class _DominoUltraState extends State<DominoUltra> {
-  List<List<int>> board=[[3,2]]; List<List<int>> hand=[[0,6],[6,1],[2,5],[1,4]]; int left=3,right=2; int turn=0;
-  void play(int idx){ var d=hand[idx]; bool cl=d[0]==left||d[1]==left, cr=d[0]==right||d[1]==right; if(!cl&&!cr) return; setState((){ if(cl){ board.insert(0, d[0]==left? [d[1],d[0]]:d); left=board.first[0]; } else { board.add(d[0]==right? d: [d[1],d[0]]); right=board.last[1]; } hand.removeAt(idx); turn=(turn+1)%4; });}
-  @override Widget build(BuildContext context){
-    return Scaffold(appBar: AppBar(title: Text("دومينو 3D [$left|$right] دور ${gamePlayers[turn].name}"), backgroundColor: const Color(0xFF451A03), foregroundColor: Colors.white),
-      body: Column(children: [
-        SizedBox(height: 70, child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: List.generate(4, (i)=> playerAvatar(gamePlayers[i], turn==i)))),
-        Expanded(flex: 5, child: Container(margin: const EdgeInsets.all(8), decoration: BoxDecoration(gradient: const LinearGradient(colors: [Color(0xFF3E2723), Color(0xFF5D4037)]), borderRadius: BorderRadius.circular(16)), child: Center(child: SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: board.map((d)=> Container(margin: const EdgeInsets.all(4), width: 48, height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8)), child: Column(children: [Expanded(child: CustomPaint(painter: DotPainter(d[0]))), Container(height: 2, color: Colors.black), Expanded(child: CustomPaint(painter: DotPainter(d[1])))]))).toList()))))),
-        Container(padding: const EdgeInsets.all(8), color: Colors.black87, child: Wrap(spacing: 8, children: List.generate(hand.length, (i)=> InkWell(onTap: ()=> play(i), child: Container(width: 54, height: 80, decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(8), border: Border.all(color: gamePlayers[turn].color, width: 2)), child: Column(children: [Expanded(child: CustomPaint(painter: DotPainter(hand[i][0]))), Container(height: 2, color: Colors.black), Expanded(child: CustomPaint(painter: DotPainter(hand[i][1])))])))))),
-        const Expanded(flex: 4, child: ChatBox()),
-      ]),
-    );
-  }
-}
-class DotPainter extends CustomPainter {
-  int v; DotPainter(this.v);
-  @override void paint(Canvas c, Size s){ Paint p=Paint()..color=Colors.black; void dot(double x,double y)=> c.drawCircle(Offset(s.width*x,s.height*y), 3.5, p);
-    if(v==1) dot(0.5,0.5);
-    if(v==2){ dot(0.25,0.25); dot(0.75,0.75); }
-    if(v==3){ dot(0.25,0.25); dot(0.5,0.5); dot(0.75,0.75); }
-    if(v==4){ dot(0.25,0.25); dot(0.75,0.25); dot(0.25,0.75); dot(0.75,0.75); }
-    if(v==5){ dot(0.25,0.25); dot(0.75,0.25); dot(0.5,0.5); dot(0.25,0.75); dot(0.75,0.75); }
-    if(v==6){ dot(0.25,0.2); dot(0.25,0.5); dot(0.25,0.8); dot(0.75,0.2); dot(0.75,0.5); dot(0.75,0.8); }
-  }
-  @override bool shouldRepaint(covariant CustomPainter oldDelegate)=> false;
+  @override bool shouldRepaint(covariant CustomPainter old)=>false;
 }
