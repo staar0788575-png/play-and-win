@@ -1,41 +1,19 @@
 name: play_and_win
-description: "A new Flutter project."
-publish_to: "none"
-
+description: "Play and Win - 4 Games"
+publish_to: 'none'
 version: 1.0.0+1
 
 environment:
-  sdk: ">=3.0.0 <4.0.5"
+  sdk: ">=3.0.0 <4.0.0"
 
 dependencies:
   flutter:
     sdk: flutter
-  cupertino_icons: ^1.0.2
-  firebase_core: ^2.24.2
-  firebase_database: ^10.4.2
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
-  flutter_launcher_icons: ^0.13.1
-  flutter_native_splash: ^2.3.15
-
-flutter_launcher_icons:
-  image_path: "assets/icon/logo.png"
-  android: true
-  ios: false
-
-flutter_native_splash:
-  color: "#ffffff"
-  image: "assets/icon/logo.png"
-  android: true
-  ios: false
-  fullscreen: true
 
 flutter:
   uses-material-design: true
-
-  assets:
-    - assets/icon/
-    - assets/images/
