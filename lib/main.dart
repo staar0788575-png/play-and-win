@@ -5,13 +5,12 @@ void main() => runApp(MaterialApp(home: LudoPro(), debugShowCheckedModeBanner: f
 
 class LudoPro extends StatefulWidget { @override _LudoProState createState() => _LudoProState(); }
 
-class _LudoProState extends State<LudoPro> with TickerProviderStateMixin {
+class _LudoProState extends State<LudoPro> {
   int dice = 1, turn = 0;
   bool canRoll = true;
-  List<List<int>> tokens = List.generate(4, (_) => List.filled(4, -1)); // -1 home, 0-51 path, 100+ win
+  List<List<int>> tokens = List.generate(4, (_) => List.filled(4, -1));
   List<int> safeCells = [0, 8, 13, 21, 26, 34, 39, 47];
 
-  // احداثيات الـ 52 خانة على البورد 15x15
   List<Point<int>> pathCoords = [
     Point(6,1), Point(6,2), Point(6,3), Point(6,4), Point(6,5), Point(5,6), Point(4,6), Point(3,6), Point(2,6), Point(1,6), Point(0,6), Point(0,7), Point(0,8),
     Point(1,8), Point(2,8), Point(3,8), Point(4,8), Point(5,8), Point(6,9), Point(6,10), Point(6,11), Point(6,12), Point(6,13), Point(6,14), Point(7,14), Point(8,14),
@@ -24,7 +23,6 @@ class _LudoProState extends State<LudoPro> with TickerProviderStateMixin {
     setState(() {
       dice = Random().nextInt(6) + 1;
       canRoll = false;
-      // شوف لو ليه حركة
       bool hasMove = false;
       for (int i = 0; i < 4; i++) {
         if (tokens[turn][i] == -1 && dice == 6) hasMove = true;
@@ -43,11 +41,10 @@ class _LudoProState extends State<LudoPro> with TickerProviderStateMixin {
     setState(() {
       int pos = tokens[turn][tokenIndex];
       if (pos == -1 && dice == 6) {
-        tokens[turn][tokenIndex] = turn * 13; // بداية كل لاعب
+        tokens[turn][tokenIndex] = turn * 13;
       } else if (pos >= 0 && pos < 52) {
         int newPos = pos + dice;
         if (newPos >= 52) newPos -= 52;
-        // اكل الخصم لو مش في الامان
         if (!safeCells.contains(newPos)) {
           for (int p = 0; p < 4; p++) {
             for (int t = 0; t < 4; t++) {
@@ -75,7 +72,6 @@ class _LudoProState extends State<LudoPro> with TickerProviderStateMixin {
             margin: EdgeInsets.all(8),
             decoration: BoxDecoration(border: Border.all(color: Colors.white, width: 3), color: Colors.white),
             child: Stack(children: [
-              // رسم البورد
               GridView.builder(
                 physics: NeverScrollableScrollPhysics(),
                 gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 15),
@@ -95,24 +91,27 @@ class _LudoProState extends State<LudoPro> with TickerProviderStateMixin {
                     child: isSafe? Icon(Icons.star, size: 12, color: Colors.black87) : null);
                 },
               ),
-              // رسم القطع
-             ...List.generate(4, (p) {
-                return...List.generate(4, (t) {
-                  int pos = tokens[p][t];
-                  double x, y;
-                  if (pos == -1) { // في البيت
-                    x = (p < 2? 0.5 + t % 2 * 1.5 : 9.5 + t % 2 * 1.5) * 20;
-                    y = (p % 2 == 0? 0.5 + t ~/ 2 * 1.5 : 9.5 + t ~/ 2 * 1.5) * 20;
-                    x = p % 2 == 0? (p == 0? 20 + t % 2 * 40 : 260 + t % 2 * 40) : (p == 1? 260 + t % 2 * 40 : 20 + t % 2 * 40);
-                    y = p < 2? 20 + t ~/ 2 * 40 : 260 + t ~/ 2 * 40;
-                  } else if (pos < 52) {
-                    var c = pathCoords[pos];
-                    x = c.y * 23.3 + 5; y = c.x * 23.3 + 5;
-                  } else { x = 160; y = 160; }
-                  return Positioned(left: x, top: y, child: GestureDetector(onTap: () => p == turn? moveToken(t) : null,
-                    child: Container(width: 18, height: 18, decoration: BoxDecoration(color: playerColors[p], shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2), boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 3)]))));
-                });
-              }),
+              // القطع - تم اصلاح السطر اللي كان عامل المشكلة هنا
+              for (int p = 0; p < 4; p++)
+                for (int t = 0; t < 4; t++)
+                  Builder(builder: (context) {
+                    int pos = tokens[p][t];
+                    double x, y;
+                    if (pos == -1) {
+                      x = (p == 0 || p == 3)? 20 + t % 2 * 40 : 260 + t % 2 * 40;
+                      y = (p < 2)? 20 + t ~/ 2 * 40 : 260 + t ~/ 2 * 40;
+                    } else if (pos < 52) {
+                      var c = pathCoords[pos];
+                      x = c.y * 23.3 + 5; y = c.x * 23.3 + 5;
+                    } else { x = 160; y = 160; }
+                    return Positioned(
+                      left: x, top: y,
+                      child: GestureDetector(
+                        onTap: () => p == turn? moveToken(t) : null,
+                        child: Container(width: 18, height: 18, decoration: BoxDecoration(color: playerColors[p], shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 2), boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 3)])),
+                      ),
+                    );
+                  }),
             ]),
           ),
         ),
@@ -123,8 +122,7 @@ class _LudoProState extends State<LudoPro> with TickerProviderStateMixin {
           ElevatedButton(onPressed: rollDice, style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, padding: EdgeInsets.symmetric(horizontal: 30, vertical: 15)), child: Text(canRoll? "ارمي النرد" : "حرك قطعة", style: TextStyle(color: Colors.black, fontSize: 18))),
         ]),
         SizedBox(height: 10),
-        Text("8 خانات آمنة ⭐ لا يمكن الأكل فيها - لازم تجيب 6 عشان تطلع", style: TextStyle(color: Colors.white70)),
-        Row(mainAxisAlignment: MainAxisAlignment.spaceEvenly, children: List.generate(4, (i) => Container(width: 12, height: 12, decoration: BoxDecoration(color: playerColors[i], shape: BoxShape.circle, border: turn == i? Border.all(color: Colors.white, width: 2) : null)))),
+        Text("8 خانات آمنة ⭐ لا يمكن الأكل فيها", style: TextStyle(color: Colors.white70)),
       ]),
     );
   }
