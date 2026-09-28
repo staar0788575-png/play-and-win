@@ -1,61 +1,104 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
-void main()=>runApp(const MyApp());
-class MyApp extends StatelessWidget{const MyApp({super.key}); @override Widget build(BuildContext c)=>const MaterialApp(debugShowCheckedModeBanner:false, home:LobbyFinal());}
 
-// ==================== اللوبي النهائي ====================
-class LobbyFinal extends StatefulWidget{const LobbyFinal({super.key}); @override State<LobbyFinal> createState()=>_LobbyF();}
-class _LobbyF extends State<LobbyFinal>{
-  List<Map<String,String>> friends=[{"n":"همام","s":"V6"},{"n":"سحاب","s":"V7"},{"n":"المجروح","s":"V6"}];
-  List<String> reqs=["طلب من محمود","طلب من علي"];
-  List<String> globalChat=["همام: يلا كيرم؟","سحاب: جاهز","الاكابر: دومينو؟"];
-  bool mic=true, speaker=true;
-  TextEditingController chatC=TextEditingController();
-  @override Widget build(BuildContext c){
-    return Scaffold(backgroundColor:const Color(0xFF0A1020),
-      appBar:AppBar(backgroundColor:const Color(0xFF1A2332), title:const Text("Play & Win - النسخة النهائية", style:TextStyle(fontSize:13)),
-        actions:[IconButton(onPressed:()=>setState(()=>mic=!mic), icon:Icon(mic?Icons.mic:Icons.mic_off, color:mic?Colors.green:Colors.red)), IconButton(onPressed:()=>setState(()=>speaker=!speaker), icon:Icon(speaker?Icons.volume_up:Icons.volume_off))]),
-      body:Column(children:[
-        if(reqs.isNotEmpty) Container(height:50, color:Colors.amber.shade100, child:ListView(scrollDirection:Axis.horizontal, children:reqs.map((r)=>Chip(label:Text(r), deleteIcon:const Icon(Icons.check), onDeleted:()=>setState(()=>reqs.remove(r)))).toList())),
-        Expanded(child:GridView.count(crossAxisCount:2, padding:const EdgeInsets.all(14), crossAxisSpacing:12, mainAxisSpacing:12, children:[
-          _card(c,"كيرم\nفيزياء + قوة\nمايك وشات خاص",[const Color(0xFFFF9800),const Color(0xFF5D4037)],"🎯",const CarromFinal()),
-          _card(c,"دومينو\n7 قطع + مطابقة\nشات خاص",[const Color(0xFF66BB6A),const Color(0xFF1B5E20)],"🀄",const DominoFinal()),
-          _card(c,"لودو\n52 خلية + SAFE\n3 ستات = طرد",[const Color(0xFF42A5F5),const Color(0xFF0D47A1)],"🎲",const LudoFinal()),
-          _card(c,"سلم وثعبان\n100 مربع + ثعابين\nلازم 100 بالظبط",[const Color(0xFFBA68C8),const Color(0xFF4A148C)],"🐍",const SnakeFinal()),
-        ])),
-        Container(height:60, color:const Color(0xFF1C2A45), child:ListView(padding:const EdgeInsets.all(6), children:globalChat.map((e)=>Text(e, style:const TextStyle(color:Colors.white70, fontSize:10))).toList())),
-        Container(padding:const EdgeInsets.all(6), color:const Color(0xFF1A2332), child:Row(children:[Expanded(child:TextField(controller:chatC, style:const TextStyle(color:Colors.white, fontSize:12), decoration:const InputDecoration(hintText:"شات عام + خاص - اكتب هنا", hintStyle:TextStyle(color:Colors.white38, fontSize:11), border:InputBorder.none))), IconButton(onPressed:(){if(chatC.text.isNotEmpty){setState(()=>globalChat.add("انت: ${chatC.text}")); chatC.clear();}}, icon:const Icon(Icons.send, color:Colors.amber))]))
-      ]));
+void main() => runApp(MaterialApp(home: GameHub(), debugShowCheckedModeBanner: false));
+
+class GameHub extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Color(0xFF1A1A2E),
+      appBar: AppBar(title: Text("4 Players Cafe"), backgroundColor: Color(0xFF16213E)),
+      body: Column(
+        children: [
+          Expanded(child: LudoGame()),
+          Divider(color: Colors.white24),
+          Expanded(child: CarromBattle()),
+          Divider(color: Colors.white24),
+          Expanded(child: DominoBattle()),
+        ],
+      ),
+    );
   }
-  Widget _card(BuildContext ctx,String t,List<Color> col,String e,Widget p)=>GestureDetector(onTap:()=>Navigator.push(ctx,MaterialPageRoute(builder:(_)=>p)), child:Container(decoration:BoxDecoration(gradient:LinearGradient(colors:col), borderRadius:BorderRadius.circular(20)), child:Column(mainAxisAlignment:MainAxisAlignment.center, children:[Text(e, style:const TextStyle(fontSize:42)), const SizedBox(height:6), Text(t, textAlign:TextAlign.center, style:const TextStyle(color:Colors.white, fontWeight:FontWeight.bold, fontSize:11))])));
 }
 
-// ==================== 1- دومينو نهائي ====================
-class DominoFinal extends StatefulWidget{const DominoFinal({super.key}); @override State<DominoFinal> createState()=>_DomF();}
-class _DomF extends State<DominoFinal>{
-  List<List<int>> board=[[3,3]]; List<List<int>> hand=[[0,2],[2,5],[3,5],[1,3],[6,6],[4,4],[2,2]]; int leftV=3,rightV=3,turn=0;
-  void put(int i,bool left){int a=hand[i][0],b=hand[i][1]; if(left){if(a!=leftV&&b!=leftV) return; setState(()=>{leftV=a==leftV?b:a, board.insert(0,[a,b]), hand.removeAt(i)});} else {if(a!=rightV&&b!=rightV) return; setState(()=>{rightV=a==rightV?b:a, board.add([a,b]), hand.removeAt(i)});} if(hand.isEmpty){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text("🏆 فزت دومينو - يد 7 خلصت!")));} setState(()=>turn=1); Future.delayed(const Duration(milliseconds:700),()=>setState(()=>turn=0));}
-  @override Widget build(BuildContext c){return Scaffold(backgroundColor:const Color(0xFF2E7D32), appBar:AppBar(title:Text("دومينو - ${turn==0?"دورك":"روبوت"} - $leftV|$rightV - يد ${hand.length}/7")), body:Column(children:[Container(height:110, color:Colors.black26, padding:const EdgeInsets.all(8), child:ListView(scrollDirection:Axis.horizontal, children:board.map((e)=>_tile(e[0],e[1])).toList())), const Spacer(), Wrap(alignment:WrapAlignment.center, spacing:6, children:List.generate(hand.length,(i)=>GestureDetector(onTap:()=>put(i,false), onLongPress:()=>put(i,true), child:_tile(hand[i][0],hand[i][1], sel:true)))), const Text("ضغطة=يمين | طويل=شمال | HAND 7 قطع", style:TextStyle(color:Colors.white70, fontSize:10)), const SizedBox(height:14)]));}
-  Widget _tile(int a,int b,{bool sel=false})=>Container(width:48, height:74, margin:const EdgeInsets.all(3), decoration:BoxDecoration(color:Colors.white, borderRadius:BorderRadius.circular(7), border:Border.all(color:sel?Colors.amber:Colors.black, width:sel?2:1)), child:Column(children:[Expanded(child:CustomPaint(painter:DotPainter(a))), Container(height:1,color:Colors.black), Expanded(child:CustomPaint(painter:DotPainter(b)))]));
+// --- 1. LUDO - 52 cell, 8 SAFE, 4 tokens, need 6 to out ---
+class LudoGame extends StatefulWidget { @override _LudoGameState createState() => _LudoGameState(); }
+class _LudoGameState extends State<LudoGame> {
+  int dice = 1; int turn = 0;
+  List<List<int>> tokens = List.generate(4, (_) => List.filled(4, -1)); // -1 = home, 0-51 path, 100+ home column
+  List<int> safeSpots = [0,8,13,21,26,34,39,47];
+  void roll() {
+    setState(() {
+      dice = Random().nextInt(6)+1;
+      // لوجيك الخروج: لو 6 طلع قطعة من البيت للبداية
+      int startPos = turn * 13;
+      for(int i=0;i<4;i++){
+        if(tokens[turn][i]==-1 && dice==6){ tokens[turn][i]=startPos; break; }
+        else if(tokens[turn][i]>=0 && tokens[turn][i]<100){
+          int newPos = tokens[turn][i]+dice;
+          if(newPos>51) newPos-=52;
+          // أكل الخصم لو مش في SAFE
+          if(!safeSpots.contains(newPos)){
+            for(int p=0;p<4;p++) for(int t=0;t<4;t++) if(p!=turn && tokens[p][t]==newPos) tokens[p][t]=-1;
+          }
+          tokens[turn][i]=newPos; break;
+        }
+      }
+      turn = (turn+1)%4;
+    });
+  }
+  @override Widget build(BuildContext context) {
+    return Column(children:[
+      Text("LUDO - 4 Players | SAFE: ${safeSpots.length} spots | Need 6 to out", style: TextStyle(color: Colors.white)),
+      Row(children: List.generate(4, (p) => Expanded(child: Row(children: List.generate(4, (t) => Container(margin: EdgeInsets.all(2), width: 12, height: 12, color: tokens[p][t]==-1?Colors.grey:[Colors.red,Colors.green,Colors.yellow,Colors.blue][p])))))),
+      ElevatedButton(onPressed: roll, child: Text("Roll Dice: $dice - Player ${turn+1}")),
+    ]);
+  }
 }
-class DotPainter extends CustomPainter{final int n; DotPainter(this.n); @override void paint(Canvas c,Size s){var p=Paint()..color=Colors.black; double w=s.width,h=s.height; List<Offset> o=[]; if(n==1) o=[Offset(w/2,h/2)]; if(n==2) o=[Offset(w*0.3,h*0.3),Offset(w*0.7,h*0.7)]; if(n==3) o=[Offset(w*0.3,h*0.3),Offset(w/2,h/2),Offset(w*0.7,h*0.7)]; if(n==4) o=[Offset(w*0.3,h*0.3),Offset(w*0.7,h*0.3),Offset(w*0.3,h*0.7),Offset(w*0.7,h*0.7)]; if(n==5) o=[Offset(w*0.3,h*0.3),Offset(w*0.7,h*0.3),Offset(w/2,h/2),Offset(w*0.3,h*0.7),Offset(w*0.7,h*0.7)]; if(n==6) o=[Offset(w*0.25,h*0.2),Offset(w*0.25,h*0.5),Offset(w*0.25,h*0.8),Offset(w*0.75,h*0.2),Offset(w*0.75,h*0.5),Offset(w*0.75,h*0.8)]; for(var e in o) c.drawCircle(e,3.2,p);} @override bool shouldRepaint(covariant _)=>false;}
 
-// ==================== 2- سلم وثعبان نهائي ====================
-class SnakeFinal extends StatefulWidget{const SnakeFinal({super.key}); @override State<SnakeFinal> createState()=>_SnaF();}
-class _SnaF extends State<SnakeFinal>{int p1=1,dice=1; Map<int,int> snakes={98:27,83:73,70:38,62:19,56:8}; Map<int,int> ladders={6:29,14:38,29:93,3:22,5:8,11:26}; final rnd=Random(); void roll(){setState(()=>dice=rnd.nextInt(6)+1); int np=p1+dice; if(np>100) return; setState(()=>p1=np); if(snakes.containsKey(p1)) setState(()=>p1=snakes[p1]!); if(ladders.containsKey(p1)) setState(()=>p1=ladders[p1]!); if(p1==100) ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text("🏆 فزت - 100 مربع!")));} @override Widget build(BuildContext c){return Scaffold(backgroundColor:const Color(0xFFFEF3C7), appBar:AppBar(title:Text("سلم وثعبان - مكانك $p1 - نرد $dice")), body:Column(children:[Expanded(child:Center(child:SizedBox(width:350, height:350, child:CustomPaint(painter:SnakeFinalPainter(p1,snakes,ladders), size:const Size(350,350))))), GestureDetector(onTap:roll, child:Container(width:90, height:90, decoration:BoxDecoration(color:Colors.green, borderRadius:BorderRadius.circular(20)), child:Center(child:Text("$dice", style:const TextStyle(fontSize:40, color:Colors.white, fontWeight:FontWeight.bold))))), const SizedBox(height:16)]));}}
-class SnakeFinalPainter extends CustomPainter{final int pl; final Map<int,int> sn,lad; SnakeFinalPainter(this.pl,this.sn,this.lad); @override void paint(Canvas c,Size s){double cw=s.width/10,ch=s.height/10; for(int r=0;r<10;r++){for(int cc=0;cc<10;cc++){int row=9-r; int col=r%2==0?cc:9-cc; int num=row*10+col+1; var rect=Rect.fromLTWH(cc*cw,r*ch,cw,ch); c.drawRect(rect,Paint()..color=num==pl?Colors.green.shade200:(num%2==0?Colors.white:const Color(0xFFFFF8E1))); c.drawRect(rect,Paint()..color=Colors.black12..style=PaintingStyle.stroke); var tp=TextPainter(text:TextSpan(text:"$num", style:const TextStyle(fontSize:7, color:Colors.black87)), textDirection:TextDirection.ltr)..layout(); tp.paint(c,Offset(rect.left+2,rect.top+2)); if(num==pl) c.drawCircle(rect.center,11,Paint()..color=Colors.green);}} var sp=Paint()..color=Colors.red..strokeWidth=3..style=PaintingStyle.stroke; sn.forEach((a,b){var sP=_pos(a,cw,ch); var eP=_pos(b,cw,ch); c.drawLine(sP,eP,sp);}); var lp=Paint()..color=Colors.amber.shade700..strokeWidth=3; lad.forEach((a,b){c.drawLine(_pos(a,cw,ch),_pos(b,cw,ch),lp);});} Offset _pos(int n,double cw,double ch){int r=(n-1)~/10; int col=(n-1)%10; if(r%2==1) col=9-col; return Offset(col*cw+cw/2,(9-r)*ch+ch/2);} @override bool shouldRepaint(covariant _)=>true;}
-
-// ==================== 3- كيرم نهائي ====================
-class CarromFinal extends StatefulWidget{const CarromFinal({super.key}); @override State<CarromFinal> createState()=>_CarF();}
-class _CarF extends State<CarromFinal>{List<Offset> balls=[const Offset(150,90),const Offset(130,110),const Offset(170,110)]; Offset striker=const Offset(150,360); @override Widget build(BuildContext c){return Scaffold(backgroundColor:const Color(0xFF3E2723), appBar:AppBar(title:const Text("كيرم - اسحب الاحمر بقوة")), body:Center(child:Container(width:320, height:480, decoration:BoxDecoration(color:const Color(0xFF5D4037), borderRadius:BorderRadius.circular(12), border:Border.all(color:Colors.black, width:6)), child:Stack(children:[Container(margin:const EdgeInsets.all(12), decoration:BoxDecoration(color:const Color(0xFFA5D6A7), borderRadius:BorderRadius.circular(8))), for(var b in balls) Positioned(left:b.dx, top:b.dy, child:Container(width:18, height:18, decoration:const BoxDecoration(color:Colors.black, shape:BoxShape.circle))), Positioned(left:striker.dx, top:striker.dy, child:GestureDetector(onPanUpdate:(d){setState(()=>striker+=d.delta); setState(()=>balls=balls.map((bb)=>Offset(bb.dx+d.delta.dx*0.3, bb.dy+d.delta.dy*0.3)).toList());}, child:Container(width:30, height:30, decoration:BoxDecoration(color:Colors.red, shape:BoxShape.circle, border:Border.all(color:Colors.white, width:2)))))]))));}}
-
-// ==================== 4- لودو نهائي - بكل طلباتك ====================
-class LudoFinal extends StatefulWidget{const LudoFinal({super.key}); @override State<LudoFinal> createState()=>_LudoF();}
-class _LudoF extends State<LudoFinal>{
-  final int TOTAL=52; final int HOME=57; final List<int> SAFE=[1,9,14,22,27,35,40,48];
-  Map<int,List<int>> tok={0:[-1,-1,-1,-1],1:[-1,-1,-1,-1],2:[-1,-1,-1,-1],3:[-1,-1,-1,-1]};
-  int turn=0,dice=1,six=0; final rnd=Random();
-  void roll(){setState(()=>dice=rnd.nextInt(6)+1); if(dice==6){six++; if(six>=3){ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content:Text("3 ستات متتالية - دورك راح!"))); six=0; turn=(turn+1)%4; return;}} else six=0; var list=tok[turn]!; for(int i=0;i<4;i++){if(list[i]==-1&&dice==6){setState(()=>list[i]=0); return;} if(list[i]>=0&&list[i]+dice<=HOME){int newCell=list[i]+dice; if(!SAFE.contains(newCell)){for(int p=0;p<4;p++){if(p==turn) continue; for(int t=0;t<4;t++){if(tok[p]![t]==newCell){setState(()=>tok[p]![t]=-1);}}}} setState(()=>list[i]=newCell); if(newCell==HOME){int win=list.where((e)=>e==HOME).length; if(win==4) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content:Text("🎉 اللاعب $turn فاز!")));} if(dice!=6) turn=(turn+1)%4; return;}} if(dice!=6) setState(()=>turn=(turn+1)%4);}
-  @override Widget build(BuildContext c){return Scaffold(backgroundColor:const Color(0xFFE3F2FD), appBar:AppBar(title:Text("لودو - TOTAL $TOTAL - SAFE $SAFE - دور $turn - ستات $six/3 - نرد $dice")), body:Column(children:[Container(width:380, height:380, color:Colors.white, child:CustomPaint(painter:LudoFinalPainter(tok,turn,SAFE), size:const Size(380,380))), const SizedBox(height:10), ElevatedButton(onPressed:roll, style:ElevatedButton.styleFrom(backgroundColor:Colors.amber, minimumSize:const Size(180,55)), child:Text("ارمي 🎲 $dice", style:const TextStyle(fontSize:24, color:Colors.black, fontWeight:FontWeight.bold))), Text("قطعك: ${tok[turn]} - لازم 6 عشان تطلع من البيت")])) ;}
+// --- 2. CARROM BATTLE - Striker drag, 9+9+Queen ---
+class CarromBattle extends StatefulWidget { @override _CarromBattleState createState() => _CarromBattleState(); }
+class _CarromBattleState extends State<CarromBattle> {
+  Offset striker = Offset(150, 350);
+  List<Offset> whites = List.generate(9, (i) => Offset(100+Random().nextInt(100).toDouble(), 100+Random().nextInt(100).toDouble()));
+  List<Offset> blacks = List.generate(9, (i) => Offset(100+Random().nextInt(100).toDouble(), 100+Random().nextInt(100).toDouble()));
+  Offset queen = Offset(150, 150);
+  void onDrag(DragUpdateDetails d){ setState(()=> striker+=d.delta); }
+  @override Widget build(BuildContext context){
+    return GestureDetector(
+      onPanUpdate: onDrag,
+      child: Container(color: Color(0xFFDEB887), child: Stack(children:[
+        Text("CARROM BATTLE - Drag Striker", style: TextStyle(color: Colors.black)),
+        Positioned(left: queen.dx, top: queen.dy, child: Container(width: 14, height: 14, decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle))),
+       ...whites.map((p)=> Positioned(left: p.dx, top: p.dy, child: Container(width: 12, height: 12, decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all())))),
+       ...blacks.map((p)=> Positioned(left: p.dx, top: p.dy, child: Container(width: 12, height: 12, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle)))),
+        Positioned(left: striker.dx, top: striker.dy, child: Container(width: 20, height: 20, decoration: BoxDecoration(color: Colors.brown, shape: BoxShape.circle))),
+      ])),
+    );
+  }
 }
-class LudoFinalPainter extends CustomPainter{final Map<int,List<int>> tok; final int turn; final List<int> safe; LudoFinalPainter(this.tok,this.turn,this.safe); @override void paint(Canvas c,Size s){double cs=s.width/15; var p=Paint(); c.drawRect(Rect.fromLTWH(0,0,s.width,s.height),p..color=Colors.white); c.drawRect(Rect.fromLTWH(0,0,6*cs,6*cs),p..color=Colors.red.shade300); c.drawRect(Rect.fromLTWH(9*cs,0,6*cs,6*cs),p..color=Colors.green.shade300); c.drawRect(Rect.fromLTWH(0,9*cs,6*cs,6*cs),p..color=Colors.blue.shade300); c.drawRect(Rect.fromLTWH(9*cs,9*cs,6*cs,6*cs),p..color=Colors.yellow.shade300); for(int i=0;i<15;i++){for(int j=0;j<15;j++){if((i>=6&&i<9)||(j>=6&&j<9)){var r=Rect.fromLTWH(i*cs,j*cs,cs,cs); c.drawRect(r,Paint()..color=Colors.black12..style=PaintingStyle.stroke); if(safe.contains((i+j)%52)) c.drawCircle(r.center,3,Paint()..color=Colors.amber);}}} for(int pl=0;pl<4;pl++){Color col=pl==0?Colors.red:pl==1?Colors.green:pl==2?Colors.yellow:Colors.blue; for(int t=0;t<4;t++){int pos=tok[pl]![t]; Offset off; if(pos==-1){off=Offset((pl%2==0?1.2:10.2)*cs+(t%2)*2.2*cs,(pl<2?1.2:10.2)*cs+(t~/2)*2.2*cs);} else {off=Offset(7.5*cs+cos(pos*0.12)*70, 7.5*cs+sin(pos*0.12)*70);} c.drawCircle(off,11,Paint()..color=col); c.drawCircle(off,11,Paint()..color=Colors.black..style=PaintingStyle.stroke..strokeWidth=1.2); if(pl==turn) c.drawCircle(off,14,Paint()..color=Colors.black..style=PaintingStyle.stroke..strokeWidth=2);}}} @override bool shouldRepaint(covariant _)=>true;}
+
+// --- 3. DOMINO BATTLE - 7 tiles, match left/right ---
+class DominoBattle extends StatefulWidget { @override _DominoBattleState createState() => _DominoBattleState(); }
+class _DominoBattleState extends State<DominoBattle> {
+  List<List<int>> myTiles = List.generate(7, (_) => [Random().nextInt(7), Random().nextInt(7)]);
+  List<List<int>> board = [[3,3]];
+  int leftEnd=3, rightEnd=3;
+  void playTile(int index){
+    setState((){
+      var t = myTiles[index];
+      if(t[0]==leftEnd){ board.insert(0, t); leftEnd=t[1]; myTiles.removeAt(index); }
+      else if(t[1]==leftEnd){ board.insert(0, [t[1],t[0]]); leftEnd=t[0]; myTiles.removeAt(index); }
+      else if(t[0]==rightEnd){ board.add(t); rightEnd=t[1]; myTiles.removeAt(index); }
+      else if(t[1]==rightEnd){ board.add([t[1],t[0]]); rightEnd=t[0]; myTiles.removeAt(index); }
+    });
+  }
+  @override Widget build(BuildContext context){
+    return Column(children:[
+      Text("DOMINO BATTLE - Match ${leftEnd} | ${rightEnd}", style: TextStyle(color: Colors.white)),
+      SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: board.map((t)=> Container(margin: EdgeInsets.all(2), padding: EdgeInsets.all(6), color: Colors.white, child: Text("${t[0]}|${t[1]}", style: TextStyle(color: Colors.black)))).toList())),
+      SingleChildScrollView(scrollDirection: Axis.horizontal, child: Row(children: List.generate(myTiles.length, (i)=> GestureDetector(onTap: ()=>playTile(i), child: Container(margin: EdgeInsets.all(2), padding: EdgeInsets.all(8), color: Colors.amber, child: Text("${myTiles[i][0]}|${myTiles[i][1]}")))))),
+    ]);
+  }
+}
