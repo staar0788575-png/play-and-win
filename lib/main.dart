@@ -17,7 +17,7 @@ class _FinalAppState extends State<FinalApp> {
           BottomNavigationBarItem(icon: Icon(Icons.casino), label: "لودو"),
           BottomNavigationBarItem(icon: Icon(Icons.circle), label: "كيرم"),
           BottomNavigationBarItem(icon: Icon(Icons.view_module), label: "دومينو"),
-          BottomNavigationBarItem(icon: Icon(Icons.ladder), label: "السلم"),
+          BottomNavigationBarItem(icon: Icon(Icons.stairs), label: "السلم"),
         ],
       ),
     );
@@ -64,8 +64,8 @@ class _CarromBattleState extends State<CarromBattle> {
       AppBar(title: Text("CARROM BATTLE - اسحب المضرب"), backgroundColor: Color(0xFF16213E), automaticallyImplyLeading: false),
       Expanded(child: GestureDetector(onPanUpdate: (d)=> setState(()=> striker+=d.delta), child: Container(color: Color(0xFFDEB887), child: Stack(children:[
         Positioned(left: queen.dx, top: queen.dy, child: Container(width: 16, height: 16, decoration: BoxDecoration(color: Colors.red, shape: BoxShape.circle))),
-       ...whites.map((p)=> Positioned(left: p.dx, top: p.dy, child: Container(width: 14, height: 14, decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all())))),
-       ...blacks.map((p)=> Positioned(left: p.dx, top: p.dy, child: Container(width: 14, height: 14, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle)))),
+      ...whites.map((p)=> Positioned(left: p.dx, top: p.dy, child: Container(width: 14, height: 14, decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all())))),
+      ...blacks.map((p)=> Positioned(left: p.dx, top: p.dy, child: Container(width: 14, height: 14, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle)))),
         Positioned(left: striker.dx, top: striker.dy, child: Container(width: 22, height: 22, decoration: BoxDecoration(color: Colors.brown, shape: BoxShape.circle))),
       ])))),
     ])));
@@ -118,7 +118,7 @@ class _SnakeLadderProState extends State<SnakeLadderPro> {
       body: Column(children:[
         Container(height: 45, color: Colors.black26, child: ListView(scrollDirection: Axis.horizontal, children: [
           Padding(padding: EdgeInsets.all(6), child: Chip(label: Text("غرفة انتظار"), backgroundColor: Colors.amber)),
-         ...List.generate(3, (i)=> Padding(padding: EdgeInsets.all(4), child: CircleAvatar(backgroundImage: NetworkImage("https://i.pravatar.cc/100?img=${i+5}")))),
+        ...List.generate(3, (i)=> Padding(padding: EdgeInsets.all(4), child: CircleAvatar(backgroundImage: NetworkImage("https://i.pravatar.cc/100?img=${i+5}")))),
           ElevatedButton(onPressed: (){}, child: Text("+ دعوة")),
         ])),
         Expanded(flex: 3, child: GridView.builder(gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10), itemCount: 100, itemBuilder: (c,i){
@@ -127,7 +127,7 @@ class _SnakeLadderProState extends State<SnakeLadderPro> {
             child: Stack(children:[
               Text("$num", style: TextStyle(color: Colors.white38, fontSize: 7)),
               if(snakes.containsKey(num)) Icon(Icons.bug_report, size: 10, color: Colors.red),
-              if(ladders.containsKey(num)) Icon(Icons.ladder, size: 10, color: Colors.green),
+              if(ladders.containsKey(num)) Icon(Icons.trending_up, size: 10, color: Colors.green),
               if(isP1) CircleAvatar(radius: 9, backgroundImage: NetworkImage("https://i.pravatar.cc/100?img=1")),
               if(isP2) Positioned(right: 0, child: CircleAvatar(radius: 9, backgroundImage: NetworkImage("https://i.pravatar.cc/100?img=2"))),
             ]));
