@@ -260,8 +260,8 @@ class _LudoRealState extends State<LudoReal> {
                                 boxShadow: [BoxShadow(color: Colors.black38, blurRadius: 3, spreadRadius: 1)],
                               ),
                               child: Center(
-                                // شكل يشبه قطع الشطرنج الملكية
-                                child: Icon(Icons.chess_rook, size: cell * 0.55, color: Colors.white),
+                                // تم التعديل هنا لاستخدام أيقونة قلعة الشطرنج المتاحة رسمياً
+                                child: Icon(Icons.castle, size: cell * 0.55, color: Colors.white),
                               ),
                             ),
                           ),
