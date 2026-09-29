@@ -34,7 +34,8 @@ class _LudoRealState extends State<LudoReal> {
     Point(8,5), Point(8,4), Point(8,3), Point(8,2), Point(8,1), Point(8,0), Point(7,0), Point(6,0),
   ];
 
-  final List<int> startIndex = [0, 13, 26, 39]; // نقاط البداية لكل لون
+  // نقاط البداية الصحيحة لكل لون أمام بيته مباشرة على المسار
+  final List<int> startIndex = [0, 26, 39, 13]; // Red: 0, Yellow: 26, Green: 39, Blue: 13
 
   void roll() {
     if (!canRoll) return;
@@ -114,7 +115,7 @@ class _LudoRealState extends State<LudoReal> {
       body: SafeArea(
         child: Column(
           children: [
-            // غرفة الانتظار مع تمييز الدور الحالي بوضوح تام
+            // غرفة الانتظار في الأعلى مع تمييز الدور الحالي بوضوح تام
             Container(
               margin: EdgeInsets.all(10),
               padding: EdgeInsets.symmetric(vertical: 10, horizontal: 8),
@@ -218,7 +219,7 @@ class _LudoRealState extends State<LudoReal> {
                     ),
                   ),
 
-                  // قطع الطيارات بتصميم "الشطرنج" الفاخر
+                  // قطع الطيارات بتصميم "ملك الشطرنج" (Crown/King)
                   ...List.generate(4, (p) => List.generate(4, (t) {
                         int pos = tokens[p][t];
                         double x = 0, y = 0;
@@ -260,8 +261,8 @@ class _LudoRealState extends State<LudoReal> {
                                 boxShadow: [BoxShadow(color: Colors.black38, blurRadius: 3, spreadRadius: 1)],
                               ),
                               child: Center(
-                                // تم التعديل هنا لاستخدام أيقونة قلعة الشطرنج المتاحة رسمياً
-                                child: Icon(Icons.castle, size: cell * 0.55, color: Colors.white),
+                                // شكل ملك الشطرنج (Crown)
+                                child: Icon(Icons.king_bed, size: cell * 0.5, color: Colors.white),
                               ),
                             ),
                           ),
