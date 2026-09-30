@@ -27,21 +27,15 @@ class _GameHubState extends State<GameHub> {
   }
 }
 
-// ==================== لودو ملوكي كامل بالمسار ====================
 class LudoRoyalFull extends StatefulWidget {
   @override State<LudoRoyalFull> createState() => _LudoRoyalFullState();
 }
 class _LudoRoyalFullState extends State<LudoRoyalFull> {
-  int dice=1, turn=0; bool canRoll=true; String msg="دور الملك الأحمر";
+  int dice=2, turn=0; bool canRoll=true; String msg="دوس ROLL";
   List<List<int>> tokens=[[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1]];
   List<int> start=[0,13,26,39];
   List<int> safe=[0,8,13,21,26,34,39,47];
-  List<List<int>> homePath=[
-    [52,53,54,55,56,57],
-    [58,59,60,61,62,63],
-    [64,65,66,67,68,69],
-    [70,71,72,73,74,75],
-  ];
+  List<List<int>> homePath=[[52,53,54,55,56,57],[58,59,60,61,62,63],[64,65,66,67,68,69],[70,71,72,73,74,75]];
 
   List<Offset> path=[
     Offset(6,1),Offset(6,2),Offset(6,3),Offset(6,4),Offset(6,5),
@@ -62,7 +56,7 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
     setState((){
       dice=math.Random().nextInt(6)+1;
       canRoll=false;
-      msg="جبت $dice - حرك ملكك يا ${["الاحمر","الاصفر","الاخضر","الازرق"][turn]}";
+      msg="جبت $dice - حرك ملك ${["الاحمر","الاصفر","الاخضر","الازرق"][turn]}";
     });
     bool can=false;
     for(int p in tokens[turn]){
@@ -71,7 +65,7 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
       if(p>=52&&p<76) can=true;
     }
     if(!can){
-      Future.delayed(Duration(seconds:1),(){
+      Future.delayed(Duration(milliseconds: 800),(){
         setState((){
           turn=(turn+1)%4;
           canRoll=true;
@@ -82,7 +76,7 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
   }
 
   void move(int p,int idx){
-    if(p!=turn){ setState(()=>msg="مش دورك!"); return; }
+    if(p!=turn){ setState(()=>msg="مش دورك - دور ${["الاحمر","الاصفر","الاخضر","الازرق"][turn]}"); return; }
     if(canRoll){ setState(()=>msg="ارمي النرد الاول!"); return; }
     int cur=tokens[p][idx];
     if(cur==-1&&dice!=6){ setState(()=>msg="لازم 6 عشان الملك يطلع!"); return; }
@@ -92,53 +86,53 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
         tokens[p][idx]=start[p];
       }else if(cur>=0&&cur<52){
         int steps=cur+dice;
-        int entry = (start[p]+51)%52;
-        if(cur<=entry && steps>entry && cur!=entry){
-          int homeSteps = steps - entry -1;
+        int entry=(start[p]+51)%52;
+        if(cur==entry){
+          int homeSteps=steps-52;
           if(homeSteps<6) tokens[p][idx]=homePath[p][homeSteps];
-          else tokens[p][idx]=100;
-        }else if(cur==entry && steps>51){
-          int homeSteps = steps - 52;
+          else if(homeSteps==6) tokens[p][idx]=100;
+          else tokens[p][idx]=steps%52;
+        }else if(cur<entry && steps>entry){
+          int homeSteps=steps-entry-1;
           if(homeSteps<6) tokens[p][idx]=homePath[p][homeSteps];
-          else tokens[p][idx]=100;
+          else if(homeSteps==6) tokens[p][idx]=100;
         }else{
           tokens[p][idx]=steps%52;
         }
       }else if(cur>=52 && cur<100){
-        int homeIdx = homePath[p].indexOf(cur);
-        if(homeIdx+ dice <6) tokens[p][idx]=homePath[p][homeIdx+dice];
+        int homeIdx=homePath[p].indexOf(cur);
+        if(homeIdx+dice<6) tokens[p][idx]=homePath[p][homeIdx+dice];
         else if(homeIdx+dice==6) tokens[p][idx]=100;
       }
-
       int newPos=tokens[p][idx];
       if(newPos<52 &&!safe.contains(newPos)){
         for(int op=0;op<4;op++){ if(op==p) continue; for(int ot=0;ot<4;ot++){ if(tokens[op][ot]==newPos){ tokens[op][ot]=-1; msg="اكلته! 🔥"; } } }
       }
       if(tokens[p].every((e)=>e==100)){
-        msg="الملك ${["الاحمر","الاصفر","الاخضر","الازرق"][p]} كسب! 👑🏆";
+        msg="الملك ${["الاحمر","الاصفر","الاخضر","الازرق"][p]} كسب! 🏆";
         return;
       }
-      if(dice!=6){ turn=(turn+1)%4; }
+      if(dice!=6) turn=(turn+1)%4;
       canRoll=true;
       if(!msg.contains("اكلته")) msg="دور ملك ${["الاحمر","الاصفر","الاخضر","الازرق"][turn]}";
     });
   }
 
-  Widget king(Color c,int p,int idx,bool small){
-    bool isTurn = turn==p &&!canRoll;
+  Widget king(Color c,int p,int idx,bool onBoard){
+    bool isTurn=turn==p &&!canRoll;
     return GestureDetector(
       onTap: ()=>move(p,idx),
       child: Container(
-        width: small?30:44, height: small?30:44,
+        width: onBoard?30:40, height: onBoard?30:40,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           gradient: RadialGradient(colors: [Color(0xFFFFE082), Color(0xFFFFC107), Color(0xFFB8860B)]),
-          border: Border.all(color: isTurn? Colors.white : Colors.white70, width: isTurn? 3.5:2),
-          boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 5, offset: Offset(0,2))],
+          border: Border.all(color: isTurn? Colors.white : Colors.white70, width: isTurn?3.5:2),
+          boxShadow: [BoxShadow(color: Colors.black54, blurRadius: 4, offset: Offset(0,2))],
         ),
         child: Stack(alignment: Alignment.center, children: [
-          Text("♔", style: TextStyle(fontSize: small?16:24, color: Color(0xFF3E2723), fontWeight: FontWeight.bold)),
-          Positioned(top: 1, child: Container(width: small?6:9, height: small?6:9, decoration: BoxDecoration(color: c, shape: BoxShape.circle, border: Border.all(color: Colors.white, width: 1)))),
+          Text("♔", style: TextStyle(fontSize: onBoard?14:20, color: Color(0xFF3E2723), fontWeight: FontWeight.bold)),
+          Positioned(top:1, child: Container(width: onBoard?5:8, height: onBoard?5:8, decoration: BoxDecoration(color: c, shape: BoxShape.circle, border: Border.all(color: Colors.white, width:1)))),
         ]),
       ),
     );
@@ -147,81 +141,95 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
   @override Widget build(BuildContext context){
     Color red=Color(0xFFE53935), yellow=Color(0xFFFBC02D), green=Color(0xFF43A047), blue=Color(0xFF1E88E5);
     List<Color> cols=[red,yellow,green,blue];
-    double size=MediaQuery.of(context).size.width-12;
+    double size=MediaQuery.of(context).size.width-10;
     double cell=size/15;
+
     return Scaffold(
       backgroundColor: Color(0xFF0D1B4A),
       body: Container(
-        decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF0D1B4A), Color(0xFF2A1B6A)])),
+        decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF0D1B4A), Color(0xFF1A237E)])),
         child: SafeArea(child: Column(children: [
-          Padding(padding: EdgeInsets.all(10), child: Row(children: [
-            Icon(Icons.arrow_back, color: Colors.white), SizedBox(width:10),
-            Text("Ludo Royal • 10356", style: TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+          // شيلت اسم الغرفة والرقم نهائياً - بس رسالة الحالة
+          Padding(padding: EdgeInsets.symmetric(horizontal:12, vertical:8), child: Row(children: [
+            Icon(Icons.arrow_back, color: Colors.white, size:24),
             Spacer(),
-            Container(padding: EdgeInsets.symmetric(horizontal:8, vertical:4), decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(10), border: Border.all(color: Colors.amber)), child: Text(msg, style: TextStyle(color: Colors.white, fontSize:10))),
+            Container(padding: EdgeInsets.symmetric(horizontal:12, vertical:6), decoration: BoxDecoration(color: Color(0xFF1A237E), borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.amber)), child: Text(msg, style: TextStyle(color: Colors.white, fontSize:12, fontWeight: FontWeight.bold))),
+            Spacer(),
+            Icon(Icons.pause, color: Colors.white24, size:20),
           ])),
+
+          // غرفة الانتظار - 4 ملوك
           Container(
             margin: EdgeInsets.symmetric(horizontal:10),
-            padding: EdgeInsets.all(8),
-            decoration: BoxDecoration(color: Color(0xFF2A2A7A).withOpacity(0.5), borderRadius: BorderRadius.circular(16)),
+            padding: EdgeInsets.symmetric(vertical:8),
+            decoration: BoxDecoration(color: Colors.white.withOpacity(0.05), borderRadius: BorderRadius.circular(16)),
             child: Row(mainAxisAlignment: MainAxisAlignment.spaceAround, children: List.generate(4, (i)=> Column(children: [
-              Container(padding: EdgeInsets.all(2), decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: cols[i], width: turn==i?4:1.5)), child: CircleAvatar(radius: 22, backgroundColor: cols[i].withOpacity(0.8), child: Text("♔", style: TextStyle(fontSize:20)))),
-              SizedBox(height:3), Text(["احمر","اصفر","اخضر","ازرق"][i], style: TextStyle(color: cols[i], fontSize:10, fontWeight: FontWeight.bold)),
+              Container(padding: EdgeInsets.all(2), decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: cols[i], width: turn==i?3.5:1.5)), child: CircleAvatar(radius: 22, backgroundColor: cols[i].withOpacity(0.2), child: Text("♔", style: TextStyle(fontSize:18, color: cols[i])))),
+              SizedBox(height:4), Text(["احمر","اصفر","اخضر","ازرق"][i], style: TextStyle(color: cols[i], fontSize:11, fontWeight: FontWeight.bold)),
             ]))),
           ),
-          SizedBox(height:6),
+          SizedBox(height:8),
+
+          // البورد الفخم متظبط
           Center(child: Container(
             width: size, height: size,
-            padding: EdgeInsets.all(8),
-            decoration: BoxDecoration(color: Color(0xFF4E342E), borderRadius: BorderRadius.circular(14), border: Border.all(color: Color(0xFFD4AF37), width: 4)),
+            padding: EdgeInsets.all(6),
+            decoration: BoxDecoration(color: Color(0xFF4E342E), borderRadius: BorderRadius.circular(14), border: Border.all(color: Color(0xFFD4AF37), width:3)),
             child: Container(
-              decoration: BoxDecoration(color: Color(0xFFF5E6C8), border: Border.all(color: Color(0xFFD4AF37), width: 2)),
+              decoration: BoxDecoration(color: Color(0xFFFFF8E1), border: Border.all(color: Color(0xFFD4AF37), width:1.5)),
               child: Stack(children: [
-                GridView.count(crossAxisCount:15, physics: NeverScrollableScrollPhysics(), children: List.generate(225, (idx){
-                  int r=idx~/15,c=idx%15; Color bg=Color(0xFFFFF8E1);
-                  if(r<6&&c<6) bg=red.withOpacity(0.85);
-                  else if(r<6&&c>8) bg=green.withOpacity(0.85);
-                  else if(r>8&&c<6) bg=yellow.withOpacity(0.85);
-                  else if(r>8&&c>8) bg=blue.withOpacity(0.85);
-                  else if(r>=6&&r<=8&&c>=6&&c<=8) bg=Color(0xFFFFD54F);
-                  else if(r==7&&c>=1&&c<=5) bg=red.withOpacity(0.5);
-                  else if(r==7&&c>=9&&c<=13) bg=green.withOpacity(0.5);
-                  else if(c==7&&r>=1&&r<=5) bg=yellow.withOpacity(0.5);
-                  else if(c==7&&r>=9&&r<=13) bg=yellow.withOpacity(0.5);
-                  Widget? ch; int pIdx=path.indexWhere((e)=>e.dx==r&&e.dy==c);
-                  if(safe.contains(pIdx)) ch=Icon(Icons.shield, size: cell*0.35, color: Colors.brown);
-                  return Container(decoration: BoxDecoration(color: bg, border: Border.all(color: Color(0xFFD4AF37).withOpacity(0.3), width:0.5)), child: Center(child: ch));
-                })),
-                Positioned(left: cell*0.5, top: cell*0.5, width: cell*5, height: cell*5, child: Container(decoration: BoxDecoration(color: red, border: Border.all(color: Color(0xFFFFD700), width:3), borderRadius: BorderRadius.circular(6)))),
-                Positioned(left: cell*9.5, top: cell*0.5, width: cell*5, height: cell*5, child: Container(decoration: BoxDecoration(color: green, border: Border.all(color: Color(0xFFFFD700), width:3), borderRadius: BorderRadius.circular(6)))),
-                Positioned(left: cell*0.5, top: cell*9.5, width: cell*5, height: cell*5, child: Container(decoration: BoxDecoration(color: yellow, border: Border.all(color: Color(0xFFFFD700), width:3), borderRadius: BorderRadius.circular(6)))),
-                Positioned(left: cell*9.5, top: cell*9.5, width: cell*5, height: cell*5, child: Container(decoration: BoxDecoration(color: blue, border: Border.all(color: Color(0xFFFFD700), width:3), borderRadius: BorderRadius.circular(6)))),
-              ...List.generate(4, (p)=>List.generate(4, (t){
+                GridView.count(
+                  crossAxisCount:15, physics: NeverScrollableScrollPhysics(), padding: EdgeInsets.zero,
+                  children: List.generate(225, (idx){
+                    int r=idx~/15,c=idx%15; Color bg=Color(0xFFFFF8E1);
+                    if(r<6&&c<6) bg=red;
+                    else if(r<6&&c>8) bg=green;
+                    else if(r>8&&c<6) bg=yellow;
+                    else if(r>8&&c>8) bg=blue;
+                    else if(r==7&&c>=1&&c<=5) bg=red.withOpacity(0.9);
+                    else if(r==7&&c>=9&&c<=13) bg=Color(0xFFA5D6A7);
+                    else if(c==7&&r>=1&&r<=5) bg=Color(0xFFFFE082);
+                    else if(c==7&&r>=9&&r<=13) bg=Color(0xFF90CAF9);
+                    else if(r>=6&&r<=8&&c>=6&&c<=8) bg=Color(0xFFFFD54F);
+                    Widget? ch; int pIdx=path.indexWhere((e)=>e.dx==r&&e.dy==c);
+                    if(safe.contains(pIdx)) ch=Icon(Icons.shield, size: cell*0.4, color: Colors.brown.shade700);
+                    return Container(decoration: BoxDecoration(color: bg, border: Border.all(color: Colors.black12, width:0.3)), child: Center(child: ch));
+                  }),
+                ),
+                // بيوت - حدود دهبي
+                Positioned(left: cell*0.5, top: cell*0.5, width: cell*5, height: cell*5, child: Container(decoration: BoxDecoration(color: Colors.transparent, border: Border.all(color: Color(0xFFFFD700), width:3), borderRadius: BorderRadius.circular(6)))),
+                Positioned(left: cell*9.5, top: cell*0.5, width: cell*5, height: cell*5, child: Container(decoration: BoxDecoration(color: Colors.transparent, border: Border.all(color: Color(0xFFFFD700), width:3), borderRadius: BorderRadius.circular(6)))),
+                Positioned(left: cell*0.5, top: cell*9.5, width: cell*5, height: cell*5, child: Container(decoration: BoxDecoration(color: Colors.transparent, border: Border.all(color: Color(0xFFFFD700), width:3), borderRadius: BorderRadius.circular(6)))),
+                Positioned(left: cell*9.5, top: cell*9.5, width: cell*5, height: cell*5, child: Container(decoration: BoxDecoration(color: Colors.transparent, border: Border.all(color: Color(0xFFFFD700), width:3), borderRadius: BorderRadius.circular(6)))),
+
+                // 16 ملك - 4 في كل بيت متظبطين
+             ...List.generate(4, (p)=>List.generate(4, (t){
                   int bp=tokens[p][t]; double x,y;
                   if(bp==-1){
                     if(p==0){ x=(t%2==0?1:3.2)*cell; y=(t<2?1:3.2)*cell; }
                     else if(p==1){ x=(t%2==0?1:3.2)*cell; y=(t<2?10:12.2)*cell; }
                     else if(p==2){ x=(t%2==0?10:12.2)*cell; y=(t<2?1:3.2)*cell; }
                     else{ x=(t%2==0?10:12.2)*cell; y=(t<2?10:12.2)*cell; }
-                  }else if(bp>=100){ x=6.3*cell; y=6.3*cell; }
+                  }else if(bp>=100){ x=6.5*cell; y=6.5*cell; }
                   else if(homeCoords.containsKey(bp)){ var pt=homeCoords[bp]!; x=pt.dy*cell; y=pt.dx*cell; }
                   else{ var pt=path[bp%52]; x=pt.dy*cell; y=pt.dx*cell; }
                   return Positioned(left: x+1, top: y+1, child: king(cols[p], p, t, bp!=-1));
                 })).expand((e)=>e),
-                Positioned(left: 6*cell, top: 6*cell, width: 3*cell, height: 3*cell, child: Container(decoration: BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [Color(0xFFFFD700), Color(0xFF8D6E00)]), border: Border.all(color: Colors.white, width:2)), child: Icon(Icons.emoji_events, color: Colors.white, size: 18))),
+
+                Positioned(left: 6*cell, top: 6*cell, width: 3*cell, height: 3*cell, child: Container(decoration: BoxDecoration(shape: BoxShape.circle, color: Color(0xFFC9A600), border: Border.all(color: Colors.white, width:2)), child: Icon(Icons.emoji_events, color: Colors.white, size: 18))),
               ]),
             ),
           )),
           Spacer(),
           Container(
-            padding: EdgeInsets.all(10),
-            decoration: BoxDecoration(color: Color(0xFF12123A), borderRadius: BorderRadius.vertical(top: Radius.circular(20)), border: Border(top: BorderSide(color: Color(0xFFFFD700), width:1.5))),
+            padding: EdgeInsets.symmetric(horizontal:10, vertical:10),
+            decoration: BoxDecoration(color: Color(0xFF0A0A2A), borderRadius: BorderRadius.vertical(top: Radius.circular(20)), border: Border(top: BorderSide(color: Color(0xFFFFD700), width:1))),
             child: Row(children: [
-              Container(width:56,height:56, decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFB8860B)]), borderRadius: BorderRadius.circular(12)), child: Center(child: Text("$dice", style: TextStyle(fontSize:28, fontWeight: FontWeight.bold)))),
+              Container(width:56,height:56, decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFB8860B)]), borderRadius: BorderRadius.circular(12)), child: Center(child: Text("$dice", style: TextStyle(fontSize:28, fontWeight: FontWeight.bold, color: Colors.black)))),
               SizedBox(width:10),
-              Expanded(child: GestureDetector(onTap: roll, child: Container(height:52, decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFFA000)]), borderRadius: BorderRadius.circular(14)), child: Center(child: Text(canRoll?"ROLL 👑":"انتظر", style: TextStyle(fontWeight: FontWeight.bold, fontSize:18)))))),
+              Expanded(child: GestureDetector(onTap: roll, child: Container(height:52, decoration: BoxDecoration(gradient: LinearGradient(colors: canRoll?[Color(0xFFFFD700), Color(0xFFFFA000)]:[Colors.grey, Colors.grey.shade700]), borderRadius: BorderRadius.circular(14)), child: Center(child: Text(canRoll?"ROLL 👑":"حرك ملكك", style: TextStyle(fontWeight: FontWeight.bold, fontSize:18, color: Colors.black)))))),
               SizedBox(width:8),
-              Container(height:52, padding: EdgeInsets.symmetric(horizontal:14), decoration: BoxDecoration(color: Color(0xFFFFC93C), borderRadius: BorderRadius.circular(12)), child: Center(child: Text("SAFE", style: TextStyle(fontWeight: FontWeight.bold)))),
+              Container(height:52, padding: EdgeInsets.symmetric(horizontal:14), decoration: BoxDecoration(color: Color(0xFFFFC93C), borderRadius: BorderRadius.circular(12)), child: Center(child: Text("SAFE", style: TextStyle(fontWeight: FontWeight.bold, color: Colors.black)))),
             ]),
           ),
         ])),
@@ -230,7 +238,6 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
   }
 }
 
-// ==================== كيرم كامل بفيزياء ====================
 class CarromFull extends StatefulWidget {
   @override State<CarromFull> createState()=>_CarromFullState();
 }
@@ -244,7 +251,7 @@ class _CarromFullState extends State<CarromFull> {
     super.initState();
     pieces=[
       CarromPiece(Offset(0.5,0.5), Colors.red, true, isQueen:true),
-    ...List.generate(9, (i){
+   ...List.generate(9, (i){
         double ang=i*40*3.14159/180;
         return CarromPiece(Offset(0.5+0.06*math.cos(ang), 0.5+0.06*math.sin(ang)), i%2==0? Colors.white: Colors.black, false);
       }),
@@ -253,6 +260,7 @@ class _CarromFullState extends State<CarromFull> {
   }
 
   void updatePhysics(){
+    if(!mounted) return;
     setState((){
       for(var p in [...pieces, striker]){
         if(p.vel==Offset.zero) continue;
@@ -287,7 +295,7 @@ class _CarromFullState extends State<CarromFull> {
   @override Widget build(BuildContext context){
     return Scaffold(
       backgroundColor: Color(0xFF2B1A0E),
-      appBar: AppBar(backgroundColor: Color(0xFF3E2723), title: Text("Carrom Royal • فيزياء μ=0.15 e=1"), centerTitle:true),
+      appBar: AppBar(backgroundColor: Color(0xFF3E2723), title: Text("Carrom Royal • μ=0.15"), centerTitle:true),
       body: Column(children: [
         Expanded(child: LayoutBuilder(builder: (ctx,cons){
           double size=math.min(cons.maxWidth, cons.maxHeight)*0.92;
@@ -305,10 +313,9 @@ class _CarromFullState extends State<CarromFull> {
               width: size, height: size,
               decoration: BoxDecoration(color: Color(0xFFF5D6A0), border: Border.all(color: Color(0xFFD4AF37), width:10), borderRadius: BorderRadius.circular(8)),
               child: Stack(children: [
-              ...[Offset(0,0),Offset(1,0),Offset(0,1),Offset(1,1)].map((p)=>Positioned(left: p.dx*(size-24), top: p.dy*(size-24), child: Container(width:26,height:26, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle, border: Border.all(color: Color(0xFFD4AF37), width:2))))),
-              ...pieces.map((pc)=>Positioned(left: pc.pos.dx*size-14, top: pc.pos.dy*size-14, child: Container(width:28,height:28, decoration: BoxDecoration(color: pc.color, shape: BoxShape.circle, border: Border.all(color: Colors.white, width:1.5)), child: pc.isQueen? Icon(Icons.star, size:12, color: Colors.yellow): null))),
+             ...[Offset(0,0),Offset(1,0),Offset(0,1),Offset(1,1)].map((p)=>Positioned(left: p.dx*(size-24), top: p.dy*(size-24), child: Container(width:26,height:26, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle, border: Border.all(color: Color(0xFFD4AF37), width:2))))),
+             ...pieces.map((pc)=>Positioned(left: pc.pos.dx*size-14, top: pc.pos.dy*size-14, child: Container(width:28,height:28, decoration: BoxDecoration(color: pc.color, shape: BoxShape.circle, border: Border.all(color: Colors.white, width:1.5)), child: pc.isQueen? Icon(Icons.star, size:12, color: Colors.yellow): null))),
                 Positioned(left: striker.pos.dx*size-18, top: striker.pos.dy*size-18, child: Container(width:36,height:36, decoration: BoxDecoration(color: striker.color, shape: BoxShape.circle, border: Border.all(color: Colors.white, width:3)), child: Icon(Icons.adjust, color: Colors.white, size:18))),
-                Positioned(bottom:6, left:0, right:0, child: Center(child: Container(padding: EdgeInsets.symmetric(horizontal:10, vertical:4), decoration: BoxDecoration(color: Colors.black54, borderRadius: BorderRadius.circular(10)), child: Text("اسحب وسيب - متبقي ${pieces.length}", style: TextStyle(color: Colors.white, fontSize:11))))),
               ]),
             )),
           );
