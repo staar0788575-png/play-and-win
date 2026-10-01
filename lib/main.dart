@@ -32,15 +32,28 @@ class LudoRoyalFull extends StatefulWidget {
   @override State<LudoRoyalFull> createState() => _LudoRoyalFullState();
 }
 class _LudoRoyalFullState extends State<LudoRoyalFull> {
-  int dice=1, turn=0; bool canRoll=true; String msg="ارمي 6 عشان تطلع من قدام بيتك";
+  int dice=1;
+  // ترتيب عقارب الساعة: ازرق(3) -> اصفر(1) -> احمر(0) -> اخضر(2) -> يرجع ازرق
+  List<int> clockwiseOrder = [3,1,0,2];
+  int orderIndex=0;
+  int get turn => clockwiseOrder[orderIndex];
+  bool canRoll=true;
+  String msg="دور عشوائي - ارمي 6 عشان تطلع من قدام بيتك";
   List<List<int>> tokens=[[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1]];
-  List<int> start=[0,39,13,26];
+  List<int> start=[0,39,13,26]; // احمر, اصفر, اخضر, ازرق
   List<int> safe=[0,8,13,21,26,34,39,47];
   List<List<int>> homePath=[[52,53,54,55,56,57],[58,59,60,61,62,63],[64,65,66,67,68,69],[70,71,72,73,74,75]];
   int chatTab=0;
   List<String> gameChat=["P1: يلا نلعب 👑","P2: جاهز 🔥"];
-  List<String> friendsChat=["Ahmed: فينكم؟","Sara: تعالو لودو 😎","Leo: انا داخل"];
+  List<String> friendsChat=["Ahmed: فينكم؟","Sara: تعالو لودو 😎"];
   TextEditingController chatCtrl=TextEditingController();
+
+  @override void initState(){
+    super.initState();
+    // بداية عشوائية
+    orderIndex = math.Random().nextInt(4);
+    msg="دور الملك ${["الاحمر","الاصفر","الاخضر","الازرق"][turn]} - البداية عشوائية";
+  }
 
   List<Offset> path=[
     Offset(6,1),Offset(6,2),Offset(6,3),Offset(6,4),Offset(6,5),
@@ -61,11 +74,11 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
     setState((){
       dice=math.Random().nextInt(6)+1;
       canRoll=false;
-      msg="جبت $dice";
+      msg="جبت $dice - ${["الاحمر","الاصفر","الاخضر","الازرق"][turn]} يلعب";
     });
     bool can=false;
     for(int p in tokens[turn]){ if(p==-1&&dice==6) can=true; if(p>=0&&p<52) can=true; if(p>=52&&p<76) can=true; }
-    if(!can){ Future.delayed(Duration(milliseconds:700),(){ setState((){ turn=(turn+1)%4; canRoll=true; }); }); }
+    if(!can){ Future.delayed(Duration(milliseconds:700),(){ setState((){ orderIndex=(orderIndex+1)%4; canRoll=true; msg="دور ${["الاحمر","الاصفر","الاخضر","الازرق"][turn]} - اللي جنبه"; }); }); }
   }
   void move(int p,int idx){
     if(p!=turn||canRoll) return;
@@ -91,19 +104,28 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
       if(newPos<52 &&!safe.contains(newPos)){
         for(int op=0;op<4;op++){ if(op==p) continue; for(int ot=0;ot<4;ot++){ if(tokens[op][ot]==newPos){ tokens[op][ot]=-1; } } }
       }
-      if(dice!=6) turn=(turn+1)%4;
+      if(dice!=6) orderIndex=(orderIndex+1)%4;
       canRoll=true;
+      msg="دور ${["الاحمر","الاصفر","الاخضر","الازرق"][turn]} - اللي جنبه";
     });
   }
 
   Widget king(Color c,int p,int idx,bool onBoard){
     bool isTurn=turn==p &&!canRoll;
-    return GestureDetector(
-      onTap: ()=>move(p,idx),
-      child: Container(
-        width: onBoard?28:38, height: onBoard?28:38,
-        decoration: BoxDecoration(shape: BoxShape.circle, color: c, border: Border.all(color: isTurn? Colors.white : Colors.white70, width: isTurn?3:2)),
-        child: Center(child: Text("♔", style: TextStyle(fontSize: onBoard?14:20, color: Colors.white, fontWeight: FontWeight.bold))),
+    // لو فيه اكتر من ملك في نفس الخانة - زحزحة بسيطة عشان ميختفوش
+    int sameSpot=0;
+    int pos=tokens[p][idx];
+    for(int i=0;i<4;i++){ if(i!=idx && tokens[p][i]==pos && pos!=-1) sameSpot++; }
+    double offset = sameSpot*6.0;
+    return Transform.translate(
+      offset: Offset(offset, offset),
+      child: GestureDetector(
+        onTap: ()=>move(p,idx),
+        child: Container(
+          width: onBoard?28:36, height: onBoard?28:36,
+          decoration: BoxDecoration(shape: BoxShape.circle, color: c, border: Border.all(color: isTurn? Colors.white : Colors.white70, width: isTurn?3:2), boxShadow: [BoxShadow(color: Colors.black54, blurRadius:3)]),
+          child: Center(child: Text("♔", style: TextStyle(fontSize: onBoard?13:18, color: Colors.white, fontWeight: FontWeight.bold))),
+        ),
       ),
     );
   }
@@ -119,12 +141,10 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
           SizedBox(width:6),
           GestureDetector(onTap: ()=>setState(()=>chatTab=1), child: Container(padding: EdgeInsets.symmetric(horizontal:12, vertical:5), decoration: BoxDecoration(color: chatTab==1? Color(0xFF3DD4C0): Colors.white10, borderRadius: BorderRadius.circular(14)), child: Row(children: [Icon(Icons.person, size:14, color: chatTab==1? Colors.black: Colors.white54), SizedBox(width:4), Text("شات الأصدقاء الخاص", style: TextStyle(fontSize:10, color: chatTab==1? Colors.black: Colors.white70, fontWeight: FontWeight.bold))]))),
           Spacer(),
-          Icon(Icons.circle, size:8, color: Colors.green),
-          SizedBox(width:4),
           Text(chatTab==0?"4 Online":"3 أصدقاء", style: TextStyle(color: Colors.white38, fontSize:9)),
         ]),
         SizedBox(height:5),
-        Container(height:32, child: ListView.builder(scrollDirection: Axis.horizontal, itemCount: current.length, itemBuilder: (_,i)=>Container(margin: EdgeInsets.only(right:6), padding: EdgeInsets.symmetric(horizontal:10, vertical:6), decoration: BoxDecoration(color: chatTab==0? Colors.white10: Color(0xFF3DD4C0).withOpacity(0.15), borderRadius: BorderRadius.circular(12), border: Border.all(color: chatTab==0? Colors.white12: Color(0xFF3DD4C0).withOpacity(0.3))), child: Text(current[i], style: TextStyle(color: Colors.white70, fontSize:10))))),
+        Container(height:32, child: ListView.builder(scrollDirection: Axis.horizontal, itemCount: current.length, itemBuilder: (_,i)=>Container(margin: EdgeInsets.only(right:6), padding: EdgeInsets.symmetric(horizontal:10, vertical:6), decoration: BoxDecoration(color: chatTab==0? Colors.white10: Color(0xFF3DD4C0).withOpacity(0.15), borderRadius: BorderRadius.circular(12)), child: Text(current[i], style: TextStyle(color: Colors.white70, fontSize:10))))),
         SizedBox(height:6),
         Row(children: [
           Container(width:38,height:38, decoration: BoxDecoration(color: Colors.white24, shape: BoxShape.circle), child: Icon(Icons.mic, color: Colors.white, size:18)),
@@ -159,8 +179,9 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
             padding: EdgeInsets.all(6),
             decoration: BoxDecoration(color: Color(0xFF4E342E), borderRadius: BorderRadius.circular(12), border: Border.all(color: Color(0xFFD4AF37), width:3)),
             child: Container(
+              clipBehavior: Clip.none,
               decoration: BoxDecoration(color: Color(0xFFFFF8E1)),
-              child: Stack(children: [
+              child: Stack(clipBehavior: Clip.none, children: [
                 GridView.count(crossAxisCount:15, physics: NeverScrollableScrollPhysics(), padding: EdgeInsets.zero, children: List.generate(225, (idx){
                   int r=idx~/15,c=idx%15; Color bg=Color(0xFFFFF8E1);
                   if(r<6&&c<6) bg=red;
@@ -176,19 +197,20 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
                   if(safe.contains(pIdx)) ch=Text("★", style: TextStyle(fontSize: cell*0.35));
                   return Container(decoration: BoxDecoration(color: bg, border: Border.all(color: Colors.black12, width:0.3)), child: Center(child: ch));
                 })),
-            ...List.generate(4, (p)=>List.generate(4, (t){
+           ...List.generate(4, (p)=>List.generate(4, (t){
                   int bp=tokens[p][t]; double x,y;
                   if(bp==-1){
-                    if(p==0){ x=(t%2==0?1:3.2)*cell; y=(t<2?1:3.2)*cell; }
-                    else if(p==1){ x=(t%2==0?1:3.2)*cell; y=(t<2?10:12.2)*cell; }
-                    else if(p==2){ x=(t%2==0?10:12.2)*cell; y=(t<2?1:3.2)*cell; }
-                    else{ x=(t%2==0?10:12.2)*cell; y=(t<2?10:12.2)*cell; }
+                    if(p==0){ x=(t%2==0?1:3.1)*cell; y=(t<2?1:3.1)*cell; }
+                    else if(p==1){ x=(t%2==0?1:3.1)*cell; y=(t<2?10:12.1)*cell; }
+                    else if(p==2){ x=(t%2==0?10:12.1)*cell; y=(t<2?1:3.1)*cell; }
+                    else{ x=(t%2==0?10:12.1)*cell; y=(t<2?10:12.1)*cell; }
                   }else if(bp>=100){ x=6.5*cell; y=6.5*cell; }
                   else if(homeCoords.containsKey(bp)){ var pt=homeCoords[bp]!; x=pt.dy*cell; y=pt.dx*cell; }
                   else{ var pt=path[bp%52]; x=pt.dy*cell; y=pt.dx*cell; }
-                  return Positioned(left: x+1, top: y+1, child: king(cols[p], p, t, bp!=-1));
+                  return Positioned(left: x, top: y, child: king(cols[p], p, t, bp!=-1));
                 })).expand((e)=>e),
-                if(canRoll) Center(child: GestureDetector(onTap: roll, child: Container(width:88, height:88, decoration: BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [Color(0xFFFFD700), Color(0xFFFF6F00)]), border: Border.all(color: Colors.white, width:3), boxShadow: [BoxShadow(blurRadius:10)]), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text("$dice", style: TextStyle(fontSize:30, fontWeight: FontWeight.bold)), Text("ROLL", style: TextStyle(fontWeight: FontWeight.bold, fontSize:12))])))),
+                // زر ROLL عائم كبرته 20%
+                if(canRoll) Center(child: GestureDetector(onTap: roll, child: Container(width: 106, height: 106, decoration: BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [Color(0xFFFFD700), Color(0xFFFF6F00)]), border: Border.all(color: Colors.white, width:3), boxShadow: [BoxShadow(blurRadius:12, color: Colors.black54)]), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text("$dice", style: TextStyle(fontSize:36, fontWeight: FontWeight.bold)), Text("ROLL", style: TextStyle(fontWeight: FontWeight.bold, fontSize:14))])))),
               ]),
             ),
           ))),
@@ -218,7 +240,7 @@ class _CarromFullState extends State<CarromFull> {
     super.initState();
     pieces=[
       CarromPiece(Offset(0.5,0.5), Colors.red, true, isQueen:true),
-    ...List.generate(9, (i){
+   ...List.generate(9, (i){
         double ang=i*40*3.14159/180;
         double r=i<3?0.05:0.09;
         return CarromPiece(Offset(0.5+r*math.cos(ang), 0.5+r*math.sin(ang)), i%2==0? Colors.white: Colors.black, false);
@@ -331,7 +353,8 @@ class _CarromFullState extends State<CarromFull> {
             onPanUpdate: (d){ dragEnd=Offset(d.localPosition.dx/size, d.localPosition.dy/size); setState((){}); },
             onPanEnd: (_){
               if(dragStart!=null&&dragEnd!=null){
-                Offset dir=dragStart!-dragEnd!;
+                // صلحت الاتجاه - دلوقتي يسحب لقدام يضرب لقدام
+                Offset dir=dragEnd!-dragStart!;
                 if(dir.distance>0.02) striker.vel=dir*14;
               }
               dragStart=null; dragEnd=null; setState((){});
@@ -345,7 +368,7 @@ class _CarromFullState extends State<CarromFull> {
                 Positioned(left:4,bottom:4, child: Container(width:26,height:26, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle, border: Border.all(color: Color(0xFFFFD700), width:2)))),
                 Positioned(right:4,bottom:4, child: Container(width:26,height:26, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle, border: Border.all(color: Color(0xFFFFD700), width:2)))),
                 CustomPaint(size: Size(size,size), painter: CarromLinesPainter()),
-             ...pieces.map((pc)=>Positioned(left: pc.pos.dx*size-15, top: pc.pos.dy*size-15, child: Container(width:30,height:30, decoration: BoxDecoration(color: pc.color, shape: BoxShape.circle, border: Border.all(color: Colors.white, width:2)), child: pc.isQueen? Center(child: Text("★", style: TextStyle(color: Colors.yellow, fontSize:14))): null))),
+            ...pieces.map((pc)=>Positioned(left: pc.pos.dx*size-15, top: pc.pos.dy*size-15, child: Container(width:30,height:30, decoration: BoxDecoration(color: pc.color, shape: BoxShape.circle, border: Border.all(color: Colors.white, width:2)), child: pc.isQueen? Center(child: Text("★", style: TextStyle(color: Colors.yellow, fontSize:14))): null))),
                 Positioned(left: striker.pos.dx*size-18, top: striker.pos.dy*size-18, child: Container(width:36,height:36, decoration: BoxDecoration(color: striker.color, shape: BoxShape.circle, border: Border.all(color: Colors.white, width:3)), child: Icon(Icons.adjust, color: Colors.white, size:16))),
                 if(dragStart!=null&&dragEnd!=null) CustomPaint(size: Size(size,size), painter: AimPainter(dragStart!*size, dragEnd!*size)),
               ]),
