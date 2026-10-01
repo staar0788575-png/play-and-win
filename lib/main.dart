@@ -27,20 +27,19 @@ class _GameHubState extends State<GameHub> {
   }
 }
 
-// ==================== لودو ====================
+// ==================== لودو - الطيارة في نص المربع ====================
 class LudoRoyalFull extends StatefulWidget {
   @override State<LudoRoyalFull> createState() => _LudoRoyalFullState();
 }
 class _LudoRoyalFullState extends State<LudoRoyalFull> {
   int dice=1;
-  // ترتيب عقارب الساعة: ازرق(3) -> اصفر(1) -> احمر(0) -> اخضر(2) -> يرجع ازرق
   List<int> clockwiseOrder = [3,1,0,2];
   int orderIndex=0;
   int get turn => clockwiseOrder[orderIndex];
   bool canRoll=true;
-  String msg="دور عشوائي - ارمي 6 عشان تطلع من قدام بيتك";
+  String msg="دور عشوائي";
   List<List<int>> tokens=[[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1]];
-  List<int> start=[0,39,13,26]; // احمر, اصفر, اخضر, ازرق
+  List<int> start=[0,39,13,26];
   List<int> safe=[0,8,13,21,26,34,39,47];
   List<List<int>> homePath=[[52,53,54,55,56,57],[58,59,60,61,62,63],[64,65,66,67,68,69],[70,71,72,73,74,75]];
   int chatTab=0;
@@ -50,7 +49,6 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
 
   @override void initState(){
     super.initState();
-    // بداية عشوائية
     orderIndex = math.Random().nextInt(4);
     msg="دور الملك ${["الاحمر","الاصفر","الاخضر","الازرق"][turn]} - البداية عشوائية";
   }
@@ -74,11 +72,11 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
     setState((){
       dice=math.Random().nextInt(6)+1;
       canRoll=false;
-      msg="جبت $dice - ${["الاحمر","الاصفر","الاخضر","الازرق"][turn]} يلعب";
+      msg="جبت $dice";
     });
     bool can=false;
     for(int p in tokens[turn]){ if(p==-1&&dice==6) can=true; if(p>=0&&p<52) can=true; if(p>=52&&p<76) can=true; }
-    if(!can){ Future.delayed(Duration(milliseconds:700),(){ setState((){ orderIndex=(orderIndex+1)%4; canRoll=true; msg="دور ${["الاحمر","الاصفر","الاخضر","الازرق"][turn]} - اللي جنبه"; }); }); }
+    if(!can){ Future.delayed(Duration(milliseconds:700),(){ setState((){ orderIndex=(orderIndex+1)%4; canRoll=true; msg="دور ${["الاحمر","الاصفر","الاخضر","الازرق"][turn]}"; }); }); }
   }
   void move(int p,int idx){
     if(p!=turn||canRoll) return;
@@ -106,23 +104,17 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
       }
       if(dice!=6) orderIndex=(orderIndex+1)%4;
       canRoll=true;
-      msg="دور ${["الاحمر","الاصفر","الاخضر","الازرق"][turn]} - اللي جنبه";
     });
   }
 
-  Widget king(Color c,int p,int idx,bool onBoard){
+  Widget king(Color c,int p,int idx,bool onBoard, double cell){
     bool isTurn=turn==p &&!canRoll;
-    // لو فيه اكتر من ملك في نفس الخانة - زحزحة بسيطة عشان ميختفوش
-    int sameSpot=0;
-    int pos=tokens[p][idx];
-    for(int i=0;i<4;i++){ if(i!=idx && tokens[p][i]==pos && pos!=-1) sameSpot++; }
-    double offset = sameSpot*6.0;
-    return Transform.translate(
-      offset: Offset(offset, offset),
+    double sz = onBoard?28:36;
+    return Container(
+      width: sz, height: sz,
       child: GestureDetector(
         onTap: ()=>move(p,idx),
         child: Container(
-          width: onBoard?28:36, height: onBoard?28:36,
           decoration: BoxDecoration(shape: BoxShape.circle, color: c, border: Border.all(color: isTurn? Colors.white : Colors.white70, width: isTurn?3:2), boxShadow: [BoxShadow(color: Colors.black54, blurRadius:3)]),
           child: Center(child: Text("♔", style: TextStyle(fontSize: onBoard?13:18, color: Colors.white, fontWeight: FontWeight.bold))),
         ),
@@ -139,12 +131,10 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
         Row(children: [
           GestureDetector(onTap: ()=>setState(()=>chatTab=0), child: Container(padding: EdgeInsets.symmetric(horizontal:12, vertical:5), decoration: BoxDecoration(color: chatTab==0? Color(0xFFFFD700): Colors.white10, borderRadius: BorderRadius.circular(14)), child: Row(children: [Icon(Icons.groups, size:14, color: chatTab==0? Colors.black: Colors.white54), SizedBox(width:4), Text("شات اللاعبين", style: TextStyle(fontSize:10, color: chatTab==0? Colors.black: Colors.white70, fontWeight: FontWeight.bold))]))),
           SizedBox(width:6),
-          GestureDetector(onTap: ()=>setState(()=>chatTab=1), child: Container(padding: EdgeInsets.symmetric(horizontal:12, vertical:5), decoration: BoxDecoration(color: chatTab==1? Color(0xFF3DD4C0): Colors.white10, borderRadius: BorderRadius.circular(14)), child: Row(children: [Icon(Icons.person, size:14, color: chatTab==1? Colors.black: Colors.white54), SizedBox(width:4), Text("شات الأصدقاء الخاص", style: TextStyle(fontSize:10, color: chatTab==1? Colors.black: Colors.white70, fontWeight: FontWeight.bold))]))),
-          Spacer(),
-          Text(chatTab==0?"4 Online":"3 أصدقاء", style: TextStyle(color: Colors.white38, fontSize:9)),
+          GestureDetector(onTap: ()=>setState(()=>chatTab=1), child: Container(padding: EdgeInsets.symmetric(horizontal:12, vertical:5), decoration: BoxDecoration(color: chatTab==1? Color(0xFF3DD4C0): Colors.white10, borderRadius: BorderRadius.circular(14)), child: Row(children: [Icon(Icons.person, size:14, color: chatTab==1? Colors.black: Colors.white54), SizedBox(width:4), Text("شات الأصدقاء الخاص", style: TextStyle(fontSize:10, color: chatTab==1? Colors.black: Colors.white70))]))),
         ]),
         SizedBox(height:5),
-        Container(height:32, child: ListView.builder(scrollDirection: Axis.horizontal, itemCount: current.length, itemBuilder: (_,i)=>Container(margin: EdgeInsets.only(right:6), padding: EdgeInsets.symmetric(horizontal:10, vertical:6), decoration: BoxDecoration(color: chatTab==0? Colors.white10: Color(0xFF3DD4C0).withOpacity(0.15), borderRadius: BorderRadius.circular(12)), child: Text(current[i], style: TextStyle(color: Colors.white70, fontSize:10))))),
+        Container(height:32, child: ListView.builder(scrollDirection: Axis.horizontal, itemCount: current.length, itemBuilder: (_,i)=>Container(margin: EdgeInsets.only(right:6), padding: EdgeInsets.symmetric(horizontal:10, vertical:6), decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(12)), child: Text(current[i], style: TextStyle(color: Colors.white70, fontSize:10))))),
         SizedBox(height:6),
         Row(children: [
           Container(width:38,height:38, decoration: BoxDecoration(color: Colors.white24, shape: BoxShape.circle), child: Icon(Icons.mic, color: Colors.white, size:18)),
@@ -153,11 +143,11 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
           SizedBox(width:5),
           Expanded(child: Container(height:38, decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white24)), child: Row(children: [
             SizedBox(width:10),
-            Expanded(child: TextField(controller: chatCtrl, style: TextStyle(color: Colors.white, fontSize:12), decoration: InputDecoration(hintText: chatTab==0?"شات اللعبة...":"شات خاص للأصدقاء...", hintStyle: TextStyle(color: Colors.white38, fontSize:10), border: InputBorder.none))),
-            IconButton(icon: Icon(Icons.emoji_emotions, color: Colors.amber, size:18), onPressed: (){ setState((){ if(chatTab==0) gameChat.add("😂🔥👑"); else friendsChat.add("Me: 😂🔥"); }); }),
+            Expanded(child: TextField(controller: chatCtrl, style: TextStyle(color: Colors.white, fontSize:12), decoration: InputDecoration(hintText: "شات...", hintStyle: TextStyle(color: Colors.white38, fontSize:10), border: InputBorder.none))),
+            IconButton(icon: Icon(Icons.emoji_emotions, color: Colors.amber, size:18), onPressed: (){ setState(()=>gameChat.add("😂🔥")); }),
           ]))),
           SizedBox(width:5),
-          GestureDetector(onTap: (){ if(chatCtrl.text.isNotEmpty){ setState((){ if(chatTab==0) gameChat.add("Me: ${chatCtrl.text}"); else friendsChat.add("Me: ${chatCtrl.text}"); }); chatCtrl.clear(); } }, child: Container(width:38,height:38, decoration: BoxDecoration(color: chatTab==0? Color(0xFFD4AF37): Color(0xFF3DD4C0), shape: BoxShape.circle), child: Icon(Icons.send, color: Colors.black, size:16))),
+          GestureDetector(onTap: (){ if(chatCtrl.text.isNotEmpty){ setState(()=>gameChat.add("Me: ${chatCtrl.text}")); chatCtrl.clear(); } }, child: Container(width:38,height:38, decoration: BoxDecoration(color: Color(0xFFD4AF37), shape: BoxShape.circle), child: Icon(Icons.send, color: Colors.black, size:16))),
         ]),
       ]),
     );
@@ -173,7 +163,7 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
       body: Container(
         decoration: BoxDecoration(gradient: LinearGradient(colors: [Color(0xFF0D1B4A), Color(0xFF1A237E)])),
         child: SafeArea(child: Column(children: [
-          Padding(padding: EdgeInsets.all(6), child: Container(padding: EdgeInsets.symmetric(horizontal:10, vertical:5), decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.amber)), child: Text(msg, style: TextStyle(color: Colors.white, fontSize:11, fontWeight: FontWeight.bold)))),
+          Padding(padding: EdgeInsets.all(6), child: Container(padding: EdgeInsets.symmetric(horizontal:10, vertical:5), decoration: BoxDecoration(color: Colors.white12, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.amber)), child: Text(msg, style: TextStyle(color: Colors.white, fontSize:11)))),
           Expanded(child: Center(child: Container(
             width: size, height: size,
             padding: EdgeInsets.all(6),
@@ -197,20 +187,20 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
                   if(safe.contains(pIdx)) ch=Text("★", style: TextStyle(fontSize: cell*0.35));
                   return Container(decoration: BoxDecoration(color: bg, border: Border.all(color: Colors.black12, width:0.3)), child: Center(child: ch));
                 })),
-           ...List.generate(4, (p)=>List.generate(4, (t){
-                  int bp=tokens[p][t]; double x,y;
+                // الطيارات في نص المربع بالظبط
+              ...List.generate(4, (p)=>List.generate(4, (t){
+                  int bp=tokens[p][t]; double cx,cy; double sz = bp==-1?36:28;
                   if(bp==-1){
-                    if(p==0){ x=(t%2==0?1:3.1)*cell; y=(t<2?1:3.1)*cell; }
-                    else if(p==1){ x=(t%2==0?1:3.1)*cell; y=(t<2?10:12.1)*cell; }
-                    else if(p==2){ x=(t%2==0?10:12.1)*cell; y=(t<2?1:3.1)*cell; }
-                    else{ x=(t%2==0?10:12.1)*cell; y=(t<2?10:12.1)*cell; }
-                  }else if(bp>=100){ x=6.5*cell; y=6.5*cell; }
-                  else if(homeCoords.containsKey(bp)){ var pt=homeCoords[bp]!; x=pt.dy*cell; y=pt.dx*cell; }
-                  else{ var pt=path[bp%52]; x=pt.dy*cell; y=pt.dx*cell; }
-                  return Positioned(left: x, top: y, child: king(cols[p], p, t, bp!=-1));
+                    if(p==0){ cx=(t%2==0?1.5:3.5)*cell; cy=(t<2?1.5:3.5)*cell; }
+                    else if(p==1){ cx=(t%2==0?1.5:3.5)*cell; cy=(t<2?10.5:12.5)*cell; }
+                    else if(p==2){ cx=(t%2==0?10.5:12.5)*cell; cy=(t<2?1.5:3.5)*cell; }
+                    else{ cx=(t%2==0?10.5:12.5)*cell; cy=(t<2?10.5:12.5)*cell; }
+                  }else if(bp>=100){ cx=7.5*cell; cy=7.5*cell; }
+                  else if(homeCoords.containsKey(bp)){ var pt=homeCoords[bp]!; cx=pt.dy*cell + cell/2; cy=pt.dx*cell + cell/2; }
+                  else{ var pt=path[bp%52]; cx=pt.dy*cell + cell/2; cy=pt.dx*cell + cell/2; }
+                  return Positioned(left: cx - sz/2, top: cy - sz/2, child: king(cols[p], p, t, bp!=-1, cell));
                 })).expand((e)=>e),
-                // زر ROLL عائم كبرته 20%
-                if(canRoll) Center(child: GestureDetector(onTap: roll, child: Container(width: 106, height: 106, decoration: BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [Color(0xFFFFD700), Color(0xFFFF6F00)]), border: Border.all(color: Colors.white, width:3), boxShadow: [BoxShadow(blurRadius:12, color: Colors.black54)]), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text("$dice", style: TextStyle(fontSize:36, fontWeight: FontWeight.bold)), Text("ROLL", style: TextStyle(fontWeight: FontWeight.bold, fontSize:14))])))),
+                if(canRoll) Center(child: GestureDetector(onTap: roll, child: Container(width: 106, height: 106, decoration: BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [Color(0xFFFFD700), Color(0xFFFF6F00)]), border: Border.all(color: Colors.white, width:3)), child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [Text("$dice", style: TextStyle(fontSize:36, fontWeight: FontWeight.bold)), Text("ROLL", style: TextStyle(fontWeight: FontWeight.bold, fontSize:14))])))),
               ]),
             ),
           ))),
@@ -221,7 +211,7 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
   }
 }
 
-// ==================== كيرم ====================
+// ==================== كيرم - 15 كورة بألوان حقيقية ====================
 class CarromFull extends StatefulWidget {
   @override State<CarromFull> createState()=>_CarromFullState();
 }
@@ -238,13 +228,25 @@ class _CarromFullState extends State<CarromFull> {
 
   @override void initState(){
     super.initState();
+    // 15 كورة حقيقية: 1 ملكة حمرا + 7 بيضا + 7 سودا = 15 غير المضرب
     pieces=[
-      CarromPiece(Offset(0.5,0.5), Colors.red, true, isQueen:true),
-   ...List.generate(9, (i){
-        double ang=i*40*3.14159/180;
-        double r=i<3?0.05:0.09;
-        return CarromPiece(Offset(0.5+r*math.cos(ang), 0.5+r*math.sin(ang)), i%2==0? Colors.white: Colors.black, false);
-      }),
+      CarromPiece(Offset(0.5,0.5), Color(0xFFD32F2F), true, isQueen:true), // ملكة حمرا حقيقية
+      // 7 بيض خشبي فاتح
+      CarromPiece(Offset(0.5,0.42), Color(0xFFFFF8E1), false, isWhite: true),
+      CarromPiece(Offset(0.46,0.46), Color(0xFFFFF3E0), false, isWhite: true),
+      CarromPiece(Offset(0.54,0.46), Color(0xFFFFECB3), false, isWhite: true),
+      CarromPiece(Offset(0.42,0.5), Color(0xFFFFF8E1), false, isWhite: true),
+      CarromPiece(Offset(0.58,0.5), Color(0xFFFFF3E0), false, isWhite: true),
+      CarromPiece(Offset(0.46,0.54), Color(0xFFFFECB3), false, isWhite: true),
+      CarromPiece(Offset(0.54,0.54), Color(0xFFFFF8E1), false, isWhite: true),
+      // 7 سود خشبي غامق
+      CarromPiece(Offset(0.5,0.58), Color(0xFF212121), false, isWhite: false),
+      CarromPiece(Offset(0.42,0.46), Color(0xFF3E2723), false, isWhite: false),
+      CarromPiece(Offset(0.58,0.46), Color(0xFF212121), false, isWhite: false),
+      CarromPiece(Offset(0.38,0.5), Color(0xFF3E2723), false, isWhite: false),
+      CarromPiece(Offset(0.62,0.5), Color(0xFF212121), false, isWhite: false),
+      CarromPiece(Offset(0.42,0.54), Color(0xFF3E2723), false, isWhite: false),
+      CarromPiece(Offset(0.58,0.54), Color(0xFF212121), false, isWhite: false),
     ];
     timer=Timer.periodic(Duration(milliseconds:16), (_)=>updatePhysics());
   }
@@ -316,22 +318,20 @@ class _CarromFullState extends State<CarromFull> {
           GestureDetector(onTap: ()=>setState(()=>chatTab=0), child: Container(padding: EdgeInsets.symmetric(horizontal:12, vertical:5), decoration: BoxDecoration(color: chatTab==0? Color(0xFFFFD700): Colors.white10, borderRadius: BorderRadius.circular(14)), child: Row(children: [Icon(Icons.sports_esports, size:14, color: chatTab==0? Colors.black: Colors.white54), SizedBox(width:4), Text("شات اللاعبين", style: TextStyle(fontSize:10, color: chatTab==0? Colors.black: Colors.white70))]))),
           SizedBox(width:6),
           GestureDetector(onTap: ()=>setState(()=>chatTab=1), child: Container(padding: EdgeInsets.symmetric(horizontal:12, vertical:5), decoration: BoxDecoration(color: chatTab==1? Color(0xFF3DD4C0): Colors.white10, borderRadius: BorderRadius.circular(14)), child: Row(children: [Icon(Icons.lock, size:12, color: chatTab==1? Colors.black: Colors.white54), SizedBox(width:4), Text("شات الأصدقاء الخاص", style: TextStyle(fontSize:10, color: chatTab==1? Colors.black: Colors.white70))]))),
-          Spacer(),
-          Text(chatTab==0?"2 لاعبين":"خاص 🔒", style: TextStyle(color: Colors.white38, fontSize:9)),
         ]),
         SizedBox(height:5),
-        Container(height:32, child: ListView.builder(scrollDirection: Axis.horizontal, itemCount: current.length, itemBuilder: (_,i)=>Container(margin: EdgeInsets.only(right:6), padding: EdgeInsets.symmetric(horizontal:10, vertical:6), decoration: BoxDecoration(color: chatTab==0? Colors.white10: Color(0xFF3DD4C0).withOpacity(0.15), borderRadius: BorderRadius.circular(12)), child: Text(current[i], style: TextStyle(color: Colors.white70, fontSize:10))))),
+        Container(height:32, child: ListView.builder(scrollDirection: Axis.horizontal, itemCount: current.length, itemBuilder: (_,i)=>Container(margin: EdgeInsets.only(right:6), padding: EdgeInsets.symmetric(horizontal:10, vertical:6), decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(12)), child: Text(current[i], style: TextStyle(color: Colors.white70, fontSize:10))))),
         SizedBox(height:6),
         Row(children: [
           Container(width:38,height:38, decoration: BoxDecoration(color: Colors.white24, shape: BoxShape.circle), child: Icon(Icons.mic, color: Colors.white, size:18)),
           SizedBox(width:5),
           Expanded(child: Container(height:38, decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(20), border: Border.all(color: Colors.white24)), child: Row(children: [
             SizedBox(width:10),
-            Expanded(child: TextField(controller: chatCtrl, style: TextStyle(color: Colors.white, fontSize:12), decoration: InputDecoration(hintText: chatTab==0?"شات اللعبة...":"شات خاص...", hintStyle: TextStyle(color: Colors.white38, fontSize:10), border: InputBorder.none))),
-            IconButton(icon: Icon(Icons.emoji_emotions, color: Colors.amber, size:18), onPressed: (){ setState((){ if(chatTab==0) gameChat.add("😂"); else friendsChat.add("😂"); }); }),
+            Expanded(child: TextField(controller: chatCtrl, style: TextStyle(color: Colors.white, fontSize:12), decoration: InputDecoration(hintText: "شات...", hintStyle: TextStyle(color: Colors.white38, fontSize:10), border: InputBorder.none))),
+            IconButton(icon: Icon(Icons.emoji_emotions, color: Colors.amber, size:18), onPressed: (){ setState(()=>gameChat.add("😂")); }),
           ]))),
           SizedBox(width:5),
-          GestureDetector(onTap: (){ if(chatCtrl.text.isNotEmpty){ setState((){ if(chatTab==0) gameChat.add("Me: ${chatCtrl.text}"); else friendsChat.add("Me: ${chatCtrl.text}"); }); chatCtrl.clear(); } }, child: Container(width:38,height:38, decoration: BoxDecoration(color: chatTab==0? Color(0xFFD4AF37): Color(0xFF3DD4C0), shape: BoxShape.circle), child: Icon(Icons.send, color: Colors.black, size:16))),
+          GestureDetector(onTap: (){ if(chatCtrl.text.isNotEmpty){ setState(()=>gameChat.add("Me: ${chatCtrl.text}")); chatCtrl.clear(); } }, child: Container(width:38,height:38, decoration: BoxDecoration(color: Color(0xFFD4AF37), shape: BoxShape.circle), child: Icon(Icons.send, color: Colors.black, size:16))),
         ]),
       ]),
     );
@@ -353,7 +353,6 @@ class _CarromFullState extends State<CarromFull> {
             onPanUpdate: (d){ dragEnd=Offset(d.localPosition.dx/size, d.localPosition.dy/size); setState((){}); },
             onPanEnd: (_){
               if(dragStart!=null&&dragEnd!=null){
-                // صلحت الاتجاه - دلوقتي يسحب لقدام يضرب لقدام
                 Offset dir=dragEnd!-dragStart!;
                 if(dir.distance>0.02) striker.vel=dir*14;
               }
@@ -368,9 +367,23 @@ class _CarromFullState extends State<CarromFull> {
                 Positioned(left:4,bottom:4, child: Container(width:26,height:26, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle, border: Border.all(color: Color(0xFFFFD700), width:2)))),
                 Positioned(right:4,bottom:4, child: Container(width:26,height:26, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle, border: Border.all(color: Color(0xFFFFD700), width:2)))),
                 CustomPaint(size: Size(size,size), painter: CarromLinesPainter()),
-            ...pieces.map((pc)=>Positioned(left: pc.pos.dx*size-15, top: pc.pos.dy*size-15, child: Container(width:30,height:30, decoration: BoxDecoration(color: pc.color, shape: BoxShape.circle, border: Border.all(color: Colors.white, width:2)), child: pc.isQueen? Center(child: Text("★", style: TextStyle(color: Colors.yellow, fontSize:14))): null))),
-                Positioned(left: striker.pos.dx*size-18, top: striker.pos.dy*size-18, child: Container(width:36,height:36, decoration: BoxDecoration(color: striker.color, shape: BoxShape.circle, border: Border.all(color: Colors.white, width:3)), child: Icon(Icons.adjust, color: Colors.white, size:16))),
+               ...pieces.map((pc)=>Positioned(
+                  left: pc.pos.dx*size-15, top: pc.pos.dy*size-15,
+                  child: Container(
+                    width:30,height:30,
+                    decoration: BoxDecoration(
+                      color: pc.color,
+                      shape: BoxShape.circle,
+                      border: Border.all(color: Colors.white, width: pc.isQueen?2.5:1.5),
+                      boxShadow: [BoxShadow(color: Colors.black26, blurRadius:2, offset: Offset(0,1))],
+                      gradient: pc.isQueen? RadialGradient(colors: [Color(0xFFEF5350), Color(0xFFB71C1C)]): null,
+                    ),
+                    child: pc.isQueen? Center(child: Text("★", style: TextStyle(color: Colors.yellowAccent, fontSize:14, fontWeight: FontWeight.bold))): null
+                  )
+                )),
+                Positioned(left: striker.pos.dx*size-18, top: striker.pos.dy*size-18, child: Container(width:36,height:36, decoration: BoxDecoration(color: striker.color, shape: BoxShape.circle, border: Border.all(color: Colors.white, width:3), boxShadow: [BoxShadow(blurRadius:4)]), child: Icon(Icons.adjust, color: Colors.white, size:16))),
                 if(dragStart!=null&&dragEnd!=null) CustomPaint(size: Size(size,size), painter: AimPainter(dragStart!*size, dragEnd!*size)),
+                Positioned(bottom:4, left:0, right:0, child: Center(child: Text("${pieces.length} كورة", style: TextStyle(fontSize:9, color: Colors.brown)))),
               ]),
             ),
           );
@@ -390,8 +403,8 @@ class CarromLinesPainter extends CustomPainter{
 }
 
 class CarromPiece{
-  Offset pos; Color color; bool isWhite; bool isQueen=false; bool isStriker=false; Offset vel=Offset.zero;
-  CarromPiece(this.pos,this.color,this.isWhite,{this.isQueen=false,this.isStriker=false});
+  Offset pos; Color color; bool isWhite; bool isQueen=false; bool isStriker=false; Offset vel=Offset.zero; bool isWhitePiece;
+  CarromPiece(this.pos,this.color,this.isWhite,{this.isQueen=false,this.isStriker=false, bool isWhite=false}): isWhitePiece=isWhite;
 }
 
 class AimPainter extends CustomPainter{
