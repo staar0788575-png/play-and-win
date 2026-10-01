@@ -27,7 +27,6 @@ class _GameHubState extends State<GameHub> {
   }
 }
 
-// ==================== لودو - الطيارة في نص المربع ====================
 class LudoRoyalFull extends StatefulWidget {
   @override State<LudoRoyalFull> createState() => _LudoRoyalFullState();
 }
@@ -115,7 +114,7 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
       child: GestureDetector(
         onTap: ()=>move(p,idx),
         child: Container(
-          decoration: BoxDecoration(shape: BoxShape.circle, color: c, border: Border.all(color: isTurn? Colors.white : Colors.white70, width: isTurn?3:2), boxShadow: [BoxShadow(color: Colors.black54, blurRadius:3)]),
+          decoration: BoxDecoration(shape: BoxShape.circle, color: c, border: Border.all(color: isTurn? Colors.white : Colors.white70, width: isTurn?3:2)),
           child: Center(child: Text("♔", style: TextStyle(fontSize: onBoard?13:18, color: Colors.white, fontWeight: FontWeight.bold))),
         ),
       ),
@@ -187,8 +186,7 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
                   if(safe.contains(pIdx)) ch=Text("★", style: TextStyle(fontSize: cell*0.35));
                   return Container(decoration: BoxDecoration(color: bg, border: Border.all(color: Colors.black12, width:0.3)), child: Center(child: ch));
                 })),
-                // الطيارات في نص المربع بالظبط
-              ...List.generate(4, (p)=>List.generate(4, (t){
+             ...List.generate(4, (p)=>List.generate(4, (t){
                   int bp=tokens[p][t]; double cx,cy; double sz = bp==-1?36:28;
                   if(bp==-1){
                     if(p==0){ cx=(t%2==0?1.5:3.5)*cell; cy=(t<2?1.5:3.5)*cell; }
@@ -211,7 +209,6 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
   }
 }
 
-// ==================== كيرم - 15 كورة بألوان حقيقية ====================
 class CarromFull extends StatefulWidget {
   @override State<CarromFull> createState()=>_CarromFullState();
 }
@@ -228,25 +225,22 @@ class _CarromFullState extends State<CarromFull> {
 
   @override void initState(){
     super.initState();
-    // 15 كورة حقيقية: 1 ملكة حمرا + 7 بيضا + 7 سودا = 15 غير المضرب
     pieces=[
-      CarromPiece(Offset(0.5,0.5), Color(0xFFD32F2F), true, isQueen:true), // ملكة حمرا حقيقية
-      // 7 بيض خشبي فاتح
-      CarromPiece(Offset(0.5,0.42), Color(0xFFFFF8E1), false, isWhite: true),
-      CarromPiece(Offset(0.46,0.46), Color(0xFFFFF3E0), false, isWhite: true),
-      CarromPiece(Offset(0.54,0.46), Color(0xFFFFECB3), false, isWhite: true),
-      CarromPiece(Offset(0.42,0.5), Color(0xFFFFF8E1), false, isWhite: true),
-      CarromPiece(Offset(0.58,0.5), Color(0xFFFFF3E0), false, isWhite: true),
-      CarromPiece(Offset(0.46,0.54), Color(0xFFFFECB3), false, isWhite: true),
-      CarromPiece(Offset(0.54,0.54), Color(0xFFFFF8E1), false, isWhite: true),
-      // 7 سود خشبي غامق
-      CarromPiece(Offset(0.5,0.58), Color(0xFF212121), false, isWhite: false),
-      CarromPiece(Offset(0.42,0.46), Color(0xFF3E2723), false, isWhite: false),
-      CarromPiece(Offset(0.58,0.46), Color(0xFF212121), false, isWhite: false),
-      CarromPiece(Offset(0.38,0.5), Color(0xFF3E2723), false, isWhite: false),
-      CarromPiece(Offset(0.62,0.5), Color(0xFF212121), false, isWhite: false),
-      CarromPiece(Offset(0.42,0.54), Color(0xFF3E2723), false, isWhite: false),
-      CarromPiece(Offset(0.58,0.54), Color(0xFF212121), false, isWhite: false),
+      CarromPiece(Offset(0.5,0.5), Color(0xFFD32F2F), true, isQueen:true),
+      CarromPiece(Offset(0.5,0.42), Color(0xFFFFF8E1), true),
+      CarromPiece(Offset(0.46,0.46), Color(0xFFFFF3E0), true),
+      CarromPiece(Offset(0.54,0.46), Color(0xFFFFECB3), true),
+      CarromPiece(Offset(0.42,0.5), Color(0xFFFFF8E1), true),
+      CarromPiece(Offset(0.58,0.5), Color(0xFFFFF3E0), true),
+      CarromPiece(Offset(0.46,0.54), Color(0xFFFFECB3), true),
+      CarromPiece(Offset(0.54,0.54), Color(0xFFFFF8E1), true),
+      CarromPiece(Offset(0.5,0.58), Color(0xFF212121), false),
+      CarromPiece(Offset(0.42,0.46), Color(0xFF3E2723), false),
+      CarromPiece(Offset(0.58,0.46), Color(0xFF212121), false),
+      CarromPiece(Offset(0.38,0.5), Color(0xFF3E2723), false),
+      CarromPiece(Offset(0.62,0.5), Color(0xFF212121), false),
+      CarromPiece(Offset(0.42,0.54), Color(0xFF3E2723), false),
+      CarromPiece(Offset(0.58,0.54), Color(0xFF212121), false),
     ];
     timer=Timer.periodic(Duration(milliseconds:16), (_)=>updatePhysics());
   }
@@ -367,7 +361,7 @@ class _CarromFullState extends State<CarromFull> {
                 Positioned(left:4,bottom:4, child: Container(width:26,height:26, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle, border: Border.all(color: Color(0xFFFFD700), width:2)))),
                 Positioned(right:4,bottom:4, child: Container(width:26,height:26, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle, border: Border.all(color: Color(0xFFFFD700), width:2)))),
                 CustomPaint(size: Size(size,size), painter: CarromLinesPainter()),
-               ...pieces.map((pc)=>Positioned(
+              ...pieces.map((pc)=>Positioned(
                   left: pc.pos.dx*size-15, top: pc.pos.dy*size-15,
                   child: Container(
                     width:30,height:30,
@@ -375,13 +369,12 @@ class _CarromFullState extends State<CarromFull> {
                       color: pc.color,
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: pc.isQueen?2.5:1.5),
-                      boxShadow: [BoxShadow(color: Colors.black26, blurRadius:2, offset: Offset(0,1))],
                       gradient: pc.isQueen? RadialGradient(colors: [Color(0xFFEF5350), Color(0xFFB71C1C)]): null,
                     ),
                     child: pc.isQueen? Center(child: Text("★", style: TextStyle(color: Colors.yellowAccent, fontSize:14, fontWeight: FontWeight.bold))): null
                   )
                 )),
-                Positioned(left: striker.pos.dx*size-18, top: striker.pos.dy*size-18, child: Container(width:36,height:36, decoration: BoxDecoration(color: striker.color, shape: BoxShape.circle, border: Border.all(color: Colors.white, width:3), boxShadow: [BoxShadow(blurRadius:4)]), child: Icon(Icons.adjust, color: Colors.white, size:16))),
+                Positioned(left: striker.pos.dx*size-18, top: striker.pos.dy*size-18, child: Container(width:36,height:36, decoration: BoxDecoration(color: striker.color, shape: BoxShape.circle, border: Border.all(color: Colors.white, width:3)), child: Icon(Icons.adjust, color: Colors.white, size:16))),
                 if(dragStart!=null&&dragEnd!=null) CustomPaint(size: Size(size,size), painter: AimPainter(dragStart!*size, dragEnd!*size)),
                 Positioned(bottom:4, left:0, right:0, child: Center(child: Text("${pieces.length} كورة", style: TextStyle(fontSize:9, color: Colors.brown)))),
               ]),
@@ -402,9 +395,10 @@ class CarromLinesPainter extends CustomPainter{
   @override bool shouldRepaint(covariant CustomPainter old)=>false;
 }
 
+// صلحت الكلاس ده فقط - كان فيه isWhite مكرر
 class CarromPiece{
-  Offset pos; Color color; bool isWhite; bool isQueen=false; bool isStriker=false; Offset vel=Offset.zero; bool isWhitePiece;
-  CarromPiece(this.pos,this.color,this.isWhite,{this.isQueen=false,this.isStriker=false, bool isWhite=false}): isWhitePiece=isWhite;
+  Offset pos; Color color; bool isWhite; bool isQueen=false; bool isStriker=false; Offset vel=Offset.zero;
+  CarromPiece(this.pos,this.color,this.isWhite,{this.isQueen=false,this.isStriker=false});
 }
 
 class AimPainter extends CustomPainter{
