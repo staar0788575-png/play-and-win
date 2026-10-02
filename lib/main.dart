@@ -27,7 +27,7 @@ class _GameHubState extends State<GameHub> {
   }
 }
 
-// ==================== لودو ملوكي - مش معلق + الطيارة في نص المربع ====================
+// ==================== لودو ====================
 class LudoRoyalFull extends StatefulWidget {
   @override State<LudoRoyalFull> createState() => _LudoRoyalFullState();
 }
@@ -35,14 +35,14 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
   int dice=6;
   int turn=0;
   bool canRoll=true;
-  String msg="جبت 6 - دوس على الطيارة";
+  String msg="جبت 6";
   List<List<int>> tokens=[[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1],[-1,-1,-1,-1]];
   List<int> start=[0,39,13,26];
   List<List<int>> homePath=[[52,53,54,55,56,57],[58,59,60,61,62,63],[64,65,66,67,68,69],[70,71,72,73,74,75]];
   int chatTab=0;
   bool showSpec=false;
-  List<String> gameChat=["P3: عاش 💪","Me: السلام عليكم ورحمة الله وبركاته","Me: عاش","P1: يلا نلعب 👑 يلا بينا"];
-  List<String> friendsChat=["Ahmed: فينكم؟","Sara: تعالو لودو 😎","Leo: انا داخل"];
+  List<String> gameChat=["P3: عاش 💪","Me: السلام عليكم","Me: عاش","P1: يلا نلعب 👑"];
+  List<String> friendsChat=["Ahmed: فينكم؟","Sara: تعالو لودو 😎"];
   TextEditingController chatCtrl=TextEditingController();
   List<Map<String,dynamic>> specs=[{"name":"Mona","color":Color(0xFFE91E63)},{"name":"Ali","color":Color(0xFF2196F3)},{"name":"Khaled","color":Color(0xFF4CAF50)}];
 
@@ -65,32 +65,25 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
     setState((){
       dice=math.Random().nextInt(6)+1;
       canRoll=false;
-      msg="جبت $dice - حرك طيارة ${["الحمرا","الصفرا","الخضرا","الزرقا"][turn]}";
+      msg="جبت $dice";
     });
     bool canMove=false;
-    for(int t in tokens[turn]){
-      if(t==-1 && dice==6) canMove=true;
-      if(t>=0) canMove=true;
-    }
+    for(int t in tokens[turn]){ if(t==-1&&dice==6) canMove=true; if(t>=0) canMove=true; }
     if(!canMove){
       Future.delayed(Duration(milliseconds:800),(){
-        if(mounted) setState((){
-          turn=(turn+1)%4;
-          canRoll=true;
-          msg="دور ${["الاحمر","الاصفر","الاخضر","الازرق"][turn]}";
-        });
+        if(mounted) setState((){ turn=(turn+1)%4; canRoll=true; });
       });
     }
   }
 
   void move(int p,int idx){
-    if(p!=turn || canRoll) return;
+    if(p!=turn||canRoll) return;
     int cur=tokens[p][idx];
-    if(cur==-1 && dice!=6) return;
+    if(cur==-1&&dice!=6) return;
     setState((){
       if(cur==-1){
         tokens[p][idx]=start[p];
-      }else if(cur>=0 && cur<52){
+      }else if(cur>=0&&cur<52){
         int entry=(start[p]+51)%52;
         int next=cur+dice;
         if(cur<=entry && next>entry){
@@ -110,7 +103,6 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
       }
       if(dice!=6) turn=(turn+1)%4;
       canRoll=true;
-      msg="دور ${["الاحمر","الاصفر","الاخضر","الازرق"][turn]}";
     });
   }
 
@@ -121,7 +113,7 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
     return Scaffold(
       backgroundColor: Color(0xFF0D1B4A),
       body: SafeArea(child: Column(children: [
-        Container(margin: EdgeInsets.only(top:8), padding: EdgeInsets.symmetric(horizontal:18, vertical:8), decoration: BoxDecoration(border: Border.all(color: Colors.amber, width:1.5), borderRadius: BorderRadius.circular(20)), child: Text(msg, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize:13))),
+        Container(margin: EdgeInsets.only(top:8), padding: EdgeInsets.symmetric(horizontal:18, vertical:8), decoration: BoxDecoration(border: Border.all(color: Colors.amber, width:1.5), borderRadius: BorderRadius.circular(20)), child: Text(msg, style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold))),
         GestureDetector(
           onTap: ()=> setState(()=> showSpec=!showSpec),
           child: Container(
@@ -164,7 +156,7 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
                 else if(r>=6&&r<=8&&co>=6&&co<=8) bg=Color(0xFFFFD54F);
                 return Container(decoration: BoxDecoration(color: bg, border: Border.all(color: Colors.black12, width:0.3)));
               })),
-            ...List.generate(4, (p)=>List.generate(4, (t){
+           ...List.generate(4, (p)=>List.generate(4, (t){
                 int bp=tokens[p][t];
                 double cx,cy;
                 double sz = ce*0.80;
@@ -218,7 +210,6 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
   }
 }
 
-// ==================== كيرم - 7 ابيض + 7 بني + كورة 15 سوداء + مضرب احترافي ====================
 class CarromFull extends StatefulWidget {
   @override State<CarromFull> createState()=>_CarromFullState();
 }
@@ -237,9 +228,7 @@ class _CarromFullState extends State<CarromFull> {
   @override void initState(){
     super.initState();
     pieces=[
-      // الكورة 15 السوداء - الملكة السوداء في النص
       CarromPiece(Offset(0.5,0.5), Color(0xFF000000), false, isQueen:true),
-      // 7 كور بيضاء
       CarromPiece(Offset(0.5,0.40), Color(0xFFFFFDE7), true),
       CarromPiece(Offset(0.43,0.43), Color(0xFFFFF8E1), true),
       CarromPiece(Offset(0.57,0.43), Color(0xFFFFFDE7), true),
@@ -247,7 +236,6 @@ class _CarromFullState extends State<CarromFull> {
       CarromPiece(Offset(0.62,0.50), Color(0xFFFFFDE7), true),
       CarromPiece(Offset(0.43,0.57), Color(0xFFFFF8E1), true),
       CarromPiece(Offset(0.57,0.57), Color(0xFFFFFDE7), true),
-      // 7 كور بني/اسود
       CarromPiece(Offset(0.5,0.60), Color(0xFF3E2723), false),
       CarromPiece(Offset(0.38,0.43), Color(0xFF212121), false),
       CarromPiece(Offset(0.62,0.43), Color(0xFF3E2723), false),
@@ -291,7 +279,7 @@ class _CarromFullState extends State<CarromFull> {
       }
       bool scored=false;
       pieces.removeWhere((CarromPiece p){
-        bool inHole=(p.pos-Offset(0.06,0.06)).distance<=0.068||(p.pos-Offset(0.94,0.06)).distance<=0.068||(p.pos-Offset(0.06,0.94)).distance<=0.068||(p.pos-Offset(0.94,0.94)).distance<=0.068);
+        bool inHole=(p.pos-Offset(0.06,0.06)).distance<=0.068||(p.pos-Offset(0.94,0.06)).distance<=0.068||(p.pos-Offset(0.06,0.94)).distance<=0.068||(p.pos-Offset(0.94,0.94)).distance<=0.068;
         if(inHole) scored=true; return inHole;
       });
       if(scored && pieces.every((CarromPiece e)=> e.vel==Offset.zero) && striker.vel==Offset.zero){
@@ -300,7 +288,7 @@ class _CarromFullState extends State<CarromFull> {
     });
   }
 
-  @override void dispose(){ timer?.cancel(); super.dispose(); }
+  @override void dispose(){ timer?.cancel(); chatCtrl.dispose(); super.dispose(); }
 
   @override Widget build(BuildContext context){
     return Scaffold(
@@ -339,7 +327,7 @@ class _CarromFullState extends State<CarromFull> {
                 Positioned(right:8,top:8, child: Container(width:34,height:34, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle, border: Border.all(color: Color(0xFFFFD700), width:2.5)))),
                 Positioned(left:8,bottom:8, child: Container(width:34,height:34, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle, border: Border.all(color: Color(0xFFFFD700), width:2.5)))),
                 Positioned(right:8,bottom:8, child: Container(width:34,height:34, decoration: BoxDecoration(color: Colors.black, shape: BoxShape.circle, border: Border.all(color: Color(0xFFFFD700), width:2.5)))),
-             ...pieces.map((CarromPiece pc)=>Positioned(
+            ...pieces.map((CarromPiece pc)=>Positioned(
                   left: pc.pos.dx*size-20, top: pc.pos.dy*size-20,
                   child: Container(
                     width:40,height:40,
@@ -347,17 +335,13 @@ class _CarromFullState extends State<CarromFull> {
                       shape: BoxShape.circle,
                       border: Border.all(color: Colors.white, width: pc.isQueen?3.5:2.2),
                       boxShadow: [BoxShadow(color: Colors.black87, blurRadius:6, offset: Offset(0,3))],
-                      gradient: pc.isQueen
-                   ? RadialGradient(colors: [Color(0xFF424242), Color(0xFF000000)], center: Alignment(-0.3,-0.3))
-                      : pc.isWhite? RadialGradient(colors: [Colors.white, Color(0xFFFFECB3), Color(0xFFFFCA28)], center: Alignment(-0.3,-0.3))
-                      : RadialGradient(colors: [Color(0xFF5D4037), Color(0xFF000000)], center: Alignment(-0.3,-0.3)),
+                      gradient: pc.isQueen? RadialGradient(colors: [Color(0xFF424242), Color(0xFF000000)], center: Alignment(-0.3,-0.3)): pc.isWhite? RadialGradient(colors: [Colors.white, Color(0xFFFFECB3)], center: Alignment(-0.3,-0.3)): RadialGradient(colors: [Color(0xFF5D4037), Color(0xFF000000)], center: Alignment(-0.3,-0.3)),
                     ),
                     child: pc.isQueen? Center(child: Text("★", style: TextStyle(color: Colors.yellowAccent, fontSize:18, fontWeight: FontWeight.bold))): null,
                   )
                 )),
                 Positioned(left: striker.pos.dx*size-28, top: striker.pos.dy*size-28, child: Container(width:56,height:56, decoration: BoxDecoration(shape: BoxShape.circle, gradient: RadialGradient(colors: [Color(0xFFFF4081), Color(0xFF880E4F)], center: Alignment(-0.2,-0.2)), border: Border.all(color: Colors.white, width:4), boxShadow: [BoxShadow(color: Colors.black87, blurRadius:10)]), child: Center(child: Container(width:26,height:26, decoration: BoxDecoration(color: Colors.white, shape: BoxShape.circle, border: Border.all(color: Color(0xFF880E4F), width:2.5)), child: Center(child: Container(width:10,height:10, decoration: BoxDecoration(color: Color(0xFFAD1457), shape: BoxShape.circle))))))),
                 if(dragStart!=null&&dragEnd!=null) CustomPaint(size: Size(size,size), painter: AimPainterPro(dragStart!*size, dragEnd!*size, power)),
-                Positioned(bottom:8, left:0, right:0, child: Center(child: Container(padding: EdgeInsets.symmetric(horizontal:14, vertical:5), decoration: BoxDecoration(color: Colors.black.withOpacity(0.7), borderRadius: BorderRadius.circular(14)), child: Text("${pieces.length} كورة • 7 ابيض + 7 بني + 1 سوداء", style: TextStyle(fontSize:11, color: Colors.white70))))),
               ]),
             ),
           );
