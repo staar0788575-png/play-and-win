@@ -126,7 +126,7 @@ class _ShopScreenState extends State<ShopScreen> {
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.between,
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Expanded(
                 child: Text(title, style: const TextStyle(color: Colors.amber, fontSize: 14)),
@@ -319,11 +319,15 @@ class _LudoState extends State<LudoRoyalFull> {
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
           decoration: BoxDecoration(color: const Color(0xFF2A3A8C), borderRadius: BorderRadius.circular(12)),
           child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Icon(Icons.visibility, color: Colors.amber, size: 16),
-              const SizedBox(width: 6),
-              Text(msg, style: const TextStyle(color: Colors.white, fontSize: 12)),
-              const Spacer(),
+              Row(
+                children: [
+                  const Icon(Icons.visibility, color: Colors.amber, size: 16),
+                  const SizedBox(width: 6),
+                  Text(msg, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                ],
+              ),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(backgroundColor: Colors.pinkAccent, padding: const EdgeInsets.symmetric(horizontal: 8)),
                 onPressed: () {
@@ -429,7 +433,6 @@ class _LudoState extends State<LudoRoyalFull> {
             ),
           ),
         ),
-        // شريط التفاعل والدردشة السريعة والإيموجي
         Container(
           height: 45,
           padding: const EdgeInsets.symmetric(horizontal: 8),
