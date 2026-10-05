@@ -154,58 +154,100 @@ class SoundManager {
   static void dice() => HapticFeedback.mediumImpact();
   static void move() => HapticFeedback.lightImpact();
   static void capture() => HapticFeedback.heavyImpact();
-  static void win() => HapticFeedback.vibrate();
 }
 
-class CarromPiece {
-  Offset pos;
-  Color color;
-  bool isWhite;
-  bool isQueen;
-  bool isStriker;
-  Offset vel;
+class ChatAndControlsBar extends StatefulWidget {
+  final Function(String) onSendChat;
+  final Function(String) onSendEmoji;
+  final VoidCallback onSendRose;
 
-  CarromPiece(this.pos, this.color, this.isWhite, {this.isQueen = false, this.isStriker = false})
-      : vel = Offset.zero;
-}
+  const ChatAndControlsBar({
+    super.key,
+    required this.onSendChat,
+    required this.onSendEmoji,
+    required this.onSendRose,
+  });
 
-class CarromImagePainter extends CustomPainter {
   @override
-  void paint(Canvas c, Size s) {
-    final p = Paint()
-      ..color = const Color(0xFF8D6E63).withOpacity(0.7)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.5;
-    c.drawRRect(
-      RRect.fromRectAndRadius(
-        Rect.fromLTWH(s.width * 0.14, s.width * 0.14, s.width * 0.72, s.height * 0.72),
-        const Radius.circular(32),
+  State<ChatAndControlsBar> createState() => _ChatAndControlsBarState();
+}
+
+class _ChatAndControlsBarState extends State<ChatAndControlsBar> {
+  final TextEditingController chatCtrl = TextEditingController();
+  final List<String> emojis = ["❤️", "🌹", "👑", "🔥", "😂", "👍"];
+  bool isMuted = false;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      color: const Color(0xFF0F172A),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // شريط الإيموجي والمايك والورود
+          SizedBox(
+            height: 40,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              children: [
+                IconButton(
+                  icon: Icon(isMuted ? Icons.mic_off : Icons.mic, color: isMuted ? Colors.red : Colors.green),
+                  onPressed: () {
+                    setState(() => isMuted = !isMuted);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(isMuted ? 'تم كتم المايك' : 'تم فتح المايك الصوتي')),
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Text("🌹", style: TextStyle(fontSize: 18)),
+                  onPressed: widget.onSendRose,
+                ),
+                ...emojis.map((e) => Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 2),
+                      actionChip: null,
+                      child: ActionChip(
+                        backgroundColor: const Color(0xFF1E293B),
+                        label: Text(e, style: const TextStyle(fontSize: 14)),
+                        onPressed: () => widget.onSendEmoji(e),
+                      ),
+                    )),
+              ],
+            ),
+          ),
+          // شريط إدخال الدردشة العامة والخاصة
+          Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: chatCtrl,
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                  decoration: InputDecoration(
+                    hintText: "اكتب رسالة عامة أو خاصة...",
+                    hintStyle: const TextStyle(color: Colors.white54),
+                    filled: true,
+                    fillColor: const Color(0xFF1E293B),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                  ),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.send, color: Colors.amber, size: 20),
+                onPressed: () {
+                  if (chatCtrl.text.isNotEmpty) {
+                    widget.onSendChat(chatCtrl.text);
+                    chatCtrl.clear();
+                  }
+                },
+              )
+            ],
+          ),
+        ],
       ),
-      p,
     );
   }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
-}
-
-class AimPainter extends CustomPainter {
-  final Offset from, to;
-  AimPainter(this.from, this.to);
-
-  @override
-  void paint(Canvas c, Size s) {
-    c.drawLine(
-      from,
-      to,
-      Paint()
-        ..color = Colors.white
-        ..strokeWidth = 3,
-    );
-  }
-
-  @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
 // ================= LUDO =================
@@ -219,23 +261,21 @@ class LudoRoyalFull extends StatefulWidget {
 class _LudoState extends State<LudoRoyalFull> {
   int dice = 6, turn = 0;
   bool canRoll = true, gameOver = false;
-  String msg = "جبت 6";
+  String msg = "غرفة الانتظار: اللاعبون متصلون (4/4)";
   List<List<int>> tokens = [
     [-1, -1, -1, -1],
     [-1, -1, -1, -1],
     [-1, -1, -1, -1],
     [-1, -1, -1, -1]
   ];
-  List<int> start = [0, 39, 13, 26], safe = [0, 8, 13, 21, 26, 34, 39, 47];
+  List<int> start = [0, 39, 13, 26];
   List<List<int>> homePath = [
     [52, 53, 54, 55, 56, 57],
     [58, 59, 60, 61, 62, 63],
     [64, 65, 66, 67, 68, 69],
     [70, 71, 72, 73, 74, 75]
   ];
-  List<String> publicChat = ["P3: عاش 💪", "Me: السلام عليكم"];
-  List<String> emojis = ["❤️", "🌹", "👑", "🔥", "😂", "👍"];
-  TextEditingController chatCtrl = TextEditingController();
+  List<String> publicChat = ["P3: هلا بالجميع 💪", "Me: أهلاً بكم"];
 
   List<Offset> path = [
     const Offset(6, 1), const Offset(6, 2), const Offset(6, 3), const Offset(6, 4), const Offset(6, 5),
@@ -260,7 +300,6 @@ class _LudoState extends State<LudoRoyalFull> {
     setState(() {
       dice = math.Random().nextInt(6) + 1;
       canRoll = false;
-      msg = "جبت $dice";
     });
     SoundManager.dice();
     bool can = tokens[turn].any((e) => e >= 0 || (e == -1 && dice == 6));
@@ -311,46 +350,30 @@ class _LudoState extends State<LudoRoyalFull> {
       const Color(0xFF43A047),
       const Color(0xFF1E88E5)
     ];
-    double board = MediaQuery.of(context).size.width - 8;
+    double boardSize = MediaQuery.of(context).size.width - 16;
     return Column(
       children: [
+        // غرفة الانتظار مباشرة في الأعلى
         Container(
-          margin: const EdgeInsets.all(4),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(color: const Color(0xFF2A3A8C), borderRadius: BorderRadius.circular(12)),
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(8)),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  const Icon(Icons.visibility, color: Colors.amber, size: 16),
-                  const SizedBox(width: 6),
-                  Text(msg, style: const TextStyle(color: Colors.white, fontSize: 12)),
-                ],
-              ),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.pinkAccent, padding: const EdgeInsets.symmetric(horizontal: 8)),
-                onPressed: () {
-                  if (UserData.freeRoses > 0) {
-                    setState(() => UserData.freeRoses--);
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('🌹 تم إرسال وردة مجانية بنجاح!')));
-                  } else {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('نفدت الوردات المجانية، اشترِ المزيد من المتجر')));
-                  }
-                },
-                icon: const Text("🌹"),
-                label: Text('${UserData.freeRoses}', style: const TextStyle(color: Colors.white)),
-              ),
+              Text(msg, style: const TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold)),
+              Text('الدور: لاعب ${turn + 1}', style: const TextStyle(color: Colors.white, fontSize: 11)),
             ],
           ),
         ),
+        // لوحة اللعب الرئيسية
         Expanded(
           child: Center(
             child: Container(
-              width: board,
-              height: board,
+              width: boardSize,
+              height: boardSize,
               decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFFFD700), width: 4),
+                border: Border.all(color: const Color(0xFFFFD700), width: 3),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: LayoutBuilder(builder: (c, cons) {
@@ -361,7 +384,13 @@ class _LudoState extends State<LudoRoyalFull> {
                     int bp = tokens[p][t];
                     Offset pt;
                     if (bp == -1) {
-                      pt = Offset((t % 2 == 0 ? 1.5 : 3.5), (t < 2 ? 1.5 : 3.5));
+                      // توزيع قطع الـ 4 لكل قاعدة لونية
+                      double dx = (t == 0 || t == 2) ? 1.5 : 3.5;
+                      double dy = (t < 2) ? (p == 0 ? 1.5 : (p == 2 ? 1.5 : 10.5)) : (p == 0 ? 3.5 : 12.5);
+                      if (p == 1) dx += 9;
+                      if (p == 2) { dx += 9; dy += 9; }
+                      if (p == 3) { dy += 9; }
+                      pt = Offset(dx, dy);
                     } else if (bp >= 100) {
                       pt = const Offset(7.5, 7.5);
                     } else if (homeC.containsKey(bp)) {
@@ -370,7 +399,7 @@ class _LudoState extends State<LudoRoyalFull> {
                       var o = path[bp % 52];
                       pt = Offset(o.dy, o.dx);
                     }
-                    double sz = ce * 0.78;
+                    double sz = ce * 0.7;
                     tw.add(Positioned(
                       left: pt.dx * ce + ce / 2 - sz / 2,
                       top: pt.dy * ce + ce / 2 - sz / 2,
@@ -382,10 +411,10 @@ class _LudoState extends State<LudoRoyalFull> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: cols[p],
-                            border: Border.all(color: Colors.white, width: 2),
+                            border: Border.all(color: Colors.white, width: 1.5),
                           ),
                           child: const Center(
-                            child: Text("♔", style: TextStyle(color: Colors.white, fontSize: 10)),
+                            child: Text("✈", style: TextStyle(color: Colors.white, fontSize: 8)),
                           ),
                         ),
                       ),
@@ -399,7 +428,7 @@ class _LudoState extends State<LudoRoyalFull> {
                   if (r < 6 && co > 8) bg = cols[2];
                   if (r > 8 && co < 6) bg = cols[1];
                   if (r > 8 && co > 8) bg = cols[3];
-                  return Container(decoration: BoxDecoration(color: bg, border: Border.all(color: Colors.black12, width: 0.3)));
+                  return Container(decoration: BoxDecoration(color: bg, border: Border.all(color: Colors.black12, width: 0.2)));
                 });
                 return Stack(
                   children: [
@@ -410,18 +439,18 @@ class _LudoState extends State<LudoRoyalFull> {
                         child: GestureDetector(
                           onTap: roll,
                           child: Container(
-                            width: 90,
-                            height: 90,
+                            width: 70,
+                            height: 70,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: const RadialGradient(colors: [Color(0xFFFFD700), Color(0xFFFF6F00)]),
-                              border: Border.all(color: Colors.white, width: 3),
+                              border: Border.all(color: Colors.white, width: 2),
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text("$dice", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
-                                const Text("ROLL", style: TextStyle(color: Colors.white, fontSize: 10)),
+                                Text("$dice", style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
+                                const Text("نرد", style: TextStyle(color: Colors.white, fontSize: 9)),
                               ],
                             ),
                           ),
@@ -433,57 +462,18 @@ class _LudoState extends State<LudoRoyalFull> {
             ),
           ),
         ),
-        Container(
-          height: 45,
-          padding: const EdgeInsets.symmetric(horizontal: 8),
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: [
-              ...emojis.map((e) => Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: ActionChip(
-                      backgroundColor: const Color(0xFF1E293B),
-                      label: Text(e, style: const TextStyle(fontSize: 16)),
-                      onPressed: () {
-                        setState(() => publicChat.add("Me: $e"));
-                      },
-                    ),
-                  )),
-            ],
-          ),
-        ),
-        Container(
-          height: 45,
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          child: Row(
-            children: [
-              Expanded(
-                child: TextField(
-                  controller: chatCtrl,
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
-                  decoration: InputDecoration(
-                    hintText: "اكتب رسالة عامة أو خاص...",
-                    hintStyle: const TextStyle(color: Colors.white54),
-                    filled: true,
-                    fillColor: const Color(0xFF1E293B),
-                    contentPadding: const EdgeInsets.symmetric(horizontal: 10),
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
-                  ),
-                ),
-              ),
-              IconButton(
-                icon: const Icon(Icons.send, color: Colors.amber),
-                onPressed: () {
-                  if (chatCtrl.text.isNotEmpty) {
-                    setState(() {
-                      publicChat.add("Me: ${chatCtrl.text}");
-                      chatCtrl.clear();
-                    });
-                  }
-                },
-              )
-            ],
-          ),
+        // شريط الشات والإيموجي والمايك والورود في الأسفل
+        ChatAndControlsBar(
+          onSendChat: (txt) => setState(() => publicChat.add("Me: $txt")),
+          onSendEmoji: (em) => setState(() => publicChat.add("Me: $em")),
+          onSendRose: () {
+            if (UserData.freeRoses > 0) {
+              setState(() => UserData.freeRoses--);
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('🌹 تم إرسال وردة يومية بنجاح!')));
+            } else {
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('نفدت الوردات المجانية')));
+            }
+          },
         ),
       ],
     );
@@ -504,6 +494,7 @@ class _CarromState extends State<CarromProLikeImage> {
   Offset? ds, de;
   Timer? t;
   bool over = false;
+  List<String> publicChat = [];
 
   @override
   void initState() {
@@ -515,14 +506,12 @@ class _CarromState extends State<CarromProLikeImage> {
   void reset() {
     pieces = [
       CarromPiece(const Offset(0.5, 0.5), Colors.black, false, isQueen: true),
-      CarromPiece(const Offset(0.5, 0.40), Colors.white, true),
-      CarromPiece(const Offset(0.43, 0.43), Colors.white, true),
-      CarromPiece(const Offset(0.57, 0.43), Colors.white, true),
-      CarromPiece(const Offset(0.38, 0.50), Colors.white, true),
-      CarromPiece(const Offset(0.62, 0.50), Colors.white, true),
-      CarromPiece(const Offset(0.43, 0.57), Colors.white, true),
-      CarromPiece(const Offset(0.57, 0.57), Colors.white, true),
-      CarromPiece(const Offset(0.5, 0.60), Colors.brown, false),
+      CarromPiece(const Offset(0.5, 0.42), Colors.white, true),
+      CarromPiece(const Offset(0.45, 0.45), Colors.white, true),
+      CarromPiece(const Offset(0.55, 0.45), Colors.white, true),
+      CarromPiece(const Offset(0.42, 0.50), Colors.white, true),
+      CarromPiece(const Offset(0.58, 0.50), Colors.white, true),
+      CarromPiece(const Offset(0.5, 0.58), Colors.brown, false),
     ];
     over = false;
   }
@@ -535,20 +524,23 @@ class _CarromState extends State<CarromProLikeImage> {
         p.pos += p.vel * 0.016;
         p.vel *= 0.985;
         if (p.vel.distance < 0.002) p.vel = Offset.zero;
-        if (p.pos.dx < 0.07 || p.pos.dx > 0.93) {
+        if (p.pos.dx < 0.08 || p.pos.dx > 0.92) {
           p.vel = Offset(-p.vel.dx, p.vel.dy);
-          p.pos = Offset(p.pos.dx.clamp(0.07, 0.93), p.pos.dy);
+          p.pos = Offset(p.pos.dx.clamp(0.08, 0.92), p.pos.dy);
         }
-        if (p.pos.dy < 0.07 || p.pos.dy > 0.93) {
+        if (p.pos.dy < 0.08 || p.pos.dy > 0.92) {
           p.vel = Offset(p.vel.dx, -p.vel.dy);
-          p.pos = Offset(p.pos.dx, p.pos.dy.clamp(0.07, 0.93));
+          p.pos = Offset(p.pos.dx, p.pos.dy.clamp(0.08, 0.92));
         }
       }
+      // 6 جيوب في الأركان والمنتصف
       pieces.removeWhere((p) =>
-          (p.pos - const Offset(0.08, 0.08)).distance < 0.06 ||
-          (p.pos - const Offset(0.92, 0.08)).distance < 0.06 ||
-          (p.pos - const Offset(0.08, 0.92)).distance < 0.06 ||
-          (p.pos - const Offset(0.92, 0.92)).distance < 0.06);
+          (p.pos - const Offset(0.09, 0.09)).distance < 0.05 ||
+          (p.pos - const Offset(0.91, 0.09)).distance < 0.05 ||
+          (p.pos - const Offset(0.09, 0.91)).distance < 0.05 ||
+          (p.pos - const Offset(0.91, 0.91)).distance < 0.05 ||
+          (p.pos - const Offset(0.09, 0.5)).distance < 0.05 ||
+          (p.pos - const Offset(0.91, 0.5)).distance < 0.05);
     });
   }
 
@@ -562,59 +554,75 @@ class _CarromState extends State<CarromProLikeImage> {
   Widget build(BuildContext context) {
     return Column(
       children: [
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(8)),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("غرفة كيرم المحترفين (الجيوب الستة مفعلة)", style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold)),
+              Text("الدور: أنت", style: TextStyle(color: Colors.white, fontSize: 11)),
+            ],
+          ),
+        ),
         Expanded(
           child: Center(
             child: LayoutBuilder(builder: (c, cons) {
-              double s = math.min(cons.maxWidth - 12, cons.maxHeight * 0.8);
+              double boardSize = math.min(cons.maxWidth - 16, cons.maxHeight * 0.75);
               return GestureDetector(
-                onPanStart: (d) => ds = Offset(d.localPosition.dx / s, d.localPosition.dy / s),
-                onPanUpdate: (d) => setState(() => de = Offset(d.localPosition.dx / s, d.localPosition.dy / s)),
+                onPanStart: (d) => ds = Offset(d.localPosition.dx / boardSize, d.localPosition.dy / boardSize),
+                onPanUpdate: (d) => setState(() => de = Offset(d.localPosition.dx / boardSize, d.localPosition.dy / boardSize)),
                 onPanEnd: (_) {
                   if (ds != null && de != null) {
                     var dir = de! - ds!;
-                    striker.vel = dir * 20;
+                    striker.vel = dir * 22;
                   }
                   ds = null;
                   de = null;
                 },
                 child: Container(
-                  width: s,
-                  height: s,
+                  width: boardSize,
+                  height: boardSize,
                   decoration: BoxDecoration(
                     color: const Color(0xFFDEB887),
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: const Color(0xFFFFD700), width: 4),
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(color: const Color(0xFFFFD700), width: 3),
                   ),
                   child: Stack(
                     children: [
-                      CustomPaint(size: Size(s, s), painter: CarromImagePainter()),
-                      ...pieces.map((p) => Positioned(
-                            left: p.pos.dx * s - 16,
-                            top: p.pos.dy * s - 16,
-                            child: Container(
-                              width: 32,
-                              height: 32,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: p.isQueen ? Colors.black : p.isWhite ? Colors.white : Colors.brown,
-                                border: Border.all(color: Colors.white),
-                              ),
+                      CustomPaint(size: Size(boardSize, boardSize), painter: CarromImagePainter()),
+                      ...pieces.map((p) {
+                        // تصغير حجم الكور بنسبة 30% (القطر الأصلي 28 أصبح ~20)
+                        double size = 20.0;
+                        return Positioned(
+                          left: p.pos.dx * boardSize - size / 2,
+                          top: p.pos.dy * boardSize - size / 2,
+                          child: Container(
+                            width: size,
+                            height: size,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: p.isQueen ? Colors.black : p.isWhite ? Colors.white : Colors.brown,
+                              border: Border.all(color: Colors.black26, width: 1),
                             ),
-                          )),
+                          ),
+                        );
+                      }),
                       Positioned(
-                        left: striker.pos.dx * s - 22,
-                        top: striker.pos.dy * s - 22,
+                        left: striker.pos.dx * boardSize - 14,
+                        top: striker.pos.dy * boardSize - 14,
                         child: Container(
-                          width: 44,
-                          height: 44,
+                          width: 28,
+                          height: 28,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.pink,
-                            border: Border.all(color: Colors.white, width: 3),
+                            border: Border.all(color: Colors.white, width: 2),
                           ),
                         ),
                       ),
-                      if (ds != null && de != null) CustomPaint(size: Size(s, s), painter: AimPainter(ds! * s, de! * s)),
+                      if (ds != null && de != null) CustomPaint(size: Size(boardSize, boardSize), painter: AimPainter(ds! * boardSize, de! * boardSize)),
                     ],
                   ),
                 ),
@@ -623,22 +631,60 @@ class _CarromState extends State<CarromProLikeImage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.all(8.0),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
-                onPressed: () => setState(reset),
-                icon: const Icon(Icons.refresh, color: Colors.black),
-                label: const Text("إعادة تعيين الكيرم", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
-              ),
-            ],
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+          child: ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4)),
+            onPressed: () => setState(reset),
+            icon: const Icon(Icons.refresh, color: Colors.black, size: 16),
+            label: const Text("إعادة تعيين الكيرم", style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold)),
           ),
-        )
+        ),
+        ChatAndControlsBar(
+          onSendChat: (txt) => setState(() => publicChat.add("Me: $txt")),
+          onSendEmoji: (em) => setState(() => publicChat.add("Me: $em")),
+          onSendRose: () {
+            if (UserData.freeRoses > 0) {
+              setState(() => UserData.freeRoses--);
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('🌹 تم إرسال وردة يومية!')));
+            }
+          },
+        ),
       ],
     );
   }
+}
+
+class CarromImagePainter extends CustomPainter {
+  @override
+  void paint(Canvas c, Size s) {
+    final p = Paint()
+      ..color = const Color(0xFF8D6E63).withOpacity(0.6)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.2;
+    c.drawRRect(
+      RRect.fromRectAndRadius(
+        Rect.fromLTWH(s.width * 0.14, s.width * 0.14, s.width * 0.72, s.height * 0.72),
+        const Radius.circular(20),
+      ),
+      p,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class AimPainter extends CustomPainter {
+  final Offset from, to;
+  AimPainter(this.from, this.to);
+
+  @override
+  void paint(Canvas c, Size s) {
+    c.drawLine(from, to, Paint()..color = Colors.white..strokeWidth = 2);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
 // ================= SNAKE =================
@@ -653,8 +699,9 @@ class _SnakeState extends State<SnakeLadderRoyal> {
   int dice = 1, turn = 0;
   bool canRoll = true;
   List<int> pos = [0, 0, 0, 0];
-  Map<int, int> snakes = {99: 54, 70: 55, 52: 42, 56: 8, 43: 17, 50: 5, 27: 5};
-  Map<int, int> ladders = {3: 51, 6: 27, 20: 70, 36: 55, 63: 95, 68: 98};
+  Map<int, int> snakes = {99: 54, 70: 55, 52: 42, 56: 8, 43: 17};
+  Map<int, int> ladders = {3: 51, 6: 27, 20: 70, 36: 55, 63: 95};
+  List<String> publicChat = [];
 
   void roll() {
     if (!canRoll) return;
@@ -683,22 +730,23 @@ class _SnakeState extends State<SnakeLadderRoyal> {
       if (pos[i] == num) here.add(i);
     }
     return Container(
-      decoration: BoxDecoration(color: bg, border: Border.all(color: Colors.black12, width: 0.4)),
+      decoration: BoxDecoration(color: bg, border: Border.all(color: Colors.black12, width: 0.3)),
       child: Stack(
         children: [
-          Positioned(top: 2, left: 4, child: Text("$num", style: const TextStyle(fontSize: 9))),
-          if (sn) const Center(child: Text("🐍")),
-          if (lad) const Center(child: Text("🪜")),
+          Positioned(top: 1, left: 2, child: Text("$num", style: const TextStyle(fontSize: 8))),
+          // تكبير حجم أيقونات السلالم والثعابين لتكون واضحة جداً
+          if (sn) const Center(child: Text("🐍", style: TextStyle(fontSize: 18))),
+          if (lad) const Center(child: Text("🪜", style: TextStyle(fontSize: 18))),
           if (here.isNotEmpty)
             Positioned(
-              bottom: 2,
-              right: 2,
+              bottom: 1,
+              right: 1,
               child: Row(
                 children: here
                     .map((p) => Container(
-                          width: 10,
-                          height: 10,
-                          margin: const EdgeInsets.only(left: 1),
+                          width: 8,
+                          height: 8,
+                          margin: const EdgeInsets.symmetric(horizontal: 0.5),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: [Colors.red, Colors.amber, Colors.green, Colors.blue][p],
@@ -714,49 +762,77 @@ class _SnakeState extends State<SnakeLadderRoyal> {
 
   @override
   Widget build(BuildContext context) {
-    double size = MediaQuery.of(context).size.width - 12;
-    return Center(
-      child: Container(
-        width: size,
-        height: size,
-        decoration: BoxDecoration(border: Border.all(color: const Color(0xFFFFD700), width: 4)),
-        child: Stack(
-          children: [
-            GridView.builder(
-              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10),
-              physics: const NeverScrollableScrollPhysics(),
-              reverse: true,
-              itemCount: 100,
-              itemBuilder: (c, i) {
-                int r = i ~/ 10, co = i % 10;
-                int num = r % 2 == 0 ? 100 - r * 10 - co : 100 - r * 10 - (9 - co);
-                return cell(num);
-              },
-            ),
-            Center(
-              child: GestureDetector(
-                onTap: roll,
-                child: Container(
-                  width: 90,
-                  height: 90,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    gradient: const RadialGradient(colors: [Color(0xFFFFD700), Color(0xFFFF6F00)]),
-                    border: Border.all(color: Colors.white, width: 3),
+    double size = math.min(MediaQuery.of(context).size.width - 16, MediaQuery.of(context).size.height * 0.65);
+    return Column(
+      children: [
+        Container(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(8)),
+          child: const Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text("غرفة سلم والثعبان الملكية (السلالم مكبرة)", style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold)),
+              Text("الدور: لاعب 1", style: TextStyle(color: Colors.white, fontSize: 11)),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Center(
+            child: Container(
+              width: size,
+              height: size,
+              decoration: BoxDecoration(border: Border.all(color: const Color(0xFFFFD700), width: 3)),
+              child: Stack(
+                children: [
+                  GridView.builder(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10),
+                    physics: const NeverScrollableScrollPhysics(),
+                    reverse: true,
+                    itemCount: 100,
+                    itemBuilder: (c, i) {
+                      int r = i ~/ 10, co = i % 10;
+                      int num = r % 2 == 0 ? 100 - r * 10 - co : 100 - r * 10 - (9 - co);
+                      return cell(num);
+                    },
                   ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Text("$dice", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
-                      const Text("ROLL", style: TextStyle(color: Colors.white, fontSize: 10)),
-                    ],
+                  Center(
+                    child: GestureDetector(
+                      onTap: roll,
+                      child: Container(
+                        width: 70,
+                        height: 70,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          gradient: const RadialGradient(colors: [Color(0xFFFFD700), Color(0xFFFF6F00)]),
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Text("$dice", style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
+                            const Text("نرد", style: TextStyle(color: Colors.white, fontSize: 9)),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                ),
+                ],
               ),
             ),
-          ],
+          ),
         ),
-      ),
+        ChatAndControlsBar(
+          onSendChat: (txt) => setState(() => publicChat.add("Me: $txt")),
+          onSendEmoji: (em) => setState(() => publicChat.add("Me: $em")),
+          onSendRose: () {
+            if (UserData.freeRoses > 0) {
+              setState(() => UserData.freeRoses--);
+              ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('🌹 تم إرسال وردة يومية!')));
+            }
+          },
+        ),
+      ],
     );
   }
 }
