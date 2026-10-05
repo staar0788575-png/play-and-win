@@ -186,7 +186,7 @@ class _ChatAndControlsBarState extends State<ChatAndControlsBar> {
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
-            height: 40,
+            height: 38,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
@@ -200,14 +200,14 @@ class _ChatAndControlsBarState extends State<ChatAndControlsBar> {
                   },
                 ),
                 IconButton(
-                  icon: const Text("🌹", style: TextStyle(fontSize: 18)),
+                  icon: const Text("🌹", style: TextStyle(fontSize: 16)),
                   onPressed: widget.onSendRose,
                 ),
                 ...emojis.map((e) => Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 2),
                       child: ActionChip(
                         backgroundColor: const Color(0xFF1E293B),
-                        label: Text(e, style: const TextStyle(fontSize: 14)),
+                        label: Text(e, style: const TextStyle(fontSize: 13)),
                         onPressed: () => widget.onSendEmoji(e),
                       ),
                     )),
@@ -247,7 +247,7 @@ class _ChatAndControlsBarState extends State<ChatAndControlsBar> {
   }
 }
 
-// ================= LUDO =================
+// ================= LUDO (Updated with Royal Chess Pieces & Full Colors) =================
 class LudoRoyalFull extends StatefulWidget {
   const LudoRoyalFull({super.key});
 
@@ -351,7 +351,7 @@ class _LudoState extends State<LudoRoyalFull> {
     return Column(
       children: [
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(8)),
           child: Row(
@@ -393,7 +393,7 @@ class _LudoState extends State<LudoRoyalFull> {
                       var o = path[bp % 52];
                       pt = Offset(o.dy, o.dx);
                     }
-                    double sz = ce * 0.7;
+                    double sz = ce * 0.75;
                     tw.add(Positioned(
                       left: pt.dx * ce + ce / 2 - sz / 2,
                       top: pt.dy * ce + ce / 2 - sz / 2,
@@ -405,10 +405,11 @@ class _LudoState extends State<LudoRoyalFull> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: cols[p],
-                            border: Border.all(color: Colors.white, width: 1.5),
+                            border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 2, offset: Offset(0, 1))],
                           ),
                           child: const Center(
-                            child: Icon(Icons.shield, color: Colors.white, size: 12),
+                            child: Icon(Icons.workspace_premium, color: Colors.white, size: 14),
                           ),
                         ),
                       ),
@@ -433,8 +434,8 @@ class _LudoState extends State<LudoRoyalFull> {
                         child: GestureDetector(
                           onTap: roll,
                           child: Container(
-                            width: 70,
-                            height: 70,
+                            width: 65,
+                            height: 65,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: const RadialGradient(colors: [Color(0xFFFFD700), Color(0xFFFF6F00)]),
@@ -443,8 +444,8 @@ class _LudoState extends State<LudoRoyalFull> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text("$dice", style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
-                                const Text("نرد", style: TextStyle(color: Colors.white, fontSize: 9)),
+                                Text("$dice", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                                const Text("نرد", style: TextStyle(color: Colors.white, fontSize: 8)),
                               ],
                             ),
                           ),
@@ -473,7 +474,7 @@ class _LudoState extends State<LudoRoyalFull> {
   }
 }
 
-// ================= CARROM (TopTop Style Corrected) =================
+// ================= CARROM (Fixed Full Kinematic Collision Physics) =================
 class CarromProScreen extends StatefulWidget {
   const CarromProScreen({super.key});
 
@@ -486,7 +487,6 @@ class _CarromProScreenState extends State<CarromProScreen> {
   CarromPiece striker = CarromPiece(const Offset(0.5, 0.78), const Color(0xFFFF1744), false, isStriker: true);
   Offset? ds, de;
   Timer? t;
-  bool isMuted = false;
   final TextEditingController chatCtrl = TextEditingController();
   
   List<Map<String, String>> messages = [
@@ -516,6 +516,7 @@ class _CarromProScreenState extends State<CarromProScreen> {
       CarromPiece(const Offset(0.44, 0.46), Colors.white, true),
       CarromPiece(const Offset(0.56, 0.46), Colors.black, false),
     ];
+    striker = CarromPiece(const Offset(0.5, 0.78), const Color(0xFFFF1744), false, isStriker: true);
   }
 
   void updatePhysics() {
@@ -528,28 +529,32 @@ class _CarromProScreenState extends State<CarromProScreen> {
         p.pos += p.vel * 0.016;
         p.vel *= 0.985;
         if (p.vel.distance < 0.002) p.vel = Offset.zero;
-        if (p.pos.dx < 0.12 || p.pos.dx > 0.88) {
+
+        // Wall collisions
+        if (p.pos.dx < 0.14 || p.pos.dx > 0.86) {
           p.vel = Offset(-p.vel.dx, p.vel.dy);
-          p.pos = Offset(p.pos.dx.clamp(0.12, 0.88), p.pos.dy);
+          p.pos = Offset(p.pos.dx.clamp(0.14, 0.86), p.pos.dy);
         }
-        if (p.pos.dy < 0.12 || p.pos.dy > 0.88) {
+        if (p.pos.dy < 0.14 || p.pos.dy > 0.86) {
           p.vel = Offset(p.vel.dx, -p.vel.dy);
-          p.pos = Offset(p.pos.dx, p.pos.dy.clamp(0.12, 0.88));
+          p.pos = Offset(p.pos.dx, p.pos.dy.clamp(0.14, 0.86));
         }
 
-        // Collision with other pieces for fully working kinetic response
+        // Piece-to-piece elastic collisions
         for (int j = i + 1; j < allItems.length; j++) {
           var p2 = allItems[j];
           double dist = (p.pos - p2.pos).distance;
-          if (dist < 0.05) {
+          if (dist < 0.06) {
             var normal = (p2.pos - p.pos);
             if (normal.distance > 0) normal = normal / normal.distance;
             else normal = const Offset(1, 0);
-            var temp = p.vel;
-            p.vel = p2.vel * 0.9;
-            p2.vel = temp * 0.9;
-            p.pos -= normal * 0.005;
-            p2.pos += normal * 0.005;
+
+            var tempVel = p.vel;
+            p.vel = p2.vel * 0.92 + normal * (-2.0);
+            p2.vel = tempVel * 0.92 + normal * (2.0);
+            
+            p.pos -= normal * 0.006;
+            p2.pos += normal * 0.006;
           }
         }
       }
@@ -575,37 +580,37 @@ class _CarromProScreenState extends State<CarromProScreen> {
     return Column(
       children: [
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Row(
                 children: [
                   Container(
-                    padding: const EdgeInsets.all(6),
+                    padding: const EdgeInsets.all(5),
                     decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(8)),
-                    child: const Icon(Icons.settings, color: Colors.white70, size: 18),
+                    child: const Icon(Icons.settings, color: Colors.white70, size: 16),
                   ),
                   const SizedBox(width: 8),
                   GestureDetector(
                     onTap: () => setState(resetBoard),
                     child: Container(
-                      padding: const EdgeInsets.all(6),
+                      padding: const EdgeInsets.all(5),
                       decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(8)),
-                      child: const Icon(Icons.refresh, color: Colors.white70, size: 18),
+                      child: const Icon(Icons.refresh, color: Colors.white70, size: 16),
                     ),
                   ),
                 ],
               ),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
                 decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(12)),
-                child: const Text("15ms  📶  0 👁", style: TextStyle(color: Colors.white70, fontSize: 11)),
+                child: const Text("15ms  📶  0 👁", style: TextStyle(color: Colors.white70, fontSize: 10)),
               ),
               Container(
-                padding: const EdgeInsets.all(6),
+                padding: const EdgeInsets.all(5),
                 decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(8)),
-                child: const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
+                child: const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 14),
               ),
             ],
           ),
@@ -614,14 +619,14 @@ class _CarromProScreenState extends State<CarromProScreen> {
           flex: 5,
           child: Center(
             child: LayoutBuilder(builder: (c, cons) {
-              double boardSize = math.min(screenW - 24, cons.maxHeight);
+              double boardSize = math.min(screenW - 20, cons.maxHeight);
               return GestureDetector(
                 onPanStart: (d) => ds = Offset(d.localPosition.dx / boardSize, d.localPosition.dy / boardSize),
                 onPanUpdate: (d) => setState(() => de = Offset(d.localPosition.dx / boardSize, d.localPosition.dy / boardSize)),
                 onPanEnd: (_) {
                   if (ds != null && de != null) {
                     var dir = de! - ds!;
-                    striker.vel = dir * 20;
+                    striker.vel = dir * -22; // Strike impulse
                   }
                   ds = null;
                   de = null;
@@ -631,9 +636,9 @@ class _CarromProScreenState extends State<CarromProScreen> {
                   height: boardSize,
                   decoration: BoxDecoration(
                     color: const Color(0xFFDEB887),
-                    borderRadius: BorderRadius.circular(24),
+                    borderRadius: BorderRadius.circular(20),
                     border: Border.all(color: const Color(0xFFFFD700), width: 3.5),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 10, spreadRadius: 2)],
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 8, spreadRadius: 2)],
                   ),
                   child: Stack(
                     children: [
@@ -679,26 +684,26 @@ class _CarromProScreenState extends State<CarromProScreen> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+          padding: const EdgeInsets.symmetric(vertical: 2),
           child: Container(
-            width: 160,
-            height: 18,
+            width: 150,
+            height: 16,
             decoration: BoxDecoration(
               color: const Color(0xFF883344),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(8),
               border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
             ),
             child: Center(
               child: Container(
-                width: 22,
-                height: 12,
-                decoration: BoxDecoration(color: Colors.pinkAccent, borderRadius: BorderRadius.circular(6)),
+                width: 20,
+                height: 10,
+                decoration: BoxDecoration(color: Colors.pinkAccent, borderRadius: BorderRadius.circular(5)),
               ),
             ),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
@@ -712,7 +717,7 @@ class _CarromProScreenState extends State<CarromProScreen> {
         Expanded(
           flex: 3,
           child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
             padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: Colors.black.withOpacity(0.25),
@@ -721,23 +726,23 @@ class _CarromProScreenState extends State<CarromProScreen> {
             child: ListView(
               reverse: true,
               children: messages.reversed.map((m) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 3),
+                padding: const EdgeInsets.symmetric(vertical: 2),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.end,
                   children: [
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
                         color: const Color(0xFF2D1B36),
-                        borderRadius: BorderRadius.circular(14),
+                        borderRadius: BorderRadius.circular(12),
                       ),
                       child: Text(
                         "${m['user']}: ${m['text']}",
-                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                        style: const TextStyle(color: Colors.white, fontSize: 11),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const CircleAvatar(radius: 12, backgroundColor: Colors.white54, child: Icon(Icons.person, size: 14, color: Colors.black)),
+                    const CircleAvatar(radius: 10, backgroundColor: Colors.white54, child: Icon(Icons.person, size: 12, color: Colors.black)),
                   ],
                 ),
               )).toList(),
@@ -766,34 +771,34 @@ class _CarromProScreenState extends State<CarromProScreen> {
           children: [
             if (isActive)
               Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.greenAccent, width: 2.5)),
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.greenAccent, width: 2)),
               ),
             const CircleAvatar(
-              radius: 18,
+              radius: 16,
               backgroundColor: Colors.white24,
-              child: Icon(Icons.person, color: Colors.white, size: 20),
+              child: Icon(Icons.person, color: Colors.white, size: 18),
             ),
             Positioned(
               top: 0,
               right: 0,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
                 decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(6)),
-                child: Text(score, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black)),
+                child: Text(score, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.black)),
               ),
             ),
             if (hasMic)
               const Positioned(
                 bottom: 0,
                 right: -2,
-                child: Icon(Icons.mic, size: 12, color: Colors.greenAccent),
+                child: Icon(Icons.mic, size: 10, color: Colors.greenAccent),
               ),
           ],
         ),
         const SizedBox(height: 2),
-        Text(name, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+        Text(name, style: const TextStyle(color: Colors.white70, fontSize: 9)),
       ],
     );
   }
@@ -876,7 +881,7 @@ class CarromPiece {
   });
 }
 
-// ================= SNAKE & LADDER =================
+// ================= SNAKE & LADDER (Expanded full-size visual ladders/snakes) =================
 class SnakeLadderRoyal extends StatefulWidget {
   const SnakeLadderRoyal({super.key});
 
@@ -923,8 +928,26 @@ class _SnakeState extends State<SnakeLadderRoyal> {
       child: Stack(
         children: [
           Positioned(top: 1, left: 2, child: Text("$num", style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold))),
-          if (sn) Center(child: Text("🐍\n->${snakes[num]}", textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.red))),
-          if (lad) Center(child: Text("🪜\n->${ladders[num]}", textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green))),
+          if (sn)
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("🐍", style: TextStyle(fontSize: 14)),
+                  Text("إلى ${snakes[num]}", style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.red)),
+                ],
+              ),
+            ),
+          if (lad)
+            Center(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Text("🪜", style: TextStyle(fontSize: 14)),
+                  Text("إلى ${ladders[num]}", style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.green)),
+                ],
+              ),
+            ),
           if (here.isNotEmpty)
             Positioned(
               bottom: 1,
@@ -950,11 +973,11 @@ class _SnakeState extends State<SnakeLadderRoyal> {
 
   @override
   Widget build(BuildContext context) {
-    double size = math.min(MediaQuery.of(context).size.width - 16, MediaQuery.of(context).size.height * 0.65);
+    double size = math.min(MediaQuery.of(context).size.width - 12, MediaQuery.of(context).size.height * 0.72);
     return Column(
       children: [
         Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
           decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(8)),
           child: const Row(
@@ -988,8 +1011,8 @@ class _SnakeState extends State<SnakeLadderRoyal> {
                     child: GestureDetector(
                       onTap: roll,
                       child: Container(
-                        width: 70,
-                        height: 70,
+                        width: 65,
+                        height: 65,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: const RadialGradient(colors: [Color(0xFFFFD700), Color(0xFFFF6F00)]),
@@ -998,8 +1021,8 @@ class _SnakeState extends State<SnakeLadderRoyal> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text("$dice", style: const TextStyle(fontSize: 26, fontWeight: FontWeight.bold, color: Colors.white)),
-                            const Text("نرد", style: TextStyle(color: Colors.white, fontSize: 9)),
+                            Text("$dice", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
+                            const Text("نرد", style: TextStyle(color: Colors.white, fontSize: 8)),
                           ],
                         ),
                       ),
