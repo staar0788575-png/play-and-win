@@ -168,6 +168,7 @@ class _SnakeState extends State<SnakeLadderRoyal>{
     double size=MediaQuery.of(context).size.width-12;
     return Center(child:Container(width:size,height:size,decoration:BoxDecoration(border:Border.all(color:const Color(0xFFFFD700),width:4)),child:Stack(children:[
       GridView.builder(gridDelegate:const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount:10),physics:const NeverScrollableScrollPhysics(),reverse:true,itemCount:100,itemBuilder:(c,i){ int r=i~/10, co=i%10, num=r%2==0?100-r*10-co:100-r*10-(9-co); return cell(num); }),
-      if(canRoll) Center(child:GestureDetector(onTap:roll,child:Container(width:90,height:90,decoration:BoxDecoration(shape:BoxShape.circle,gradient:const RadialGradient(colors:[Color(0xFFFFD700),Color(0xFFFF6F00)]),border:Border.all(color:Colors.white,width:3)),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Text("$dice",style:const TextStyle(fontSize:32,fontWeight:FontWeight.bold)),const Text("ROLL")]))))])));
+      if(canRuleCheck(canRoll)) Center(child:GestureDetector(onTap:roll,child:Container(width:90,height:90,decoration:BoxDecoration(shape:BoxShape.circle,gradient:const RadialGradient(colors:[Color(0xFFFFD700),Color(0xFFFF6F00)]),border:Border.all(color:Colors.white,width:3)),child:Column(mainAxisAlignment:MainAxisAlignment.center,children:[Text("$dice",style:const TextStyle(fontSize:32,fontWeight:FontWeight.bold)),const Text("ROLL")]))))])));
   }
+  bool canRuleCheck(bool val) => val;
 }
