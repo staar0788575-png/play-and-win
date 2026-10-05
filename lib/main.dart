@@ -174,7 +174,7 @@ class ChatAndControlsBar extends StatefulWidget {
 
 class _ChatAndControlsBarState extends State<ChatAndControlsBar> {
   final TextEditingController chatCtrl = TextEditingController();
-  final List<String> emojis = ["❤️️", "🌹", "👑", "🔥", "😂", "👍"];
+  final List<String> emojis = ["❤", "🌹", "👑", "🔥", "😂", "👍"];
   bool isMuted = false;
 
   @override
@@ -408,7 +408,7 @@ class _LudoState extends State<LudoRoyalFull> {
                             border: Border.all(color: Colors.white, width: 1.5),
                           ),
                           child: const Center(
-                            child: Text("✈", style: TextStyle(color: Colors.white, fontSize: 8)),
+                            child: Icon(Icons.shield, color: Colors.white, size: 12),
                           ),
                         ),
                       ),
@@ -522,7 +522,8 @@ class _CarromProScreenState extends State<CarromProScreen> {
     if (!mounted) return;
     setState(() {
       List<CarromPiece> allItems = [...pieces, striker];
-      for (var p in allItems) {
+      for (int i = 0; i < allItems.length; i++) {
+        var p = allItems[i];
         if (p.vel == Offset.zero) continue;
         p.pos += p.vel * 0.016;
         p.vel *= 0.985;
@@ -534,6 +535,22 @@ class _CarromProScreenState extends State<CarromProScreen> {
         if (p.pos.dy < 0.12 || p.pos.dy > 0.88) {
           p.vel = Offset(p.vel.dx, -p.vel.dy);
           p.pos = Offset(p.pos.dx, p.pos.dy.clamp(0.12, 0.88));
+        }
+
+        // Collision with other pieces for fully working kinetic response
+        for (int j = i + 1; j < allItems.length; j++) {
+          var p2 = allItems[j];
+          double dist = (p.pos - p2.pos).distance;
+          if (dist < 0.05) {
+            var normal = (p2.pos - p.pos);
+            if (normal.distance > 0) normal = normal / normal.distance;
+            else normal = const Offset(1, 0);
+            var temp = p.vel;
+            p.vel = p2.vel * 0.9;
+            p2.vel = temp * 0.9;
+            p.pos -= normal * 0.005;
+            p2.pos += normal * 0.005;
+          }
         }
       }
       pieces.removeWhere((p) =>
@@ -905,9 +922,9 @@ class _SnakeState extends State<SnakeLadderRoyal> {
       decoration: BoxDecoration(color: bg, border: Border.all(color: Colors.black12, width: 0.3)),
       child: Stack(
         children: [
-          Positioned(top: 1, left: 2, child: Text("$num", style: const TextStyle(fontSize: 8))),
-          if (sn) const Center(child: Text("🐍", style: TextStyle(fontSize: 18))),
-          if (lad) const Center(child: Text("🪜", style: TextStyle(fontSize: 18))),
+          Positioned(top: 1, left: 2, child: Text("$num", style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold))),
+          if (sn) Center(child: Text("🐍\n->${snakes[num]}", textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.red))),
+          if (lad) Center(child: Text("🪜\n->${ladders[num]}", textAlign: TextAlign.center, style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.green))),
           if (here.isNotEmpty)
             Positioned(
               bottom: 1,
