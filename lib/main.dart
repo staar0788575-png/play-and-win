@@ -21,6 +21,11 @@ class PlayAndWinApp extends StatelessWidget {
   }
 }
 
+class UserData {
+  static int coins = 1200;
+  static int freeRoses = 5;
+}
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
 
@@ -43,12 +48,27 @@ class _HomeScreenState extends State<HomeScreen> {
         title: const Text('Play & Win - منصة الألعاب'),
         backgroundColor: const Color(0xFF1E293B),
         actions: [
+          Center(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 8.0),
+              child: Row(
+                children: [
+                  const Icon(Icons.monetization_on, color: Colors.amber, size: 20),
+                  const SizedBox(width: 4),
+                  Text('${UserData.coins}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.diamond, color: Colors.amber),
-            onPressed: () => Navigator.push(
-              context,
-              MaterialPageRoute(builder: (_) => const ShopScreen()),
-            ),
+            onPressed: () async {
+              await Navigator.push(
+                context,
+                MaterialPageRoute(builder: (_) => const ShopScreen()),
+              );
+              setState(() {});
+            },
           ),
         ],
       ),
@@ -69,42 +89,63 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 }
 
-class ShopScreen extends StatelessWidget {
+class ShopScreen extends StatefulWidget {
   const ShopScreen({super.key});
 
+  @override
+  State<ShopScreen> createState() => _ShopScreenState();
+}
+
+class _ShopScreenState extends State<ShopScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('عروض الشحن'),
+        title: const Text('متجر العملات والورود'),
         backgroundColor: const Color(0xFF1E293B),
       ),
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
           const Text(
-            'عروض الشحن والبطاقات',
-            style: TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
+            'اختر الباقة المناسبة لشحن رصيدك:',
+            style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 10),
-          _card('عرض المبتدئين: احصل على 500 عملة + 50 وردة هدية، 4.99\$'),
-          _card('عرض الأعضاء المميزين: احصل على 1500 عملة + 200 وردة هدية، 9.99\$'),
-          _card('عرض النخبة الماسى: احصل على 5000 عملة + 600 وردة هدية، 24.99\$'),
+          _card('باقة المبتدئين: 500 عملة + 10 وردات مجانية', 500, 10, '4.99\$'),
+          _card('باقة المحترفين: 1500 عملة + 30 وردة مجانية', 1500, 30, '9.99\$'),
+          _card('باقة النخبة: 5000 عملة + 100 وردة مجانية', 5000, 100, '24.99\$'),
         ],
       ),
     );
   }
 
-  Widget _card(String t) => Card(
+  Widget _card(String title, int addCoins, int addRoses, String price) => Card(
         color: const Color(0xFF1E293B),
         margin: const EdgeInsets.symmetric(vertical: 8),
         child: Padding(
           padding: const EdgeInsets.all(16),
-          child: Text(t, style: const TextStyle(color: Colors.amber, fontSize: 16)),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.between,
+            children: [
+              Expanded(
+                child: Text(title, style: const TextStyle(color: Colors.amber, fontSize: 14)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+                onPressed: () {
+                  setState(() {
+                    UserData.coins += addCoins;
+                    UserData.freeRoses += addRoses;
+                  });
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('تم الشحن بنجاح! رصيدك الحالي: ${UserData.coins} عملة')),
+                  );
+                },
+                child: Text(price, style: const TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
         ),
       );
 }
@@ -114,8 +155,6 @@ class SoundManager {
   static void move() => HapticFeedback.lightImpact();
   static void capture() => HapticFeedback.heavyImpact();
   static void win() => HapticFeedback.vibrate();
-  static void hit() => HapticFeedback.selectionClick();
-  static void pot() => HapticFeedback.lightImpact();
 }
 
 class CarromPiece {
@@ -126,13 +165,8 @@ class CarromPiece {
   bool isStriker;
   Offset vel;
 
-  CarromPiece(
-    this.pos,
-    this.color,
-    this.isWhite, {
-    this.isQueen = false,
-    this.isStriker = false,
-  }) : vel = Offset.zero;
+  CarromPiece(this.pos, this.color, this.isWhite, {this.isQueen = false, this.isStriker = false})
+      : vel = Offset.zero;
 }
 
 class CarromImagePainter extends CustomPainter {
@@ -157,9 +191,7 @@ class CarromImagePainter extends CustomPainter {
 
 class AimPainter extends CustomPainter {
   final Offset from, to;
-  final double power;
-
-  AimPainter(this.from, this.to, this.power);
+  AimPainter(this.from, this.to);
 
   @override
   void paint(Canvas c, Size s) {
@@ -185,9 +217,9 @@ class LudoRoyalFull extends StatefulWidget {
 }
 
 class _LudoState extends State<LudoRoyalFull> {
-  int dice = 6, turn = 0, winner = -1, countdown = 10;
-  bool canRoll = true, gameOver = false, micOn = true, privateMode = false;
-  String flyingEmoji = "", selectedGift = "", msg = "جبت 6";
+  int dice = 6, turn = 0;
+  bool canRoll = true, gameOver = false;
+  String msg = "جبت 6";
   List<List<int>> tokens = [
     [-1, -1, -1, -1],
     [-1, -1, -1, -1],
@@ -202,9 +234,9 @@ class _LudoState extends State<LudoRoyalFull> {
     [70, 71, 72, 73, 74, 75]
   ];
   List<String> publicChat = ["P3: عاش 💪", "Me: السلام عليكم"];
-  List<String> gifts = ["❤️", "🌹", "👑", "🚗", "🦁", "💎"];
+  List<String> emojis = ["❤️", "🌹", "👑", "🔥", "😂", "👍"];
   TextEditingController chatCtrl = TextEditingController();
-  Timer? timer;
+
   List<Offset> path = [
     const Offset(6, 1), const Offset(6, 2), const Offset(6, 3), const Offset(6, 4), const Offset(6, 5),
     const Offset(5, 6), const Offset(4, 6), const Offset(3, 6), const Offset(2, 6), const Offset(1, 6), const Offset(0, 6),
@@ -266,16 +298,6 @@ class _LudoState extends State<LudoRoyalFull> {
           tokens[p][idx] = hi + dice == 6 ? 100 : homePath[p][hi + dice];
         }
       }
-      int pos = tokens[p][idx];
-      if (pos < 52 && !safe.contains(pos)) {
-        for (int op = 0; op < 4; op++) {
-          if (op != p) {
-            for (int oi = 0; oi < 4; oi++) {
-              if (tokens[op][oi] == pos) tokens[op][oi] = -1;
-            }
-          }
-        }
-      }
       if (dice != 6) turn = (turn + 1) % 4;
       canRoll = true;
     });
@@ -293,19 +315,28 @@ class _LudoState extends State<LudoRoyalFull> {
     return Column(
       children: [
         Container(
-          margin: const EdgeInsets.all(8),
-          padding: const EdgeInsets.all(10),
-          decoration: BoxDecoration(
-            color: const Color(0xFF2A3A8C),
-            borderRadius: BorderRadius.circular(16),
-          ),
+          margin: const EdgeInsets.all(4),
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+          decoration: BoxDecoration(color: const Color(0xFF2A3A8C), borderRadius: BorderRadius.circular(12)),
           child: Row(
             children: [
-              const Icon(Icons.visibility, color: Colors.amber, size: 18),
-              const SizedBox(width: 8),
-              Text(msg, style: const TextStyle(color: Colors.white)),
+              const Icon(Icons.visibility, color: Colors.amber, size: 16),
+              const SizedBox(width: 6),
+              Text(msg, style: const TextStyle(color: Colors.white, fontSize: 12)),
               const Spacer(),
-              Icon(micOn ? Icons.mic : Icons.mic_off, color: Colors.greenAccent),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.pinkAccent, padding: const EdgeInsets.symmetric(horizontal: 8)),
+                onPressed: () {
+                  if (UserData.freeRoses > 0) {
+                    setState(() => UserData.freeRoses--);
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('🌹 تم إرسال وردة مجانية بنجاح!')));
+                  } else {
+                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('نفدت الوردات المجانية، اشترِ المزيد من المتجر')));
+                  }
+                },
+                icon: const Text("🌹"),
+                label: Text('${UserData.freeRoses}', style: const TextStyle(color: Colors.white)),
+              ),
             ],
           ),
         ),
@@ -315,7 +346,7 @@ class _LudoState extends State<LudoRoyalFull> {
               width: board,
               height: board,
               decoration: BoxDecoration(
-                border: Border.all(color: const Color(0xFFFFD700), width: 5),
+                border: Border.all(color: const Color(0xFFFFD700), width: 4),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: LayoutBuilder(builder: (c, cons) {
@@ -350,10 +381,7 @@ class _LudoState extends State<LudoRoyalFull> {
                             border: Border.all(color: Colors.white, width: 2),
                           ),
                           child: const Center(
-                            child: Text(
-                              "♔",
-                              style: TextStyle(color: Colors.white),
-                            ),
+                            child: Text("♔", style: TextStyle(color: Colors.white, fontSize: 10)),
                           ),
                         ),
                       ),
@@ -367,51 +395,29 @@ class _LudoState extends State<LudoRoyalFull> {
                   if (r < 6 && co > 8) bg = cols[2];
                   if (r > 8 && co < 6) bg = cols[1];
                   if (r > 8 && co > 8) bg = cols[3];
-                  return Container(
-                    decoration: BoxDecoration(
-                      color: bg,
-                      border: Border.all(color: Colors.black12, width: 0.3),
-                    ),
-                  );
+                  return Container(decoration: BoxDecoration(color: bg, border: Border.all(color: Colors.black12, width: 0.3)));
                 });
                 return Stack(
                   children: [
-                    GridView.count(
-                      crossAxisCount: 15,
-                      physics: const NeverScrollableScrollPhysics(),
-                      padding: EdgeInsets.zero,
-                      children: grid,
-                    ),
+                    GridView.count(crossAxisCount: 15, physics: const NeverScrollableScrollPhysics(), padding: EdgeInsets.zero, children: grid),
                     ...tw,
                     if (canRoll)
                       Center(
                         child: GestureDetector(
                           onTap: roll,
                           child: Container(
-                            width: 106,
-                            height: 106,
+                            width: 90,
+                            height: 90,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              gradient: const RadialGradient(
-                                colors: [Color(0xFFFFD700), Color(0xFFFF6F00)],
-                              ),
+                              gradient: const RadialGradient(colors: [Color(0xFFFFD700), Color(0xFFFF6F00)]),
                               border: Border.all(color: Colors.white, width: 3),
                             ),
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text(
-                                  "$dice",
-                                  style: const TextStyle(
-                                    fontSize: 38,
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.white,
-                                  ),
-                                ),
-                                const Text(
-                                  "ROLL",
-                                  style: TextStyle(color: Colors.white),
-                                ),
+                                Text("$dice", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
+                                const Text("ROLL", style: TextStyle(color: Colors.white, fontSize: 10)),
                               ],
                             ),
                           ),
@@ -423,24 +429,57 @@ class _LudoState extends State<LudoRoyalFull> {
             ),
           ),
         ),
+        // شريط التفاعل والدردشة السريعة والإيموجي
         Container(
-          height: 60,
-          margin: const EdgeInsets.all(8),
-          child: ListView.builder(
+          height: 45,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+          child: ListView(
             scrollDirection: Axis.horizontal,
-            itemCount: publicChat.length,
-            itemBuilder: (c, i) => Container(
-              margin: const EdgeInsets.only(right: 6),
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              decoration: BoxDecoration(
-                color: const Color(0xFF2A3A8C),
-                borderRadius: BorderRadius.circular(10),
+            children: [
+              ...emojis.map((e) => Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 4),
+                    child: ActionChip(
+                      backgroundColor: const Color(0xFF1E293B),
+                      label: Text(e, style: const TextStyle(fontSize: 16)),
+                      onPressed: () {
+                        setState(() => publicChat.add("Me: $e"));
+                      },
+                    ),
+                  )),
+            ],
+          ),
+        ),
+        Container(
+          height: 45,
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          child: Row(
+            children: [
+              Expanded(
+                child: TextField(
+                  controller: chatCtrl,
+                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                  decoration: InputDecoration(
+                    hintText: "اكتب رسالة عامة أو خاص...",
+                    hintStyle: const TextStyle(color: Colors.white54),
+                    filled: true,
+                    fillColor: const Color(0xFF1E293B),
+                    contentPadding: const EdgeInsets.symmetric(horizontal: 10),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                  ),
+                ),
               ),
-              child: Text(
-                publicChat[i],
-                style: const TextStyle(color: Colors.white, fontSize: 11),
-              ),
-            ),
+              IconButton(
+                icon: const Icon(Icons.send, color: Colors.amber),
+                onPressed: () {
+                  if (chatCtrl.text.isNotEmpty) {
+                    setState(() {
+                      publicChat.add("Me: ${chatCtrl.text}");
+                      chatCtrl.clear();
+                    });
+                  }
+                },
+              )
+            ],
           ),
         ),
       ],
@@ -458,12 +497,7 @@ class CarromProLikeImage extends StatefulWidget {
 
 class _CarromState extends State<CarromProLikeImage> {
   List<CarromPiece> pieces = [];
-  CarromPiece striker = CarromPiece(
-    const Offset(0.5, 0.82),
-    const Color(0xFFFF1744),
-    false,
-    isStriker: true,
-  );
+  CarromPiece striker = CarromPiece(const Offset(0.5, 0.82), const Color(0xFFFF1744), false, isStriker: true);
   Offset? ds, de;
   Timer? t;
   bool over = false;
@@ -523,71 +557,83 @@ class _CarromState extends State<CarromProLikeImage> {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: LayoutBuilder(builder: (c, cons) {
-        double s = math.min(cons.maxWidth - 12, cons.maxHeight * 0.8);
-        return GestureDetector(
-          onPanStart: (d) => ds = Offset(d.localPosition.dx / s, d.localPosition.dy / s),
-          onPanUpdate: (d) => setState(() => de = Offset(d.localPosition.dx / s, d.localPosition.dy / s)),
-          onPanEnd: (_) {
-            if (ds != null && de != null) {
-              var dir = de! - ds!;
-              striker.vel = dir * 20;
-            }
-            ds = null;
-            de = null;
-          },
-          child: Container(
-            width: s,
-            height: s,
-            decoration: BoxDecoration(
-              color: const Color(0xFFDEB887),
-              borderRadius: BorderRadius.circular(22),
-              border: Border.all(color: const Color(0xFFFFD700), width: 4),
-            ),
-            child: Stack(
-              children: [
-                CustomPaint(size: Size(s, s), painter: CarromImagePainter()),
-                ...pieces.map((p) => Positioned(
-                      left: p.pos.dx * s - 16,
-                      top: p.pos.dy * s - 16,
-                      child: Container(
-                        width: 32,
-                        height: 32,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: p.isQueen
-                              ? Colors.black
-                              : p.isWhite
-                                  ? Colors.white
-                                  : Colors.brown,
-                          border: Border.all(color: Colors.white),
+    return Column(
+      children: [
+        Expanded(
+          child: Center(
+            child: LayoutBuilder(builder: (c, cons) {
+              double s = math.min(cons.maxWidth - 12, cons.maxHeight * 0.8);
+              return GestureDetector(
+                onPanStart: (d) => ds = Offset(d.localPosition.dx / s, d.localPosition.dy / s),
+                onPanUpdate: (d) => setState(() => de = Offset(d.localPosition.dx / s, d.localPosition.dy / s)),
+                onPanEnd: (_) {
+                  if (ds != null && de != null) {
+                    var dir = de! - ds!;
+                    striker.vel = dir * 20;
+                  }
+                  ds = null;
+                  de = null;
+                },
+                child: Container(
+                  width: s,
+                  height: s,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFDEB887),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(color: const Color(0xFFFFD700), width: 4),
+                  ),
+                  child: Stack(
+                    children: [
+                      CustomPaint(size: Size(s, s), painter: CarromImagePainter()),
+                      ...pieces.map((p) => Positioned(
+                            left: p.pos.dx * s - 16,
+                            top: p.pos.dy * s - 16,
+                            child: Container(
+                              width: 32,
+                              height: 32,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: p.isQueen ? Colors.black : p.isWhite ? Colors.white : Colors.brown,
+                                border: Border.all(color: Colors.white),
+                              ),
+                            ),
+                          )),
+                      Positioned(
+                        left: striker.pos.dx * s - 22,
+                        top: striker.pos.dy * s - 22,
+                        child: Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: Colors.pink,
+                            border: Border.all(color: Colors.white, width: 3),
+                          ),
                         ),
                       ),
-                    )),
-                Positioned(
-                  left: striker.pos.dx * s - 22,
-                  top: striker.pos.dy * s - 22,
-                  child: Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: Colors.pink,
-                      border: Border.all(color: Colors.white, width: 3),
-                    ),
+                      if (ds != null && de != null) CustomPaint(size: Size(s, s), painter: AimPainter(ds! * s, de! * s)),
+                    ],
                   ),
                 ),
-                if (ds != null && de != null)
-                  CustomPaint(
-                    size: Size(s, s),
-                    painter: AimPainter(ds! * s, de! * s, 1),
-                  ),
-              ],
-            ),
+              );
+            }),
           ),
-        );
-      }),
+        ),
+        Padding(
+          padding: const EdgeInsets.all(8.0),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(backgroundColor: Colors.amber),
+                onPressed: () => setState(reset),
+                icon: const Icon(Icons.refresh, color: Colors.black),
+                label: const Text("إعادة تعيين الكيرم", style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+              ),
+            ],
+          ),
+        )
+      ],
     );
   }
 }
@@ -628,27 +674,16 @@ class _SnakeState extends State<SnakeLadderRoyal> {
 
   Widget cell(int num) {
     bool sn = snakes.containsKey(num), lad = ladders.containsKey(num);
-    Color bg = sn
-        ? const Color(0xFFFFCDD2)
-        : lad
-            ? const Color(0xFFC8E6C9)
-            : const Color(0xFFFFF8E1);
+    Color bg = sn ? const Color(0xFFFFCDD2) : lad ? const Color(0xFFC8E6C9) : const Color(0xFFFFF8E1);
     List<int> here = [];
     for (int i = 0; i < 4; i++) {
       if (pos[i] == num) here.add(i);
     }
     return Container(
-      decoration: BoxDecoration(
-        color: bg,
-        border: Border.all(color: Colors.black12, width: 0.4),
-      ),
+      decoration: BoxDecoration(color: bg, border: Border.all(color: Colors.black12, width: 0.4)),
       child: Stack(
         children: [
-          Positioned(
-            top: 2,
-            left: 4,
-            child: Text("$num", style: const TextStyle(fontSize: 9)),
-          ),
+          Positioned(top: 2, left: 4, child: Text("$num", style: const TextStyle(fontSize: 9))),
           if (sn) const Center(child: Text("🐍")),
           if (lad) const Center(child: Text("🪜")),
           if (here.isNotEmpty)
@@ -663,12 +698,7 @@ class _SnakeState extends State<SnakeLadderRoyal> {
                           margin: const EdgeInsets.only(left: 1),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: [
-                              Colors.red,
-                              Colors.amber,
-                              Colors.green,
-                              Colors.blue
-                            ][p],
+                            color: [Colors.red, Colors.amber, Colors.green, Colors.blue][p],
                           ),
                         ))
                     .toList(),
@@ -686,14 +716,11 @@ class _SnakeState extends State<SnakeLadderRoyal> {
       child: Container(
         width: size,
         height: size,
-        decoration: BoxDecoration(
-          border: Border.all(color: const Color(0xFFFFD700), width: 4),
-        ),
+        decoration: BoxDecoration(border: Border.all(color: const Color(0xFFFFD700), width: 4)),
         child: Stack(
           children: [
             GridView.builder(
-              gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(crossAxisCount: 10),
               physics: const NeverScrollableScrollPhysics(),
               reverse: true,
               itemCount: 100,
@@ -703,45 +730,30 @@ class _SnakeState extends State<SnakeLadderRoyal> {
                 return cell(num);
               },
             ),
-            if (canRuleCheck(canRoll))
-              Center(
-                child: GestureDetector(
-                  onTap: roll,
-                  child: Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: const RadialGradient(
-                        colors: [Color(0xFFFFD700), Color(0xFFFF6F00)],
-                      ),
-                      border: Border.all(color: Colors.white, width: 3),
-                    ),
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          "$dice",
-                          style: const TextStyle(
-                            fontSize: 32,
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
-                        ),
-                        const Text(
-                          "ROLL",
-                          style: TextStyle(color: Colors.white),
-                        ),
-                      ],
-                    ),
+            Center(
+              child: GestureDetector(
+                onTap: roll,
+                child: Container(
+                  width: 90,
+                  height: 90,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: const RadialGradient(colors: [Color(0xFFFFD700), Color(0xFFFF6F00)]),
+                    border: Border.all(color: Colors.white, width: 3),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text("$dice", style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white)),
+                      const Text("ROLL", style: TextStyle(color: Colors.white, fontSize: 10)),
+                    ],
                   ),
                 ),
               ),
+            ),
           ],
         ),
       ),
     );
   }
-
-  bool canRuleCheck(bool val) => val;
 }
