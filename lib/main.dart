@@ -15,7 +15,7 @@ class PlayAndWinApp extends StatelessWidget {
     return MaterialApp(
       title: 'Play and Win',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(scaffoldBackgroundColor: const Color(0xFF0F172A)),
+      theme: ThemeData(scaffoldBackgroundColor: const Color(0xFF1E0524)),
       home: const HomeScreen(),
     );
   }
@@ -37,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   int tab = 0;
   final List<Widget> pages = const [
     LudoRoyalFull(),
-    CarromProLikeImage(),
+    CarromProScreen(),
     SnakeLadderRoyal(),
   ];
 
@@ -174,7 +174,7 @@ class ChatAndControlsBar extends StatefulWidget {
 
 class _ChatAndControlsBarState extends State<ChatAndControlsBar> {
   final TextEditingController chatCtrl = TextEditingController();
-  final List<String> emojis = ["❤️", "🌹", "👑", "🔥", "😂", "👍"];
+  final List<String> emojis = ["❤️️", "🌹", "👑", "🔥", "😂", "👍"];
   bool isMuted = false;
 
   @override
@@ -185,7 +185,6 @@ class _ChatAndControlsBarState extends State<ChatAndControlsBar> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          // شريط الإيموجي والمايك والورود
           SizedBox(
             height: 40,
             child: ListView(
@@ -206,7 +205,6 @@ class _ChatAndControlsBarState extends State<ChatAndControlsBar> {
                 ),
                 ...emojis.map((e) => Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 2),
-                      actionChip: null,
                       child: ActionChip(
                         backgroundColor: const Color(0xFF1E293B),
                         label: Text(e, style: const TextStyle(fontSize: 14)),
@@ -216,7 +214,6 @@ class _ChatAndControlsBarState extends State<ChatAndControlsBar> {
               ],
             ),
           ),
-          // شريط إدخال الدردشة العامة والخاصة
           Row(
             children: [
               Expanded(
@@ -353,7 +350,6 @@ class _LudoState extends State<LudoRoyalFull> {
     double boardSize = MediaQuery.of(context).size.width - 16;
     return Column(
       children: [
-        // غرفة الانتظار مباشرة في الأعلى
         Container(
           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -366,7 +362,6 @@ class _LudoState extends State<LudoRoyalFull> {
             ],
           ),
         ),
-        // لوحة اللعب الرئيسية
         Expanded(
           child: Center(
             child: Container(
@@ -384,7 +379,6 @@ class _LudoState extends State<LudoRoyalFull> {
                     int bp = tokens[p][t];
                     Offset pt;
                     if (bp == -1) {
-                      // توزيع قطع الـ 4 لكل قاعدة لونية
                       double dx = (t == 0 || t == 2) ? 1.5 : 3.5;
                       double dy = (t < 2) ? (p == 0 ? 1.5 : (p == 2 ? 1.5 : 10.5)) : (p == 0 ? 3.5 : 12.5);
                       if (p == 1) dx += 9;
@@ -462,7 +456,6 @@ class _LudoState extends State<LudoRoyalFull> {
             ),
           ),
         ),
-        // شريط الشات والإيموجي والمايك والورود في الأسفل
         ChatAndControlsBar(
           onSendChat: (txt) => setState(() => publicChat.add("Me: $txt")),
           onSendEmoji: (em) => setState(() => publicChat.add("Me: $em")),
@@ -480,103 +473,138 @@ class _LudoState extends State<LudoRoyalFull> {
   }
 }
 
-// ================= CARROM =================
-class CarromProLikeImage extends StatefulWidget {
-  const CarromProLikeImage({super.key});
+// ================= CARROM (TopTop Style Corrected) =================
+class CarromProScreen extends StatefulWidget {
+  const CarromProScreen({super.key});
 
   @override
-  State<CarromProLikeImage> createState() => _CarromState();
+  State<CarromProScreen> createState() => _CarromProScreenState();
 }
 
-class _CarromState extends State<CarromProLikeImage> {
+class _CarromProScreenState extends State<CarromProScreen> {
   List<CarromPiece> pieces = [];
-  CarromPiece striker = CarromPiece(const Offset(0.5, 0.82), const Color(0xFFFF1744), false, isStriker: true);
+  CarromPiece striker = CarromPiece(const Offset(0.5, 0.78), const Color(0xFFFF1744), false, isStriker: true);
   Offset? ds, de;
   Timer? t;
-  bool over = false;
-  List<String> publicChat = [];
+  bool isMuted = false;
+  final TextEditingController chatCtrl = TextEditingController();
+  
+  List<Map<String, String>> messages = [
+    {"user": "ابن الاكابر", "text": "مرحباً بالجميع، سأنضم اليكم!"},
+    {"user": "رحيل", "text": "مرحباً بالجميع، سأنضم اليكم!"}
+  ];
 
   @override
   void initState() {
     super.initState();
-    reset();
-    t = Timer.periodic(const Duration(milliseconds: 16), (x) => phys());
+    resetBoard();
+    t = Timer.periodic(const Duration(milliseconds: 16), (x) => updatePhysics());
   }
 
-  void reset() {
+  void resetBoard() {
     pieces = [
-      CarromPiece(const Offset(0.5, 0.5), Colors.black, false, isQueen: true),
-      CarromPiece(const Offset(0.5, 0.42), Colors.white, true),
-      CarromPiece(const Offset(0.45, 0.45), Colors.white, true),
-      CarromPiece(const Offset(0.55, 0.45), Colors.white, true),
-      CarromPiece(const Offset(0.42, 0.50), Colors.white, true),
-      CarromPiece(const Offset(0.58, 0.50), Colors.white, true),
-      CarromPiece(const Offset(0.5, 0.58), Colors.brown, false),
+      CarromPiece(const Offset(0.5, 0.5), Colors.red, false, isQueen: true),
+      CarromPiece(const Offset(0.5, 0.44), Colors.black, false),
+      CarromPiece(const Offset(0.53, 0.46), Colors.white, true),
+      CarromPiece(const Offset(0.53, 0.50), Colors.black, false),
+      CarromPiece(const Offset(0.5, 0.56), Colors.white, true),
+      CarromPiece(const Offset(0.47, 0.54), Colors.black, false),
+      CarromPiece(const Offset(0.47, 0.50), Colors.white, true),
+      CarromPiece(const Offset(0.47, 0.46), Colors.black, false),
+      CarromPiece(const Offset(0.53, 0.54), Colors.white, true),
+      CarromPiece(const Offset(0.5, 0.38), Colors.black, false),
+      CarromPiece(const Offset(0.44, 0.46), Colors.white, true),
+      CarromPiece(const Offset(0.56, 0.46), Colors.black, false),
     ];
-    over = false;
   }
 
-  void phys() {
-    if (!mounted || over) return;
+  void updatePhysics() {
+    if (!mounted) return;
     setState(() {
-      for (var p in [...pieces, striker]) {
+      List<CarromPiece> allItems = [...pieces, striker];
+      for (var p in allItems) {
         if (p.vel == Offset.zero) continue;
         p.pos += p.vel * 0.016;
         p.vel *= 0.985;
         if (p.vel.distance < 0.002) p.vel = Offset.zero;
-        if (p.pos.dx < 0.08 || p.pos.dx > 0.92) {
+        if (p.pos.dx < 0.12 || p.pos.dx > 0.88) {
           p.vel = Offset(-p.vel.dx, p.vel.dy);
-          p.pos = Offset(p.pos.dx.clamp(0.08, 0.92), p.pos.dy);
+          p.pos = Offset(p.pos.dx.clamp(0.12, 0.88), p.pos.dy);
         }
-        if (p.pos.dy < 0.08 || p.pos.dy > 0.92) {
+        if (p.pos.dy < 0.12 || p.pos.dy > 0.88) {
           p.vel = Offset(p.vel.dx, -p.vel.dy);
-          p.pos = Offset(p.pos.dx, p.pos.dy.clamp(0.08, 0.92));
+          p.pos = Offset(p.pos.dx, p.pos.dy.clamp(0.12, 0.88));
         }
       }
-      // 6 جيوب في الأركان والمنتصف
       pieces.removeWhere((p) =>
-          (p.pos - const Offset(0.09, 0.09)).distance < 0.05 ||
-          (p.pos - const Offset(0.91, 0.09)).distance < 0.05 ||
-          (p.pos - const Offset(0.09, 0.91)).distance < 0.05 ||
-          (p.pos - const Offset(0.91, 0.91)).distance < 0.05 ||
-          (p.pos - const Offset(0.09, 0.5)).distance < 0.05 ||
-          (p.pos - const Offset(0.91, 0.5)).distance < 0.05);
+          (p.pos - const Offset(0.13, 0.13)).distance < 0.05 ||
+          (p.pos - const Offset(0.87, 0.13)).distance < 0.05 ||
+          (p.pos - const Offset(0.13, 0.87)).distance < 0.05 ||
+          (p.pos - const Offset(0.87, 0.87)).distance < 0.05);
     });
   }
 
   @override
   void dispose() {
     t?.cancel();
+    chatCtrl.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
+    double screenW = MediaQuery.of(context).size.width;
+
     return Column(
       children: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-          decoration: BoxDecoration(color: const Color(0xFF1E293B), borderRadius: BorderRadius.circular(8)),
-          child: const Row(
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+          child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("غرفة كيرم المحترفين (الجيوب الستة مفعلة)", style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold)),
-              Text("الدور: أنت", style: TextStyle(color: Colors.white, fontSize: 11)),
+              Row(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.all(6),
+                    decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(8)),
+                    child: const Icon(Icons.settings, color: Colors.white70, size: 18),
+                  ),
+                  const SizedBox(width: 8),
+                  GestureDetector(
+                    onTap: () => setState(resetBoard),
+                    child: Container(
+                      padding: const EdgeInsets.all(6),
+                      decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(8)),
+                      child: const Icon(Icons.refresh, color: Colors.white70, size: 18),
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(12)),
+                child: const Text("15ms  📶  0 👁", style: TextStyle(color: Colors.white70, fontSize: 11)),
+              ),
+              Container(
+                padding: const EdgeInsets.all(6),
+                decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(8)),
+                child: const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 16),
+              ),
             ],
           ),
         ),
         Expanded(
+          flex: 5,
           child: Center(
             child: LayoutBuilder(builder: (c, cons) {
-              double boardSize = math.min(cons.maxWidth - 16, cons.maxHeight * 0.75);
+              double boardSize = math.min(screenW - 24, cons.maxHeight);
               return GestureDetector(
                 onPanStart: (d) => ds = Offset(d.localPosition.dx / boardSize, d.localPosition.dy / boardSize),
                 onPanUpdate: (d) => setState(() => de = Offset(d.localPosition.dx / boardSize, d.localPosition.dy / boardSize)),
                 onPanEnd: (_) {
                   if (ds != null && de != null) {
                     var dir = de! - ds!;
-                    striker.vel = dir * 22;
+                    striker.vel = dir * 20;
                   }
                   ds = null;
                   de = null;
@@ -586,14 +614,14 @@ class _CarromState extends State<CarromProLikeImage> {
                   height: boardSize,
                   decoration: BoxDecoration(
                     color: const Color(0xFFDEB887),
-                    borderRadius: BorderRadius.circular(18),
-                    border: Border.all(color: const Color(0xFFFFD700), width: 3),
+                    borderRadius: BorderRadius.circular(24),
+                    border: Border.all(color: const Color(0xFFFFD700), width: 3.5),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 10, spreadRadius: 2)],
                   ),
                   child: Stack(
                     children: [
-                      CustomPaint(size: Size(boardSize, boardSize), painter: CarromImagePainter()),
+                      CustomPaint(size: Size(boardSize, boardSize), painter: CarromBoardPainter()),
                       ...pieces.map((p) {
-                        // تصغير حجم الكور بنسبة 30% (القطر الأصلي 28 أصبح ~20)
                         double size = 20.0;
                         return Positioned(
                           left: p.pos.dx * boardSize - size / 2,
@@ -603,26 +631,29 @@ class _CarromState extends State<CarromProLikeImage> {
                             height: size,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
-                              color: p.isQueen ? Colors.black : p.isWhite ? Colors.white : Colors.brown,
-                              border: Border.all(color: Colors.black26, width: 1),
+                              color: p.isQueen ? Colors.red : p.isWhite ? Colors.white : Colors.black87,
+                              border: Border.all(color: Colors.black38, width: 1),
+                              boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 2, offset: Offset(0, 1))],
                             ),
                           ),
                         );
                       }),
                       Positioned(
-                        left: striker.pos.dx * boardSize - 14,
-                        top: striker.pos.dy * boardSize - 14,
+                        left: striker.pos.dx * boardSize - 13,
+                        top: striker.pos.dy * boardSize - 13,
                         child: Container(
-                          width: 28,
-                          height: 28,
+                          width: 26,
+                          height: 26,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: Colors.pink,
+                            color: Colors.pinkAccent,
                             border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: const [BoxShadow(color: Color(0xFFFFD700), blurRadius: 8, spreadRadius: 2)],
                           ),
                         ),
                       ),
-                      if (ds != null && de != null) CustomPaint(size: Size(boardSize, boardSize), painter: AimPainter(ds! * boardSize, de! * boardSize)),
+                      if (ds != null && de != null)
+                        CustomPaint(size: Size(boardSize, boardSize), painter: AimLinePainter(ds! * boardSize, de! * boardSize)),
                     ],
                   ),
                 ),
@@ -631,17 +662,74 @@ class _CarromState extends State<CarromProLikeImage> {
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          child: ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(backgroundColor: Colors.amber, padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4)),
-            onPressed: () => setState(reset),
-            icon: const Icon(Icons.refresh, color: Colors.black, size: 16),
-            label: const Text("إعادة تعيين الكيرم", style: TextStyle(color: Colors.black, fontSize: 12, fontWeight: FontWeight.bold)),
+          padding: const EdgeInsets.symmetric(vertical: 4),
+          child: Container(
+            width: 160,
+            height: 18,
+            decoration: BoxDecoration(
+              color: const Color(0xFF883344),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
+            ),
+            child: Center(
+              child: Container(
+                width: 22,
+                height: 12,
+                decoration: BoxDecoration(color: Colors.pinkAccent, borderRadius: BorderRadius.circular(6)),
+              ),
+            ),
+          ),
+        ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              _playerStatusItem("ابن الاكابر", "0", false),
+              _playerStatusItem("Al QES", "0", true),
+              _playerStatusItem("رحيل", "0", false),
+              _playerStatusItem("malk", "0", false, hasMic: true),
+            ],
+          ),
+        ),
+        Expanded(
+          flex: 3,
+          child: Container(
+            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.black.withOpacity(0.25),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: ListView(
+              reverse: true,
+              children: messages.reversed.map((m) => Padding(
+                padding: const EdgeInsets.symmetric(vertical: 3),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF2D1B36),
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                      child: Text(
+                        "${m['user']}: ${m['text']}",
+                        style: const TextStyle(color: Colors.white, fontSize: 12),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    const CircleAvatar(radius: 12, backgroundColor: Colors.white54, child: Icon(Icons.person, size: 14, color: Colors.black)),
+                  ],
+                ),
+              )).toList(),
+            ),
           ),
         ),
         ChatAndControlsBar(
-          onSendChat: (txt) => setState(() => publicChat.add("Me: $txt")),
-          onSendEmoji: (em) => setState(() => publicChat.add("Me: $em")),
+          onSendChat: (txt) => setState(() => messages.add({"user": "أنت", "text": txt})),
+          onSendEmoji: (em) => setState(() => messages.add({"user": "أنت", "text": em})),
           onSendRose: () {
             if (UserData.freeRoses > 0) {
               setState(() => UserData.freeRoses--);
@@ -652,42 +740,126 @@ class _CarromState extends State<CarromProLikeImage> {
       ],
     );
   }
+
+  Widget _playerStatusItem(String name, String score, bool isActive, {bool hasMic = false}) {
+    return Column(
+      children: [
+        Stack(
+          alignment: Alignment.center,
+          children: [
+            if (isActive)
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.greenAccent, width: 2.5)),
+              ),
+            const CircleAvatar(
+              radius: 18,
+              backgroundColor: Colors.white24,
+              child: Icon(Icons.person, color: Colors.white, size: 20),
+            ),
+            Positioned(
+              top: 0,
+              right: 0,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(6)),
+                child: Text(score, style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Colors.black)),
+              ),
+            ),
+            if (hasMic)
+              const Positioned(
+                bottom: 0,
+                right: -2,
+                child: Icon(Icons.mic, size: 12, color: Colors.greenAccent),
+              ),
+          ],
+        ),
+        const SizedBox(height: 2),
+        Text(name, style: const TextStyle(color: Colors.white70, fontSize: 10)),
+      ],
+    );
+  }
 }
 
-class CarromImagePainter extends CustomPainter {
+class CarromBoardPainter extends CustomPainter {
   @override
-  void paint(Canvas c, Size s) {
-    final p = Paint()
-      ..color = const Color(0xFF8D6E63).withOpacity(0.6)
+  void paint(Canvas canvas, Size size) {
+    double w = size.width;
+    double h = size.height;
+    final pocketPaint = Paint()..color = const Color(0xFF111111);
+    double pSize = w * 0.08;
+    canvas.drawCircle(Offset(pSize, pSize), pSize * 0.75, pocketPaint);
+    canvas.drawCircle(Offset(w - pSize, pSize), pSize * 0.75, pocketPaint);
+    canvas.drawCircle(Offset(pSize, h - pSize), pSize * 0.75, pocketPaint);
+    canvas.drawCircle(Offset(w - pSize, h - pSize), pSize * 0.75, pocketPaint);
+
+    final linePaint = Paint()
+      ..color = const Color(0xFFD4AF37).withOpacity(0.8)
       ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-    c.drawRRect(
+      ..strokeWidth = 1.5;
+
+    canvas.drawRRect(
       RRect.fromRectAndRadius(
-        Rect.fromLTWH(s.width * 0.14, s.width * 0.14, s.width * 0.72, s.height * 0.72),
-        const Radius.circular(20),
+        Rect.fromLTWH(w * 0.15, h * 0.15, w * 0.7, h * 0.7),
+        const Radius.circular(16),
       ),
-      p,
+      linePaint,
     );
+
+    final dotPaint = Paint()..color = const Color(0xFFD4AF37);
+    double offsetPos = w * 0.22;
+    double offsetEnd = w * 0.78;
+
+    for (var x in [offsetPos, offsetEnd]) {
+      for (var y in [offsetPos, offsetEnd]) {
+        canvas.drawCircle(Offset(x, y), 5, linePaint);
+        canvas.drawCircle(Offset(x, y), 1.5, dotPaint);
+      }
+    }
+    canvas.drawCircle(Offset(w / 2, h / 2), w * 0.12, linePaint);
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
-class AimPainter extends CustomPainter {
+class AimLinePainter extends CustomPainter {
   final Offset from, to;
-  AimPainter(this.from, this.to);
+  AimLinePainter(this.from, this.to);
 
   @override
-  void paint(Canvas c, Size s) {
-    c.drawLine(from, to, Paint()..color = Colors.white..strokeWidth = 2);
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white.withOpacity(0.7)
+      ..strokeWidth = 2
+      ..strokeCap = StrokeCap.round;
+    canvas.drawLine(from, to, paint);
   }
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-// ================= SNAKE =================
+class CarromPiece {
+  Offset pos;
+  Offset vel;
+  Color color;
+  bool isWhite;
+  bool isQueen;
+  bool isStriker;
+
+  CarromPiece(
+    this.pos,
+    this.color,
+    this.isWhite, {
+    this.vel = Offset.zero,
+    this.isQueen = false,
+    this.isStriker = false,
+  });
+}
+
+// ================= SNAKE & LADDER =================
 class SnakeLadderRoyal extends StatefulWidget {
   const SnakeLadderRoyal({super.key});
 
@@ -734,7 +906,6 @@ class _SnakeState extends State<SnakeLadderRoyal> {
       child: Stack(
         children: [
           Positioned(top: 1, left: 2, child: Text("$num", style: const TextStyle(fontSize: 8))),
-          // تكبير حجم أيقونات السلالم والثعابين لتكون واضحة جداً
           if (sn) const Center(child: Text("🐍", style: TextStyle(fontSize: 18))),
           if (lad) const Center(child: Text("🪜", style: TextStyle(fontSize: 18))),
           if (here.isNotEmpty)
@@ -772,7 +943,7 @@ class _SnakeState extends State<SnakeLadderRoyal> {
           child: const Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text("غرفة سلم والثعبان الملكية (السلالم مكبرة)", style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold)),
+              Text("غرفة سلم والثعبان الملكية", style: TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold)),
               Text("الدور: لاعب 1", style: TextStyle(color: Colors.white, fontSize: 11)),
             ],
           ),
