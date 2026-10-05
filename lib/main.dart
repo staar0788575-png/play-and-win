@@ -4,9 +4,10 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 
 void main() {
-  runApp(const MaterialApp(home: GameHub(), debugShowCheckedModeBanner: false));
+  runApp(const MaterialApp(home: AuthScreen(), debugShowCheckedModeBanner: false));
 }
 
+// ================= Sound Manager =================
 class SoundManager {
   static void dice() { HapticFeedback.mediumImpact(); }
   static void move() { HapticFeedback.lightImpact(); }
@@ -16,61 +17,484 @@ class SoundManager {
   static void pot() { HapticFeedback.lightImpact(); }
 }
 
-// عشان نصلح Error: Couldn't find constructor 'CarromProFull' و 'SnakeLadderFull'
-class CarromProFull extends CarromProLikeImage { const CarromProFull({super.key}); }
-class SnakeLadderFull extends SnakeLadderRoyal { const SnakeLadderFull({super.key}); }
+// ================= Bot & Social System Simulation =================
+class BotManager {
+  static final List<Map<String, dynamic>> bots = List.generate(200, (i) {
+    bool isFemale = i < 150; // 150 بنات، 50 أولاد
+    List<String> maleNames = ["أحمد", "محمد", "يوسف", "عمر", "علي", "محمود", "حسن", "حسين", "إبراهيم", "خالد"];
+    List<String> femaleNames = ["فاطمة", "مريم", "عائشة", "زينب", "سارة", "نور", "ملك", "ياسمين", "ريم", "هدى"];
+    String name = isFemale ? "${femaleNames[i % femaleNames.length]}_${i+1}" : "${maleNames[i % maleNames.length]}_${i+1}";
+    return {
+      "id": i,
+      "name": name,
+      "isFemale": isFemale,
+      "avatar": isFemale ? "👩‍🦰" : "👨‍🦱",
+      "isFriend": false,
+      "rosesSentToday": false,
+    };
+  });
 
-class CarromPiece {
-  Offset pos; Color color; bool isWhite; bool isQueen; bool isStriker; Offset vel;
-  CarromPiece(this.pos, this.color, this.isWhite, {this.isQueen = false, this.isStriker = false}) : vel = Offset.zero;
+  static void sendDailyRosesToPlayer() {
+    for (var bot in bots) {
+      bot["rosesSentToday"] = math.Random().nextBool();
+    }
+  }
 }
 
-class CarromImagePainter extends CustomPainter {
+// ================= Auth Screen (Google / Phone) =================
+class AuthScreen extends StatefulWidget {
+  const AuthScreen({super.key});
   @override
-  void paint(Canvas canvas, Size size) {
-    final p = Paint()..color = const Color(0xFF8D6E63).withOpacity(0.7)..style = PaintingStyle.stroke..strokeWidth = 1.5;
-    double inset = size.width * 0.14;
-    RRect r = RRect.fromRectAndRadius(Rect.fromLTWH(inset, inset, size.width - inset * 2, size.height - inset * 2), const Radius.circular(32));
-    canvas.drawRRect(r, p);
-  }
-  @override bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  State<AuthScreen> createState() => _AuthScreenState();
 }
+class _AuthScreenState extends State<AuthScreen> {
+  bool isPhoneLogin = false;
+  final TextEditingController phoneCtrl = TextEditingController();
 
-class AimPainter extends CustomPainter {
-  final Offset from; final Offset to; final double power;
-  AimPainter(this.from, this.to, this.power);
-  @override void paint(Canvas c, Size s) {
-    var p = Paint()..color = const Color(0xE6FFFFFF)..strokeWidth = 3..style = PaintingStyle.stroke;
-    c.drawLine(from, to, p);
-  }
-  @override bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
-}
-
-class GameHub extends StatefulWidget {
-  const GameHub({super.key});
-  @override State<GameHub> createState() => _GameHubState();
-}
-class _GameHubState extends State<GameHub> {
-  int tab = 0;
   @override
   Widget build(BuildContext context) {
-    Widget body;
-    if (tab == 0) { body = const LudoRoyalFull(); }
-    else if (tab == 1) { body = const CarromProFull(); }
-    else { body = const SnakeLadderFull(); }
     return Scaffold(
-      body: body,
-      bottomNavigationBar: BottomNavigationBar(
-        currentIndex: tab,
-        onTap: (i) { setState(() { tab = i; }); },
+      backgroundColor: const Color(0xFF0A1931),
+      body: Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24.0),
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const Icon(Icons.casino, size: 80, color: Color(0xFFFFD700)),
+              const SizedBox(height: 16),
+              const Text("عالم الألعاب الملكي", style: TextStyle(color: Colors.white, fontSize: 26, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 40),
+              // Google Login Button
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white,
+                  foregroundColor: Colors.black,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                onPressed: () {
+                  Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainHomeHub()));
+                },
+                icon: const Icon(Icons.g_mobiledata, size: 30),
+                label: const Text("تسجيل الدخول بواسطة جوجل", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+              const SizedBox(height: 16),
+              // Phone Login Button
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1E88E5),
+                  foregroundColor: Colors.white,
+                  minimumSize: const Size(double.infinity, 50),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                ),
+                onPressed: () {
+                  setState(() { isPhoneLogin = true; });
+                },
+                icon: const Icon(Icons.phone, size: 22),
+                label: const Text("تسجيل الدخول برقم الهاتف", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold)),
+              ),
+              if (isPhoneLogin) ...[
+                const SizedBox(height: 20),
+                TextField(
+                  controller: phoneCtrl,
+                  keyboardType: TextInputType.phone,
+                  style: const TextStyle(color: Colors.white),
+                  decoration: InputDecoration(
+                    hintText: "أدخل رقم الهاتف...",
+                    hintStyle: const TextStyle(color: Colors.white54),
+                    filled: true,
+                    fillColor: const Color(0xFF1A2A6A),
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFD700), foregroundColor: Colors.black),
+                  onPressed: () {
+                    Navigator.pushReplacement(context, MaterialPageRoute(builder: (_) => const MainHomeHub()));
+                  },
+                  child: const Text("دخول"),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ================= Main Home Hub (Navigation & Games & Wheel & Store) =================
+class MainHomeHub extends StatefulWidget {
+  const MainHomeHub({super.key});
+  @override
+  State<MainHomeHub> createState() => _MainHomeHubState();
+}
+class _MainHomeHubState extends State<MainHomeHub> {
+  int userRoses = 50;
+  int userCoins = 200;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0D1B4A),
+      appBar: AppBar(
         backgroundColor: const Color(0xFF0A1931),
-        selectedItemColor: const Color(0xFFFFD700),
-        unselectedItemColor: Colors.white54,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.casino), label: "لودو"),
-          BottomNavigationBarItem(icon: Icon(Icons.circle), label: "كيرم"),
-          BottomNavigationBarItem(icon: Icon(Icons.show_chart), label: "سلم"),
+        title: const Text("منصة الألعاب الملكية", style: TextStyle(color: Color(0xFFFFD700), fontWeight: FontWeight.bold)),
+        actions: [
+          Center(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text("🌹 $userRoses", style: const TextStyle(color: Colors.white)))),
+          Center(child: Padding(padding: const EdgeInsets.symmetric(horizontal: 8), child: Text("🪙 $userCoins", style: const TextStyle(color: Colors.amber)))),
+          IconButton(
+            icon: const Icon(Icons.store, color: Color(0xFFFFD700)),
+            onPressed: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const StoreScreen()));
+            },
+          ),
         ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Lucky Wheel Banner
+            GestureDetector(
+              onTap: () {
+                Navigator.push(context, MaterialPageRoute(builder: (_) => LuckyWheelScreen(onRewardWon: (roses, coins) {
+                  setState(() {
+                    userRoses += roses;
+                    userCoins += coins;
+                  });
+                })));
+              },
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(colors: [Color(0xFFFFD700), Color(0xFFFF6F00)]),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: const Row(
+                  children: [
+                    Icon(Icons.card_giftcard, size: 40, color: Colors.white),
+                    SizedBox(width: 16),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text("عجلة الحظ اليومية!", style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                        Text("اضغط هنا لربح ورود وعملات مجانية كل 24 ساعة", style: TextStyle(fontSize: 12, color: Colors.white70)),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 24),
+            const Text("اختر اللعبة للبدء", style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 16),
+            GridView.count(
+              crossAxisCount: 2,
+              shrinkWrap: true,
+              physics: const NeverScrollableScrollPhysics(),
+              crossAxisSpacing: 16,
+              mainAxisSpacing: 16,
+              children: [
+                _buildGameCard(context, "لودو الملكية", Icons.casino, const Color(0xFFE53935), const LudoRoyalFull()),
+                _buildGameCard(context, "كيرم الاحترافية", Icons.circle, const Color(0xFF8D6E63), const CarromProFull()),
+                _buildGameCard(context, "سلم وثعبان", Icons.show_chart, const Color(0xFF43A047), const SnakeLadderFull()),
+                _buildGameCard(context, "الدومينو الملكية", Icons.dashboard, const Color(0xFFFBC02D), const DominoGameScreen()),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGameCard(BuildContext context, String title, IconData icon, Color color, Widget screen) {
+    return GestureDetector(
+      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => screen)),
+      child: Container(
+        decoration: BoxDecoration(
+          color: const Color(0xFF1A2A6A),
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: color, width: 2),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 50, color: color),
+            const SizedBox(height: 12),
+            Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ================= Lucky Wheel Screen =================
+class LuckyWheelScreen extends StatefulWidget {
+  final Function(int roses, int coins) onRewardWon;
+  const LuckyWheelScreen({super.key, required this.onRewardWon});
+  @override
+  State<LuckyWheelScreen> createState() => _LuckyWheelScreenState();
+}
+class _LuckyWheelScreenState extends State<LuckyWheelScreen> {
+  bool canSpin = true;
+  String resultMsg = "اضغط على زر الدوران لاختبار حظك!";
+
+  void spinWheel() {
+    if (!canSpin) return;
+    setState(() {
+      canSpin = false;
+      int r = math.Random().nextInt(8);
+      // الجوائز: 0: 10 ورود, 1: جمجمة (حظ أوفر), 2: 10 عملات, 3: جمجمة, 4: 5 دورات, 5: جمجمة, 6: 10 ورود, 7: جمجمة
+      if (r == 0 || r == 6) {
+        resultMsg = "مبروك! ربحت 10 ورود 🌹";
+        widget.onRewardWon(10, 0);
+      } else if (r == 2) {
+        resultMsg = "مبروك! ربحت 10 عملات ذهبية 🪙";
+        widget.onRewardWon(0, 10);
+      } else if (r == 4) {
+        resultMsg = "مبروك! ربحت 5 دورات إضافية 🎰";
+      } else {
+        resultMsg = "حظ أوفر في المرة القادمة 💀";
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0D1B4A),
+      appBar: AppBar(backgroundColor: const Color(0xFF0A1931), title: const Text("عجلة الحظ اليومية", style: TextStyle(color: Colors.white))),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.radar, size: 120, color: Color(0xFFFFD700)),
+            const SizedBox(height: 24),
+            Text(resultMsg, style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 40),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: canSpin ? const Color(0xFFFFD700) : Colors.grey,
+                foregroundColor: Colors.black,
+                padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+              ),
+              onPressed: canSpin ? spinWheel : null,
+              child: Text(canSpin ? "تدوير العجلة" : "تمت الدوران اليومي (تتجدد بعد 24 ساعة)", style: const TextStyle(fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ================= Store & Offers Screen =================
+class StoreScreen extends StatelessWidget {
+  const StoreScreen({super.key});
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0D1B4A),
+      appBar: AppBar(backgroundColor: const Color(0xFF0A1931), title: const Text("متجر العملات والعروض", style: TextStyle(color: Colors.white))),
+      body: ListView(
+        padding: const EdgeInsets.all(16),
+        children: [
+          const Text("عروض الشحن الخاصة", style: TextStyle(color: Color(0xFFFFD700), fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          _buildOfferCard("عرض البداية الملكي", "احصل على 500 عملة + 50 وردة هدية", "4.99 $"),
+          _buildOfferCard("عرض الأصدقاء الضخم", "احصل على 1500 عملة + 200 وردة هدية", "9.99 $"),
+          _buildOfferCard("عرض الشحن الماسي", "احصل على 5000 عملة + 600 وردة هدية", "24.99 $"),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildOfferCard(String title, String desc, String price) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(color: const Color(0xFF1A2A6A), borderRadius: BorderRadius.circular(16), border: Border.all(color: const Color(0xFFFFD700))),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text(desc, style: const TextStyle(color: Colors.white70, fontSize: 12)),
+            ],
+          ),
+          ElevatedButton(
+            style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFFFFD700), foregroundColor: Colors.black),
+            onPressed: () {},
+            child: Text(price, style: const TextStyle(fontWeight: FontWeight.bold)),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ================= DOMINO FULL GAME =================
+class DominoGameScreen extends StatefulWidget {
+  const DominoGameScreen({super.key});
+  @override
+  State<DominoGameScreen> createState() => _DominoGameScreenState();
+}
+class _DominoGameScreenState extends State<DominoGameScreen> {
+  bool micOn = true;
+  bool privateMode = false;
+  List<String> publicChat = ["P3: دومينو ممتازة 🔥", "Me: العب يا بطل"];
+  List<String> privateChat = ["P1 خاص: جاهز للجولة؟"];
+  List<String> gifts = ["❤️","🌹","👑","🚗","🦁","💎"];
+  List<String> emojis = ["😂","😡","😍","👏","🎉","🔥"];
+  TextEditingController chatCtrl = TextEditingController();
+  String flyingEmoji = "";
+  String selectedGift = "";
+
+  void sendChat() {
+    if (chatCtrl.text.trim().isEmpty) return;
+    setState(() {
+      if (privateMode) {
+        privateChat.add("Me خاص: ${chatCtrl.text.trim()}");
+      } else {
+        publicChat.add("Me: ${chatCtrl.text.trim()}");
+      }
+      chatCtrl.clear();
+    });
+  }
+
+  void sendEmoji(String e) {
+    setState(() { flyingEmoji = e; });
+    Future.delayed(const Duration(seconds: 2), () { if (mounted) setState(() { flyingEmoji = ""; }); });
+  }
+
+  void sendGift(String g) {
+    setState(() { selectedGift = g; });
+    SoundManager.win();
+    Future.delayed(const Duration(seconds: 2), () { if (mounted) setState(() { selectedGift = ""; }); });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: const Color(0xFF0D1B4A),
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Waiting Room Header
+            Container(
+              margin: const EdgeInsets.all(8),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+              decoration: BoxDecoration(color: const Color(0xFF2A3A8C), borderRadius: BorderRadius.circular(16)),
+              child: Row(
+                children: [
+                  const Icon(Icons.visibility, color: Colors.amber, size: 18),
+                  const SizedBox(width: 8),
+                  const Text("غرفة انتظار الأصدقاء - دومينو 🀄", style: TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
+                  const Spacer(),
+                  GestureDetector(
+                    onTap: () { setState(() { micOn = !micOn; }); },
+                    child: Icon(micOn ? Icons.mic : Icons.mic_off, color: micOn ? Colors.greenAccent : Colors.redAccent, size: 18),
+                  ),
+                ],
+              ),
+            ),
+            // Game Board Area
+            Expanded(
+              child: Center(
+                child: Container(
+                  width: MediaQuery.of(context).size.width - 20,
+                  height: 300,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF2E7D32),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFFFD700), width: 3),
+                  ),
+                  child: Stack(
+                    children: [
+                      const Center(child: Text("منطقة لعب الدومينو", style: TextStyle(color: Colors.white70, fontSize: 18, fontWeight: FontWeight.bold))),
+                      if (flyingEmoji.isNotEmpty) Center(child: Text(flyingEmoji, style: const TextStyle(fontSize: 60))),
+                      if (selectedGift.isNotEmpty) Center(child: Container(padding: const EdgeInsets.all(12), decoration: BoxDecoration(color: const Color(0xCC000000), borderRadius: BorderRadius.circular(16)), child: Text(selectedGift, style: const TextStyle(fontSize: 40)))),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Chat & Gifts Box
+            Container(
+              height: 70,
+              margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(color: const Color(0xFF1A2A6A), borderRadius: BorderRadius.circular(12)),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      GestureDetector(onTap: () { setState(() { privateMode = false; }); }, child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: !privateMode ? const Color(0xFFFFD700) : const Color(0xFF2A3A8C), borderRadius: BorderRadius.circular(12)), child: Text("عام", style: TextStyle(color: !privateMode ? Colors.black : Colors.white, fontSize: 11)))),
+                      const SizedBox(width: 6),
+                      GestureDetector(onTap: () { setState(() { privateMode = true; }); }, child: Container(padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4), decoration: BoxDecoration(color: privateMode ? const Color(0xFFFFD700) : const Color(0xFF2A3A8C), borderRadius: BorderRadius.circular(12)), child: Text("خاص", style: TextStyle(color: privateMode ? Colors.black : Colors.white, fontSize: 11)))),
+                      const Spacer(),
+                      Row(children: List.generate(gifts.length, (index) { String g = gifts[index]; return GestureDetector(onTap: () { sendGift(g); }, child: Container(margin: const EdgeInsets.symmetric(horizontal: 2), padding: const EdgeInsets.all(4), decoration: BoxDecoration(color: const Color(0x33FFFFFF), borderRadius: BorderRadius.circular(8)), child: Text(g, style: const TextStyle(fontSize: 14)))); })),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Expanded(
+                    child: ListView.builder(
+                      scrollDirection: Axis.horizontal,
+                      itemCount: privateMode ? privateChat.length : publicChat.length,
+                      itemBuilder: (context, i) {
+                        var list = privateMode ? privateChat : publicChat;
+                        return Container(
+                          margin: const EdgeInsets.only(right: 6),
+                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                          decoration: BoxDecoration(color: const Color(0xFF2A3A8C), borderRadius: BorderRadius.circular(10)),
+                          child: Text(list[i], style: const TextStyle(color: Colors.white, fontSize: 11)),
+                        );
+                      },
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            // Emoji & Text Input
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                children: [
+                  Row(children: List.generate(emojis.length, (index) { String e = emojis[index]; return GestureDetector(onTap: () { sendEmoji(e); }, child: Container(margin: const EdgeInsets.only(right: 4), padding: const EdgeInsets.all(6), decoration: const BoxDecoration(color: Color(0xFF2A3A8C), shape: BoxShape.circle), child: Text(e, style: const TextStyle(fontSize: 16)))); })),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: TextField(
+                      controller: chatCtrl,
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                      decoration: InputDecoration(
+                        hintText: privateMode ? "رسالة خاصة..." : "اكتب رسالة...",
+                        filled: true,
+                        fillColor: const Color(0xFF2A3A8C),
+                        border: OutlineInputBorder(borderRadius: BorderRadius.circular(20), borderSide: BorderSide.none),
+                        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                      ),
+                      onSubmitted: (_) { sendChat(); },
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  GestureDetector(
+                    onTap: () { sendChat(); },
+                    child: Container(padding: const EdgeInsets.all(8), decoration: const BoxDecoration(shape: BoxShape.circle, color: Color(0xFFFFD700)), child: const Icon(Icons.send, color: Colors.black, size: 16)),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -116,7 +540,6 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
       body: SafeArea(child: Column(children:[
         Container(margin: const EdgeInsets.all(8),padding: const EdgeInsets.symmetric(horizontal:14,vertical:10),decoration: BoxDecoration(color: const Color(0xFF2A3A8C),borderRadius: BorderRadius.circular(16)),child: Row(children:[const Icon(Icons.visibility,color: Colors.amber,size:18), const SizedBox(width:8), const Text("غرفة انتظار الأصدقاء - لودو 👀",style: TextStyle(color: Colors.white,fontSize:12,fontWeight: FontWeight.bold)), const Spacer(), GestureDetector(onTap:(){ setState((){ micOn=!micOn; }); },child: Icon(micOn?Icons.mic:Icons.mic_off,color: micOn?Colors.greenAccent:Colors.redAccent,size:18))])),
         Expanded(child: Center(child: Container(width: boardSize,height: boardSize,padding: const EdgeInsets.all(4),decoration: BoxDecoration(border: Border.all(color: const Color(0xFFFFD700),width:5),color: const Color(0xFF3E2723),borderRadius: BorderRadius.circular(8)),child: LayoutBuilder(builder: (c,cons){ double s=cons.maxWidth; double ce=s/15; List<Widget> tW=[]; for(int p=0;p<4;p++){ for(int t=0;t<4;t++){ int bp=tokens[p][t]; double cx; double cy; double sz=ce*0.78; if(bp==-1){ cx=(t%2==0?1.5:3.5)*ce; cy=(t<2?1.5:3.5)*ce; if(p==1) cy=(t<2?10.5:12.5)*ce; if(p==2) cx=(t%2==0?10.5:12.5)*ce; if(p==3){ cx=(t%2==0?10.5:12.5)*ce; cy=(t<2?10.5:12.5)*ce; } } else if(bp>=100){ cx=7.5*ce; cy=7.5*ce; } else if(homeC.containsKey(bp)){ var pt=homeC[bp]!; cx=pt.dy*ce+ce/2; cy=pt.dx*ce+ce/2; } else { var pt=path[bp%52]; cx=pt.dy*ce+ce/2; cy=pt.dx*ce+ce/2; } tW.add(Positioned(left:cx-sz/2,top:cy-sz/2,child: GestureDetector(onTap:(){ moveToken(p,t); },child: Container(width:sz,height:sz,decoration: BoxDecoration(shape: BoxShape.circle,color: cols[p],border: Border.all(color: Colors.white,width:2)),child: Center(child: Text("♔",style: TextStyle(color: Colors.white,fontSize:sz*0.6))))))); } } List<Widget> gridCells = List.generate(225,(i){ int r=i~/15; int co=i%15; Color bg=const Color(0xFFFFF8E1); if(r<6&&co<6) bg=red; else if(r<6&&co>8) bg=green; else if(r>8&&co<6) bg=yellow; else if(r>8&&co>8) bg=blue; else if(r==7&&co>=1&&co<=5) bg=red.withOpacity(0.85); else if(r==7&&co>=9&&co<=13) bg=green.withOpacity(0.65); else if(co==7&&r>=1&&r<=5) bg=yellow.withOpacity(0.65); else if(co==7&&r>=9&&r<=13) bg=blue.withOpacity(0.65); else if(r>=6&&r<=8&&co>=6&&co<=8) bg=const Color(0xFFFFD54F); Widget? ch; int pIdx=path.indexWhere((e)=>e.dx==r&&e.dy==co); if(safe.contains(pIdx)) ch=Text("★",style: TextStyle(fontSize:ce*0.5)); return Container(decoration: BoxDecoration(color:bg,border: Border.all(color: Colors.black12,width:0.3)),child: Center(child:ch)); }); return Stack(children: [ GridView.count(crossAxisCount:15,physics: const NeverScrollableScrollPhysics(),padding: EdgeInsets.zero,children: gridCells),...tW, if(flyingEmoji.isNotEmpty) Center(child: Text(flyingEmoji,style: const TextStyle(fontSize:60))), if(selectedGift.isNotEmpty) Center(child: Container(padding: const EdgeInsets.all(12),decoration: BoxDecoration(color: const Color(0xCC000000),borderRadius: BorderRadius.circular(16)),child: Text(selectedGift,style: const TextStyle(fontSize:40)))), if(canRoll&&!gameOver) Center(child: GestureDetector(onTap:roll,child: Container(width:106,height:106,decoration: BoxDecoration(shape: BoxShape.circle,gradient: const RadialGradient(colors:[Color(0xFFFFD700),Color(0xFFFF6F00)]),border: Border.all(color: Colors.white,width:3)),child: Column(mainAxisAlignment: MainAxisAlignment.center,children:[Text("$dice",style: const TextStyle(fontSize:38,fontWeight: FontWeight.bold)), const Text("ROLL",style: TextStyle(fontWeight: FontWeight.bold))])))), if(gameOver) Container(color: const Color(0x99000000),child: Center(child: Column(mainAxisAlignment: MainAxisAlignment.center,children:[const Icon(Icons.emoji_events,color: Color(0xFFFFD700),size:70), Text("اللاعب ${winner+1} فاز",style: const TextStyle(color: Colors.white,fontSize:22)), const SizedBox(height:20), Text("$countdown",style: const TextStyle(color: Colors.white,fontSize:36)),]))), ]); })))),
-        // ==== هنا كان الخطأ - تم اصلاح ListView.builder ====
         Container(
           height: 70,
           margin: const EdgeInsets.symmetric(horizontal:8,vertical:4),
@@ -159,6 +582,7 @@ class _LudoRoyalFullState extends State<LudoRoyalFull> {
 }
 
 // ================= CARROM FULL =================
+class CarromProFull extends StatelessWidget { const CarromProFull({super.key}); @override Widget build(BuildContext context) { return const CarromProLikeImage(); } }
 class CarromProLikeImage extends StatefulWidget { const CarromProLikeImage({super.key}); @override State<CarromProLikeImage> createState()=>_CarromProState(); }
 class _CarromProState extends State<CarromProLikeImage> {
   List<CarromPiece> pieces=[]; CarromPiece striker=CarromPiece(const Offset(0.5,0.82),const Color(0xFFFF1744),false,isStriker:true);
@@ -177,7 +601,34 @@ class _CarromProState extends State<CarromProLikeImage> {
   }
 }
 
+class CarromPiece {
+  Offset pos; Color color; bool isWhite; bool isQueen; bool isStriker; Offset vel;
+  CarromPiece(this.pos, this.color, this.isWhite, {this.isQueen = false, this.isStriker = false}) : vel = Offset.zero;
+}
+
+class CarromImagePainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final p = Paint()..color = const Color(0xFF8D6E63).withOpacity(0.7)..style = PaintingStyle.stroke..strokeWidth = 1.5;
+    double inset = size.width * 0.14;
+    RRect r = RRect.fromRectAndRadius(Rect.fromLTWH(inset, inset, size.width - inset * 2, size.height - inset * 2), const Radius.circular(32));
+    canvas.drawRRect(r, p);
+  }
+  @override bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+class AimPainter extends CustomPainter {
+  final Offset from; final Offset to; final double power;
+  AimPainter(this.from, this.to, this.power);
+  @override void paint(Canvas c, Size s) {
+    var p = Paint()..color = const Color(0xE6FFFFFF)..strokeWidth = 3..style = PaintingStyle.stroke;
+    c.drawLine(from, to, p);
+  }
+  @override bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+}
+
 // ================= SNAKE FULL =================
+class SnakeLadderFull extends StatelessWidget { const SnakeLadderFull({super.key}); @override Widget build(BuildContext context) { return const SnakeLadderRoyal(); } }
 class SnakeLadderRoyal extends StatefulWidget { const SnakeLadderRoyal({super.key}); @override State<SnakeLadderRoyal> createState()=>_SnakeLadderState(); }
 class _SnakeLadderState extends State<SnakeLadderRoyal> {
   int dice=1; int turn=0; int winner=-1; int countdown=10; bool canRoll=true; bool gameOver=false; bool micOn=true; bool privateMode=false;
