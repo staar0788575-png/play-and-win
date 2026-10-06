@@ -247,7 +247,7 @@ class _ChatAndControlsBarState extends State<ChatAndControlsBar> {
   }
 }
 
-// ================= LUDO (Updated with Royal Chess Pieces & Full Colors) =================
+// ================= LUDO (Fully Colored Royal Pieces) =================
 class LudoRoyalFull extends StatefulWidget {
   const LudoRoyalFull({super.key});
 
@@ -393,7 +393,7 @@ class _LudoState extends State<LudoRoyalFull> {
                       var o = path[bp % 52];
                       pt = Offset(o.dy, o.dx);
                     }
-                    double sz = ce * 0.75;
+                    double sz = ce * 0.8;
                     tw.add(Positioned(
                       left: pt.dx * ce + ce / 2 - sz / 2,
                       top: pt.dy * ce + ce / 2 - sz / 2,
@@ -405,11 +405,11 @@ class _LudoState extends State<LudoRoyalFull> {
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: cols[p],
-                            border: Border.all(color: Colors.white, width: 2),
-                            boxShadow: const [BoxShadow(color: Colors.black45, blurRadius: 2, offset: Offset(0, 1))],
+                            border: Border.all(color: Colors.white, width: 2.5),
+                            boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 3, offset: Offset(0, 2))],
                           ),
                           child: const Center(
-                            child: Icon(Icons.workspace_premium, color: Colors.white, size: 14),
+                            child: Icon(Icons.star, color: Colors.white, size: 12),
                           ),
                         ),
                       ),
@@ -487,7 +487,6 @@ class _CarromProScreenState extends State<CarromProScreen> {
   CarromPiece striker = CarromPiece(const Offset(0.5, 0.78), const Color(0xFFFF1744), false, isStriker: true);
   Offset? ds, de;
   Timer? t;
-  final TextEditingController chatCtrl = TextEditingController();
   
   List<Map<String, String>> messages = [
     {"user": "ابن الاكابر", "text": "مرحباً بالجميع، سأنضم اليكم!"},
@@ -550,8 +549,8 @@ class _CarromProScreenState extends State<CarromProScreen> {
             else normal = const Offset(1, 0);
 
             var tempVel = p.vel;
-            p.vel = p2.vel * 0.92 + normal * (-2.0);
-            p2.vel = tempVel * 0.92 + normal * (2.0);
+            p.vel = p2.vel * 0.92 + normal * (-2.5);
+            p2.vel = tempVel * 0.92 + normal * (2.5);
             
             p.pos -= normal * 0.006;
             p2.pos += normal * 0.006;
@@ -569,7 +568,6 @@ class _CarromProScreenState extends State<CarromProScreen> {
   @override
   void dispose() {
     t?.cancel();
-    chatCtrl.dispose();
     super.dispose();
   }
 
@@ -607,11 +605,6 @@ class _CarromProScreenState extends State<CarromProScreen> {
                 decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(12)),
                 child: const Text("15ms  📶  0 👁", style: TextStyle(color: Colors.white70, fontSize: 10)),
               ),
-              Container(
-                padding: const EdgeInsets.all(5),
-                decoration: BoxDecoration(color: Colors.white10, borderRadius: BorderRadius.circular(8)),
-                child: const Icon(Icons.arrow_forward_ios, color: Colors.white70, size: 14),
-              ),
             ],
           ),
         ),
@@ -626,7 +619,7 @@ class _CarromProScreenState extends State<CarromProScreen> {
                 onPanEnd: (_) {
                   if (ds != null && de != null) {
                     var dir = de! - ds!;
-                    striker.vel = dir * -22; // Strike impulse
+                    striker.vel = dir * -25;
                   }
                   ds = null;
                   de = null;
@@ -683,72 +676,6 @@ class _CarromProScreenState extends State<CarromProScreen> {
             }),
           ),
         ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 2),
-          child: Container(
-            width: 150,
-            height: 16,
-            decoration: BoxDecoration(
-              color: const Color(0xFF883344),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: Colors.redAccent.withOpacity(0.5)),
-            ),
-            child: Center(
-              child: Container(
-                width: 20,
-                height: 10,
-                decoration: BoxDecoration(color: Colors.pinkAccent, borderRadius: BorderRadius.circular(5)),
-              ),
-            ),
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _playerStatusItem("ابن الاكابر", "0", false),
-              _playerStatusItem("Al QES", "0", true),
-              _playerStatusItem("رحيل", "0", false),
-              _playerStatusItem("malk", "0", false, hasMic: true),
-            ],
-          ),
-        ),
-        Expanded(
-          flex: 3,
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              color: Colors.black.withOpacity(0.25),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: ListView(
-              reverse: true,
-              children: messages.reversed.map((m) => Padding(
-                padding: const EdgeInsets.symmetric(vertical: 2),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.end,
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: const Color(0xFF2D1B36),
-                        borderRadius: BorderRadius.circular(12),
-                      ),
-                      child: Text(
-                        "${m['user']}: ${m['text']}",
-                        style: const TextStyle(color: Colors.white, fontSize: 11),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const CircleAvatar(radius: 10, backgroundColor: Colors.white54, child: Icon(Icons.person, size: 12, color: Colors.black)),
-                  ],
-                ),
-              )).toList(),
-            ),
-          ),
-        ),
         ChatAndControlsBar(
           onSendChat: (txt) => setState(() => messages.add({"user": "أنت", "text": txt})),
           onSendEmoji: (em) => setState(() => messages.add({"user": "أنت", "text": em})),
@@ -759,46 +686,6 @@ class _CarromProScreenState extends State<CarromProScreen> {
             }
           },
         ),
-      ],
-    );
-  }
-
-  Widget _playerStatusItem(String name, String score, bool isActive, {bool hasMic = false}) {
-    return Column(
-      children: [
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            if (isActive)
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: Colors.greenAccent, width: 2)),
-              ),
-            const CircleAvatar(
-              radius: 16,
-              backgroundColor: Colors.white24,
-              child: Icon(Icons.person, color: Colors.white, size: 18),
-            ),
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 3, vertical: 1),
-                decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(6)),
-                child: Text(score, style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.black)),
-              ),
-            ),
-            if (hasMic)
-              const Positioned(
-                bottom: 0,
-                right: -2,
-                child: Icon(Icons.mic, size: 10, color: Colors.greenAccent),
-              ),
-          ],
-        ),
-        const SizedBox(height: 2),
-        Text(name, style: const TextStyle(color: Colors.white70, fontSize: 9)),
       ],
     );
   }
@@ -828,18 +715,6 @@ class CarromBoardPainter extends CustomPainter {
       ),
       linePaint,
     );
-
-    final dotPaint = Paint()..color = const Color(0xFFD4AF37);
-    double offsetPos = w * 0.22;
-    double offsetEnd = w * 0.78;
-
-    for (var x in [offsetPos, offsetEnd]) {
-      for (var y in [offsetPos, offsetEnd]) {
-        canvas.drawCircle(Offset(x, y), 5, linePaint);
-        canvas.drawCircle(Offset(x, y), 1.5, dotPaint);
-      }
-    }
-    canvas.drawCircle(Offset(w / 2, h / 2), w * 0.12, linePaint);
   }
 
   @override
@@ -881,7 +756,7 @@ class CarromPiece {
   });
 }
 
-// ================= SNAKE & LADDER (Expanded full-size visual ladders/snakes) =================
+// ================= SNAKE & LADDER (Expanded full-size visual grid) =================
 class SnakeLadderRoyal extends StatefulWidget {
   const SnakeLadderRoyal({super.key});
 
@@ -933,8 +808,8 @@ class _SnakeState extends State<SnakeLadderRoyal> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("🐍", style: TextStyle(fontSize: 14)),
-                  Text("إلى ${snakes[num]}", style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.red)),
+                  const Text("🐍", style: TextStyle(fontSize: 12)),
+                  Text("إلى ${snakes[num]}", style: const TextStyle(fontSize: 7, fontWeight: FontWeight.bold, color: Colors.red)),
                 ],
               ),
             ),
@@ -943,8 +818,8 @@ class _SnakeState extends State<SnakeLadderRoyal> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("🪜", style: TextStyle(fontSize: 14)),
-                  Text("إلى ${ladders[num]}", style: const TextStyle(fontSize: 8, fontWeight: FontWeight.bold, color: Colors.green)),
+                  const Text("🪜", style: TextStyle(fontSize: 12)),
+                  Text("إلى ${ladders[num]}", style: const TextStyle(fontSize: 7, fontWeight: FontWeight.bold, color: Colors.green)),
                 ],
               ),
             ),
@@ -973,7 +848,7 @@ class _SnakeState extends State<SnakeLadderRoyal> {
 
   @override
   Widget build(BuildContext context) {
-    double size = math.min(MediaQuery.of(context).size.width - 12, MediaQuery.of(context).size.height * 0.72);
+    double size = math.min(MediaQuery.of(context).size.width - 8, MediaQuery.of(context).size.height * 0.78);
     return Column(
       children: [
         Container(
