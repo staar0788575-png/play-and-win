@@ -247,7 +247,7 @@ class _ChatAndControlsBarState extends State<ChatAndControlsBar> {
   }
 }
 
-// ================= LUDO (Fully Colored Royal Pieces) =================
+// ================= LUDO (Fixed Fully Colored Royal Pieces) =================
 class LudoRoyalFull extends StatefulWidget {
   const LudoRoyalFull({super.key});
 
@@ -393,7 +393,7 @@ class _LudoState extends State<LudoRoyalFull> {
                       var o = path[bp % 52];
                       pt = Offset(o.dy, o.dx);
                     }
-                    double sz = ce * 0.8;
+                    double sz = ce * 0.75;
                     tw.add(Positioned(
                       left: pt.dx * ce + ce / 2 - sz / 2,
                       top: pt.dy * ce + ce / 2 - sz / 2,
@@ -404,12 +404,12 @@ class _LudoState extends State<LudoRoyalFull> {
                           height: sz,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
-                            color: cols[p],
-                            border: Border.all(color: Colors.white, width: 2.5),
-                            boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 3, offset: Offset(0, 2))],
+                            color: cols[p], // ملونة بلون اللاعب تماماً
+                            border: Border.all(color: Colors.white, width: 2),
+                            boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 2, offset: Offset(0, 1))],
                           ),
-                          child: const Center(
-                            child: Icon(Icons.star, color: Colors.white, size: 12),
+                          child: Center(
+                            child: Text("${t + 1}", style: const TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold)),
                           ),
                         ),
                       ),
@@ -430,12 +430,14 @@ class _LudoState extends State<LudoRoyalFull> {
                     GridView.count(crossAxisCount: 15, physics: const NeverScrollableScrollPhysics(), padding: EdgeInsets.zero, children: grid),
                     ...tw,
                     if (canRoll)
-                      Center(
+                      Positioned(
+                        bottom: 10,
+                        right: 10,
                         child: GestureDetector(
                           onTap: roll,
                           child: Container(
-                            width: 65,
-                            height: 65,
+                            width: 50,
+                            height: 50,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: const RadialGradient(colors: [Color(0xFFFFD700), Color(0xFFFF6F00)]),
@@ -444,8 +446,8 @@ class _LudoState extends State<LudoRoyalFull> {
                             child: Column(
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
-                                Text("$dice", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                                const Text("نرد", style: TextStyle(color: Colors.white, fontSize: 8)),
+                                Text("$dice", style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Colors.white)),
+                                const Text("نرد", style: TextStyle(color: Colors.white, fontSize: 7)),
                               ],
                             ),
                           ),
@@ -474,7 +476,7 @@ class _LudoState extends State<LudoRoyalFull> {
   }
 }
 
-// ================= CARROM (Fixed Full Kinematic Collision Physics) =================
+// ================= CARROM (Fixed Kinematic Physics & Layout) =================
 class CarromProScreen extends StatefulWidget {
   const CarromProScreen({super.key});
 
@@ -489,8 +491,8 @@ class _CarromProScreenState extends State<CarromProScreen> {
   Timer? t;
   
   List<Map<String, String>> messages = [
-    {"user": "ابن الاكابر", "text": "مرحباً بالجميع، سأنضم اليكم!"},
-    {"user": "رحيل", "text": "مرحباً بالجميع، سأنضم اليكم!"}
+    {"user": "ابن الاكابر", "text": "مرحباً بالجميع!"},
+    {"user": "رحيل", "text": "أهلاً بك!"}
   ];
 
   @override
@@ -529,7 +531,6 @@ class _CarromProScreenState extends State<CarromProScreen> {
         p.vel *= 0.985;
         if (p.vel.distance < 0.002) p.vel = Offset.zero;
 
-        // Wall collisions
         if (p.pos.dx < 0.14 || p.pos.dx > 0.86) {
           p.vel = Offset(-p.vel.dx, p.vel.dy);
           p.pos = Offset(p.pos.dx.clamp(0.14, 0.86), p.pos.dy);
@@ -539,7 +540,6 @@ class _CarromProScreenState extends State<CarromProScreen> {
           p.pos = Offset(p.pos.dx, p.pos.dy.clamp(0.14, 0.86));
         }
 
-        // Piece-to-piece elastic collisions
         for (int j = i + 1; j < allItems.length; j++) {
           var p2 = allItems[j];
           double dist = (p.pos - p2.pos).distance;
@@ -609,7 +609,7 @@ class _CarromProScreenState extends State<CarromProScreen> {
           ),
         ),
         Expanded(
-          flex: 5,
+          flex: 4,
           child: Center(
             child: LayoutBuilder(builder: (c, cons) {
               double boardSize = math.min(screenW - 20, cons.maxHeight);
@@ -629,15 +629,15 @@ class _CarromProScreenState extends State<CarromProScreen> {
                   height: boardSize,
                   decoration: BoxDecoration(
                     color: const Color(0xFFDEB887),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: const Color(0xFFFFD700), width: 3.5),
-                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.5), blurRadius: 8, spreadRadius: 2)],
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: const Color(0xFFFFD700), width: 3),
+                    boxShadow: [BoxShadow(color: Colors.black.withOpacity(0.4), blurRadius: 6)],
                   ),
                   child: Stack(
                     children: [
                       CustomPaint(size: Size(boardSize, boardSize), painter: CarromBoardPainter()),
                       ...pieces.map((p) {
-                        double size = 20.0;
+                        double size = 18.0;
                         return Positioned(
                           left: p.pos.dx * boardSize - size / 2,
                           top: p.pos.dy * boardSize - size / 2,
@@ -654,16 +654,16 @@ class _CarromProScreenState extends State<CarromProScreen> {
                         );
                       }),
                       Positioned(
-                        left: striker.pos.dx * boardSize - 13,
-                        top: striker.pos.dy * boardSize - 13,
+                        left: striker.pos.dx * boardSize - 11,
+                        top: striker.pos.dy * boardSize - 11,
                         child: Container(
-                          width: 26,
-                          height: 26,
+                          width: 22,
+                          height: 22,
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
                             color: Colors.pinkAccent,
                             border: Border.all(color: Colors.white, width: 2),
-                            boxShadow: const [BoxShadow(color: Color(0xFFFFD700), blurRadius: 8, spreadRadius: 2)],
+                            boxShadow: const [BoxShadow(color: Color(0xFFFFD700), blurRadius: 6, spreadRadius: 1)],
                           ),
                         ),
                       ),
@@ -756,7 +756,7 @@ class CarromPiece {
   });
 }
 
-// ================= SNAKE & LADDER (Expanded full-size visual grid) =================
+// ================= SNAKE & LADDER (Fixed Layout with Floating Dice Button) =================
 class SnakeLadderRoyal extends StatefulWidget {
   const SnakeLadderRoyal({super.key});
 
@@ -808,8 +808,8 @@ class _SnakeState extends State<SnakeLadderRoyal> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("🐍", style: TextStyle(fontSize: 12)),
-                  Text("إلى ${snakes[num]}", style: const TextStyle(fontSize: 7, fontWeight: FontWeight.bold, color: Colors.red)),
+                  const Text("🐍", style: TextStyle(fontSize: 10)),
+                  Text("إلى ${snakes[num]}", style: const TextStyle(fontSize: 6, fontWeight: FontWeight.bold, color: Colors.red)),
                 ],
               ),
             ),
@@ -818,8 +818,8 @@ class _SnakeState extends State<SnakeLadderRoyal> {
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const Text("🪜", style: TextStyle(fontSize: 12)),
-                  Text("إلى ${ladders[num]}", style: const TextStyle(fontSize: 7, fontWeight: FontWeight.bold, color: Colors.green)),
+                  const Text("🪜", style: TextStyle(fontSize: 10)),
+                  Text("إلى ${ladders[num]}", style: const TextStyle(fontSize: 6, fontWeight: FontWeight.bold, color: Colors.green)),
                 ],
               ),
             ),
@@ -830,8 +830,8 @@ class _SnakeState extends State<SnakeLadderRoyal> {
               child: Row(
                 children: here
                     .map((p) => Container(
-                          width: 8,
-                          height: 8,
+                          width: 7,
+                          height: 7,
                           margin: const EdgeInsets.symmetric(horizontal: 0.5),
                           decoration: BoxDecoration(
                             shape: BoxShape.circle,
@@ -848,7 +848,7 @@ class _SnakeState extends State<SnakeLadderRoyal> {
 
   @override
   Widget build(BuildContext context) {
-    double size = math.min(MediaQuery.of(context).size.width - 8, MediaQuery.of(context).size.height * 0.78);
+    double size = math.min(MediaQuery.of(context).size.width - 16, MediaQuery.of(context).size.height * 0.72);
     return Column(
       children: [
         Container(
@@ -868,7 +868,10 @@ class _SnakeState extends State<SnakeLadderRoyal> {
             child: Container(
               width: size,
               height: size,
-              decoration: BoxDecoration(border: Border.all(color: const Color(0xFFFFD700), width: 3)),
+              decoration: BoxDecoration(
+                border: Border.all(color: const Color(0xFFFFD700), width: 3),
+                borderRadius: BorderRadius.circular(8),
+              ),
               child: Stack(
                 children: [
                   GridView.builder(
@@ -882,12 +885,14 @@ class _SnakeState extends State<SnakeLadderRoyal> {
                       return cell(num);
                     },
                   ),
-                  Center(
+                  Positioned(
+                    bottom: 8,
+                    right: 8,
                     child: GestureDetector(
                       onTap: roll,
                       child: Container(
-                        width: 65,
-                        height: 65,
+                        width: 45,
+                        height: 45,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: const RadialGradient(colors: [Color(0xFFFFD700), Color(0xFFFF6F00)]),
@@ -896,8 +901,8 @@ class _SnakeState extends State<SnakeLadderRoyal> {
                         child: Column(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
-                            Text("$dice", style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold, color: Colors.white)),
-                            const Text("نرد", style: TextStyle(color: Colors.white, fontSize: 8)),
+                            Text("$dice", style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white)),
+                            const Text("نرد", style: TextStyle(color: Colors.white, fontSize: 6)),
                           ],
                         ),
                       ),
