@@ -2,18 +2,24 @@ name: play_and_win
 description: "Play and Win - 4 Games"
 publish_to: 'none'
 version: 1.0.0+1
+
 environment:
   sdk: ">=3.0.0 <4.0.0"
+
 dependencies:
   flutter:
     sdk: flutter
+  flutter_tts: ^3.8.5
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^2.0.0
   flutter_launcher_icons: ^0.13.1
+
 flutter:
   uses-material-design: true
+
 flutter_launcher_icons:
   android: true
   ios: false
