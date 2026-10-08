@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/services.dart';
+import 'package:flutter_tts/flutter_tts.dart';
 
 void main() {
   runApp(const PlayAndWinApp());
@@ -28,6 +29,126 @@ class Pal {
   static const Color green = Color(0xFF3DDC84);
   static const Color red = Color(0xFFFF5252);
 }
+
+// ---------- أفاتار شخصي مرسوم (للاعبين الآليين) ----------
+class _PersonPainter extends CustomPainter {
+  final int v;
+  const _PersonPainter(this.v);
+
+  static const List<Color> skins = [
+    Color(0xFFF5D0B0), Color(0xFFE8B98F), Color(0xFFD39B6C), Color(0xFFB77A4E), Color(0xFF8D5A38), Color(0xFFFFE0C7),
+  ];
+  static const List<Color> hairs = [
+    Color(0xFF1B1B1B), Color(0xFF3E2723), Color(0xFF5D4037), Color(0xFF8D6E63), Color(0xFF212121),
+  ];
+  static const List<Color> shirts = [
+    Color(0xFF1E88E5), Color(0xFF43A047), Color(0xFFE53935), Color(0xFF8E24AA), Color(0xFF00897B), Color(0xFFFB8C00), Color(0xFF546E7A), Color(0xFFD81B60),
+  ];
+  static const List<List<Color>> bgs = [
+    [Color(0xFF4FC3F7), Color(0xFF0277BD)],
+    [Color(0xFFA5D6A7), Color(0xFF2E7D32)],
+    [Color(0xFFFFCC80), Color(0xFFEF6C00)],
+    [Color(0xFFCE93D8), Color(0xFF6A1B9A)],
+    [Color(0xFFEF9A9A), Color(0xFFC62828)],
+    [Color(0xFF80CBC4), Color(0xFF00695C)],
+    [Color(0xFF9FA8DA), Color(0xFF283593)],
+    [Color(0xFFB0BEC5), Color(0xFF37474F)],
+  ];
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final s = size.width;
+    final style = v % 5;
+    final skin = skins[(v ~/ 5) % skins.length];
+    final hair = hairs[(v ~/ 30) % hairs.length];
+    final bg = bgs[(v ~/ 150) % bgs.length];
+    final shirt = shirts[(v ~/ 7) % shirts.length];
+
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..shader = LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: bg).createShader(Offset.zero & size),
+    );
+
+    final headC = Offset(s * 0.5, s * 0.42);
+    final headR = s * 0.22;
+
+    // الشعر الخلفي أو الحجاب
+    if (style == 2) {
+      canvas.drawOval(Rect.fromCenter(center: Offset(s * 0.5, s * 0.5), width: s * 0.62, height: s * 0.7), Paint()..color = hair);
+    } else if (style == 3) {
+      final hij = shirts[(v ~/ 11) % shirts.length];
+      canvas.drawOval(Rect.fromCenter(center: Offset(s * 0.5, s * 0.52), width: s * 0.66, height: s * 0.78), Paint()..color = hij);
+    } else if (style == 1) {
+      canvas.drawOval(Rect.fromCenter(center: Offset(s * 0.5, s * 0.46), width: s * 0.62, height: s * 0.66), Paint()..color = Colors.white);
+    }
+
+    // الكتفان
+    final body = Path()
+      ..moveTo(s * 0.1, s * 1.02)
+      ..quadraticBezierTo(s * 0.12, s * 0.7, s * 0.5, s * 0.68)
+      ..quadraticBezierTo(s * 0.88, s * 0.7, s * 0.9, s * 1.02)
+      ..close();
+    canvas.drawPath(body, Paint()..color = style == 1 ? Colors.white : shirt);
+
+    // العنق والوجه
+    canvas.drawRect(Rect.fromCenter(center: Offset(s * 0.5, s * 0.66), width: s * 0.14, height: s * 0.12), Paint()..color = skin);
+    canvas.drawCircle(headC, headR, Paint()..color = skin);
+
+    // غطاء الرأس / الشعر الأمامي
+    if (style == 0) {
+      canvas.drawArc(Rect.fromCircle(center: headC, radius: headR * 1.04), math_pi, math_pi, true, Paint()..color = hair);
+    } else if (style == 2) {
+      canvas.drawArc(Rect.fromCircle(center: headC, radius: headR * 1.04), math_pi * 1.05, math_pi * 0.9, true, Paint()..color = hair);
+    } else if (style == 4) {
+      canvas.drawArc(Rect.fromCircle(center: headC, radius: headR * 1.06), math_pi, math_pi, true, Paint()..color = shirt);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(Rect.fromLTWH(headC.dx - headR * 0.2, headC.dy - headR * 0.18, headR * 1.4, headR * 0.2), Radius.circular(headR * 0.1)),
+        Paint()..color = shirt,
+      );
+    } else if (style == 1) {
+      canvas.drawArc(Rect.fromCircle(center: headC, radius: headR * 1.08), math_pi, math_pi, true, Paint()..color = Colors.white);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(
+            Rect.fromCenter(center: Offset(headC.dx, headC.dy - headR * 0.78), width: headR * 2.0, height: headR * 0.22), Radius.circular(headR * 0.1)),
+        Paint()..color = const Color(0xFF212121),
+      );
+    } else if (style == 3) {
+      canvas.drawArc(Rect.fromCircle(center: headC, radius: headR * 1.1), math_pi * 1.02, math_pi * 0.96, false,
+          Paint()
+            ..color = shirts[(v ~/ 11) % shirts.length]
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = headR * 0.4);
+    }
+
+    // الملامح
+    final eye = Paint()..color = const Color(0xFF212121);
+    canvas.drawCircle(Offset(headC.dx - headR * 0.38, headC.dy + headR * 0.05), headR * 0.09, eye);
+    canvas.drawCircle(Offset(headC.dx + headR * 0.38, headC.dy + headR * 0.05), headR * 0.09, eye);
+    final smile = Path()
+      ..moveTo(headC.dx - headR * 0.32, headC.dy + headR * 0.42)
+      ..quadraticBezierTo(headC.dx, headC.dy + headR * 0.75, headC.dx + headR * 0.32, headC.dy + headR * 0.42);
+    canvas.drawPath(
+        smile,
+        Paint()
+          ..color = const Color(0xFF8D3B2F)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = headR * 0.1
+          ..strokeCap = StrokeCap.round);
+    // لحية خفيفة لبعض الرجال
+    if ((style == 0 || style == 1 || style == 4) && (v ~/ 3) % 3 == 0) {
+      canvas.drawArc(Rect.fromCircle(center: headC, radius: headR * 0.98), 0.25, math_pi - 0.5, false,
+          Paint()
+            ..color = hair.withOpacity(0.75)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = headR * 0.28);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant _PersonPainter old) => old.v != v;
+}
+
+const double math_pi = 3.141592653589793;
 
 // ---------- الأفاتار ----------
 class Avatars {
@@ -56,6 +177,17 @@ class AvatarView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (id >= 100) {
+      return Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: ring ? Pal.gold : Colors.white24, width: ring ? 2.5 : 1.5),
+        ),
+        child: ClipOval(child: CustomPaint(painter: _PersonPainter(id - 100))),
+      );
+    }
     final i = id.abs() % Avatars.emoji.length;
     return Container(
       width: size,
@@ -89,16 +221,29 @@ class SeatInfo {
 }
 
 class Bots {
-  static const List<SeatInfo> pool = [
-    SeatInfo('سلطان', 1),
-    SeatInfo('نورة', 10),
-    SeatInfo('ليث', 2),
-    SeatInfo('ريم', 6),
-    SeatInfo('فهد', 3),
-    SeatInfo('هديل', 9),
-    SeatInfo('زياد', 7),
-    SeatInfo('لمى', 11),
+  static const List<String> maleNames = [
+    'سلطان', 'ليث', 'فهد', 'زياد', 'أحمد', 'محمد', 'خالد', 'عمر', 'يوسف', 'حسن', 'علي', 'مصطفى', 'إبراهيم', 'طارق', 'ماجد',
+    'سعود', 'نبيل', 'وليد', 'رامي', 'باسم', 'كرم', 'هاني', 'جاسم', 'ناصر', 'عادل', 'سامي', 'بدر', 'ياسر', 'مازن', 'أنس',
   ];
+  static const List<String> femaleNames = [
+    'نورة', 'ريم', 'هديل', 'لمى', 'سارة', 'ليلى', 'منى', 'مريم', 'فاطمة', 'زينب', 'هند', 'دانة', 'رهف', 'جود', 'ملك',
+    'سلمى', 'آية', 'رنا', 'شهد', 'تالا',
+  ];
+
+  static final List<SeatInfo> pool = _build();
+
+  static List<SeatInfo> _build() {
+    final res = <SeatInfo>[];
+    for (int i = 0; i < maleNames.length; i++) {
+      final style = const [0, 1, 4][i % 3];
+      res.add(SeatInfo(maleNames[i], 100 + style + 5 * ((i * 7) % 6) + 30 * ((i * 3) % 5) + 150 * ((i * 5) % 8)));
+    }
+    for (int i = 0; i < femaleNames.length; i++) {
+      final style = const [2, 3][i % 2];
+      res.add(SeatInfo(femaleNames[i], 100 + style + 5 * ((i * 5 + 1) % 6) + 30 * ((i * 2) % 5) + 150 * ((i * 3 + 2) % 8)));
+    }
+    return res;
+  }
 }
 
 class Seats {
@@ -112,14 +257,27 @@ class Seats {
         if (!m.isMe) res.add(m);
       }
     }
+    final start = _rnd.nextInt(Bots.pool.length);
+    final step = 7 + 2 * _rnd.nextInt(5); // 7,9,11,13,15 أولية مع 50
     int k = 0;
-    while (res.length < n && k < 60) {
-      final b = Bots.pool[k % Bots.pool.length];
+    while (res.length < n && k < 200) {
+      final b = Bots.pool[(start + k * step) % Bots.pool.length];
       k++;
       if (res.any((s) => s.name == b.name)) continue;
       res.add(b);
     }
     return res;
+  }
+
+  static final math.Random _rnd = math.Random();
+
+  /// لاعب آلي جديد غير موجود على الطاولة (يُستخدم بعد الطرد)
+  static SeatInfo replacement(List<SeatInfo> current) {
+    for (int k = 0; k < 200; k++) {
+      final b = Bots.pool[_rnd.nextInt(Bots.pool.length)];
+      if (!current.any((s) => s.name == b.name)) return b;
+    }
+    return Bots.pool.first;
   }
 }
 
@@ -135,6 +293,8 @@ class AppState extends ChangeNotifier {
 
   String get myName => me?.name ?? 'أنت';
   int get myAvatar => me?.avatar ?? 0;
+  final int myId = 1000000 + math.Random().nextInt(8999999);
+  SeatInfo get meSeat => SeatInfo(myName, myAvatar, isMe: true, isBot: false);
 
   void setProfile(Profile p) {
     me = p;
@@ -221,6 +381,18 @@ class RoomService {
     return room;
   }
 
+  /// طرد لاعب: يكلّف المُطرِد قيمة مستوى الهدف، ثم ينخفض مستوى الهدف 5
+  static String? kick(GameRoom? room, SeatInfo target) {
+    final st = Stats.of(target);
+    final cost = st.kickCost;
+    if (UserData.coins < cost) return 'رصيدك لا يكفي. تحتاج $cost عملة لطرد ${target.name}';
+    UserData.addCoins(-cost);
+    st.kickCost = math.max(0, st.kickCost - 5);
+    room?.members.removeWhere((m) => m.name == target.name && !m.isMe);
+    AppState.I.changed();
+    return null;
+  }
+
   static GameRoom? find(String code) {
     final c = code.trim().toUpperCase();
     for (final r in rooms) {
@@ -239,6 +411,9 @@ class Friends {
     SeatInfo('خالد', 1),
     SeatInfo('منى', 10),
   ];
+
+  /// أصدقائي (قابلة للإضافة)
+  static final List<SeatInfo> mine = <SeatInfo>[list[0], list[1], list[2], list[3], list[4], list[5]];
 }
 
 // ---------- خدمات الدخول والدفع (تجريبية، جاهزة للربط) ----------
@@ -485,6 +660,38 @@ class UserData {
     _notify();
   }
 
+  static int earned = 0; // مجموع أرباح الألعاب نحو مكافأة 5000
+  static String _lastSpin = '';
+
+  static String _today() {
+    final d = DateTime.now();
+    return '${d.year}-${d.month}-${d.day}';
+  }
+
+  static bool get canSpin => _lastSpin != _today();
+  static void markSpun() {
+    _lastSpin = _today();
+    _notify();
+  }
+
+  static void win() {
+    coins += 20;
+    earned += 20;
+    _notify();
+  }
+
+  static void lose() {
+    coins = math.max(0, coins - 10);
+    _notify();
+  }
+
+  static void claimMilestone() {
+    if (earned < 5000) return;
+    earned -= 5000;
+    coins += 500;
+    _notify();
+  }
+
   static bool useRose() {
     if (freeRoses <= 0) return false;
     freeRoses--;
@@ -519,16 +726,50 @@ class BotChat {
 // ================= الصوت والاهتزاز =================
 class SoundManager {
   static bool enabled = true;
+  static FlutterTts? _tts;
+  static bool _ttsReady = false;
+
+  static void _click() {
+    try {
+      SystemSound.play(SystemSoundType.click);
+    } catch (_) {}
+  }
+
   static void dice() {
-    if (enabled) HapticFeedback.mediumImpact();
+    if (!enabled) return;
+    HapticFeedback.mediumImpact();
+    _click();
   }
 
   static void move() {
     if (enabled) HapticFeedback.lightImpact();
   }
 
+  static void coin() {
+    if (!enabled) return;
+    HapticFeedback.selectionClick();
+    _click();
+  }
+
   static void capture() {
     if (enabled) HapticFeedback.heavyImpact();
+  }
+
+  /// صوت القلم + "ارررجع يالمبي" عند أكل قطعة أو الوقوف على رأس ثعبان
+  static Future<void> oops() async {
+    if (!enabled) return;
+    HapticFeedback.heavyImpact();
+    _click();
+    try {
+      if (_tts == null) {
+        _tts = FlutterTts();
+        await _tts!.setLanguage('ar');
+        await _tts!.setPitch(1.5);
+        await _tts!.setSpeechRate(0.4);
+        _ttsReady = true;
+      }
+      if (_ttsReady) await _tts!.speak('ارررجع يالمبي');
+    } catch (_) {}
   }
 }
 
@@ -569,6 +810,7 @@ class _ChatAndControlsBarState extends State<ChatAndControlsBar> {
 
   @override
   Widget build(BuildContext context) {
+    final kbOpen = MediaQuery.of(context).viewInsets.bottom > 0;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       color: Pal.bg,
@@ -576,7 +818,7 @@ class _ChatAndControlsBarState extends State<ChatAndControlsBar> {
         mainAxisSize: MainAxisSize.min,
         children: [
           SizedBox(
-            height: 40,
+            height: kbOpen ? 0 : 40,
             child: ListView(
               scrollDirection: Axis.horizontal,
               children: [
@@ -665,14 +907,14 @@ class ChatTicker extends StatelessWidget {
 }
 
 /// بطاقة لاعب (صورة + اسم + شارة)
-class PlayerBadge extends StatelessWidget {
+class _PlayerBadgeBody extends StatelessWidget {
   final String name;
   final Color color;
   final String badge;
   final bool active;
   final int avatar;
 
-  const PlayerBadge({
+  const _PlayerBadgeBody({
     super.key,
     required this.name,
     required this.color,
@@ -897,6 +1139,884 @@ class ChatPanel extends StatelessWidget {
   }
 }
 
+
+// ================= هيكل شاشة اللعب المشترك (آمن مع الكيبورد) =================
+/// اللوحة بالأعلى بحجم ثابت، تحتها ملفات اللاعبين ثم الدردشة.
+/// عند ظهور الكيبورد: تبقى اللوحة بنفس حجمها وتختفي ملفات اللاعبين والإيموجي.
+class GameFrame extends StatelessWidget {
+  final Widget? top;
+  final Widget board;
+  final Widget? mid;
+  final double midH;
+  final Widget badges;
+  final Widget chat;
+  final Widget bar;
+  final double boardFrac;
+
+  const GameFrame({
+    super.key,
+    this.top,
+    required this.board,
+    this.mid,
+    this.midH = 0,
+    required this.badges,
+    required this.chat,
+    required this.bar,
+    this.boardFrac = 0.46,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final kb = MediaQuery.of(context).viewInsets.bottom;
+    final kbOpen = kb > 0;
+    return LayoutBuilder(builder: (context, cons) {
+      final full = cons.maxHeight;
+      final topH = top == null ? 0.0 : 36.0;
+      final boardH = full * boardFrac;
+      final boardTop = kbOpen ? 0.0 : topH;
+      final midShown = mid != null && !kbOpen;
+      final upper = boardTop + boardH + (midShown ? midH : 0.0);
+      final lowerH = kbOpen ? math.max(full - upper - kb, 92.0) : math.max(full - upper, 0.0);
+      return Stack(
+        clipBehavior: Clip.hardEdge,
+        children: [
+          if (top != null)
+            Positioned(left: 0, right: 0, top: 0, height: topH, child: Visibility(visible: !kbOpen, child: top!)),
+          Positioned(left: 0, right: 0, top: boardTop, height: boardH, child: board),
+          if (mid != null)
+            Positioned(
+              left: 0,
+              right: 0,
+              top: boardTop + boardH,
+              height: midH,
+              child: Visibility(visible: midShown, child: mid!),
+            ),
+          Positioned(
+            left: 0,
+            right: 0,
+            bottom: kbOpen ? kb : 0,
+            height: lowerH,
+            child: Container(
+              color: Pal.bg,
+              child: Column(
+                children: [
+                  Visibility(visible: !kbOpen, child: badges),
+                  Expanded(child: chat),
+                  bar,
+                ],
+              ),
+            ),
+          ),
+        ],
+      );
+    });
+  }
+}
+
+
+// ================= الملفات الشخصية، الهدايا، الطرد =================
+class Stat {
+  int roses = 0;
+  int gifts = 0;
+  int kickCost = 500; // تكلفة طرد هذا اللاعب (مستوى الحماية)
+  int recharges = 0;
+}
+
+class Stats {
+  static final Map<String, Stat> _m = {};
+
+  static Stat of(SeatInfo s) => _m.putIfAbsent(s.isMe ? 'me' : s.name, () {
+        final st = Stat();
+        if (!s.isMe) {
+          final h = idOf(s);
+          st.roses = 20 + h % 780;
+          st.gifts = h % 9;
+          st.kickCost = 500 + (h % 5) * 25;
+        }
+        return st;
+      });
+  static Stat get mine => _m.putIfAbsent('me', () => Stat());
+
+  static int idOf(SeatInfo s) {
+    if (s.isMe) return AppState.I.myId;
+    int h = 7;
+    for (final c in s.name.codeUnits) {
+      h = (h * 31 + c) % 8999999;
+    }
+    return 1000000 + h;
+  }
+
+  /// أصدقاء اللاعب (توليد ثابت من اسمه)
+  static List<SeatInfo> friendsOf(SeatInfo s) {
+    final pool = <SeatInfo>[...Friends.list, ...Bots.pool].where((x) => x.name != s.name).toList();
+    int h = 11;
+    for (final c in s.name.codeUnits) {
+      h = (h * 17 + c) % 100003;
+    }
+    final res = <SeatInfo>[];
+    for (int i = 0; i < pool.length && res.length < 8; i++) {
+      if ((h + i * 7) % 3 != 0) res.add(pool[i]);
+    }
+    return res;
+  }
+}
+
+class Gift {
+  final String id;
+  final String emoji;
+  final String name;
+  final int cost;
+  final int roses;
+  const Gift(this.id, this.emoji, this.name, this.cost, this.roses);
+}
+
+const List<Gift> kGifts = [
+  Gift('rose', '🌹', 'وردة', 10, 1),
+  Gift('bouquet', '💐', 'باقة ورد', 45, 5),
+  Gift('hearts', '💕', 'قلوب كثيرة', 150, 0),
+  Gift('crown', '👑', 'تاج', 1200, 0),
+  Gift('rose500', '🌹', '500 وردة', 3500, 500),
+  Gift('car', '🚗', 'سيارة', 5000, 0),
+  Gift('yacht', '🛥️', 'يخت', 20000, 0),
+  Gift('plane', '✈️', 'طائرة', 50000, 0),
+];
+
+const List<int> kCoinGifts = [50, 100, 500, 1000];
+
+void _toastCtx(BuildContext context, String t) {
+  final m = ScaffoldMessenger.of(context);
+  m.hideCurrentSnackBar();
+  m.showSnackBar(SnackBar(duration: const Duration(milliseconds: 1900), content: rtl(Text(t))));
+}
+
+class PlayerBadge extends StatelessWidget {
+  final String name;
+  final Color color;
+  final String badge;
+  final bool active;
+  final int avatar;
+  final SeatInfo? seat;
+  final VoidCallback? onKick;
+
+  const PlayerBadge({
+    super.key,
+    required this.name,
+    required this.color,
+    required this.badge,
+    required this.active,
+    this.avatar = -1,
+    this.seat,
+    this.onKick,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final body = _PlayerBadgeBody(name: name, color: color, badge: badge, active: active, avatar: avatar);
+    if (seat == null) return body;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => showPlayerProfile(context, seat!, onKick: onKick),
+      child: body,
+    );
+  }
+}
+
+void showPlayerProfile(BuildContext context, SeatInfo s, {GameRoom? room, VoidCallback? onKick}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Pal.card,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+    builder: (ctx) => rtl(_ProfileSheet(seat: s, room: room ?? AppState.I.currentRoom, onKick: onKick)),
+  );
+}
+
+class _ProfileSheet extends StatefulWidget {
+  final SeatInfo seat;
+  final GameRoom? room;
+  final VoidCallback? onKick;
+  const _ProfileSheet({required this.seat, this.room, this.onKick});
+
+  @override
+  State<_ProfileSheet> createState() => _ProfileSheetState();
+}
+
+class _ProfileSheetState extends State<_ProfileSheet> {
+  Widget _stat(String icon, String value, String label) => Expanded(
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          decoration: BoxDecoration(color: Pal.card2, borderRadius: BorderRadius.circular(14)),
+          child: Column(children: [
+            Text('$icon $value', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+            const SizedBox(height: 2),
+            Text(label, style: const TextStyle(color: Pal.muted, fontSize: 11)),
+          ]),
+        ),
+      );
+
+  void _confirmKick() {
+    final s = widget.seat;
+    final room = widget.room;
+    final cost = Stats.of(s).kickCost;
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => rtl(AlertDialog(
+        backgroundColor: Pal.card,
+        title: const Text('طرد اللاعب', style: TextStyle(color: Pal.gold)),
+        content: Text('سيتم خصم $cost عملة من رصيدك لطرد ${s.name} من الغرفة. هل تريد المتابعة؟',
+            style: const TextStyle(color: Colors.white)),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('إلغاء')),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              final err = RoomService.kick(room, s);
+              if (err != null) {
+                _toastCtx(context, err);
+              } else {
+                final messenger = ScaffoldMessenger.of(context);
+                widget.onKick?.call();
+                Navigator.of(context).pop();
+                messenger.hideCurrentSnackBar();
+                messenger.showSnackBar(SnackBar(content: rtl(Text('تم طرد ${s.name} من الغرفة'))));
+              }
+            },
+            child: const Text('طرد', style: TextStyle(color: Pal.red)),
+          ),
+        ],
+      )),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final s = widget.seat;
+    final st = Stats.of(s);
+    final mutual = s.isMe
+        ? List<SeatInfo>.from(Friends.mine)
+        : Stats.friendsOf(s).where((f) => Friends.mine.any((m) => m.name == f.name)).toList();
+    final room = widget.room;
+    final canKick = !s.isMe &&
+        (widget.onKick != null ||
+            (room != null && room.members.isNotEmpty && room.members.first.isMe && room.members.any((m) => m.name == s.name)));
+    final isFriend = Friends.mine.any((m) => m.name == s.name);
+    final id = Stats.idOf(s);
+    return SafeArea(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(18, 14, 18, 18),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Container(width: 44, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2))),
+          const SizedBox(height: 14),
+          AvatarView(id: s.avatar, size: 78, ring: StoryService.hasStory(s)),
+          const SizedBox(height: 8),
+          Text(s.name, style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.bold)),
+          GestureDetector(
+            onTap: () {
+              Clipboard.setData(ClipboardData(text: '$id'));
+              _toastCtx(context, 'تم نسخ الـ ID');
+            },
+            child: Text('ID: $id  ⧉', textDirection: TextDirection.ltr, style: const TextStyle(color: Pal.muted, fontSize: 13)),
+          ),
+          const SizedBox(height: 14),
+          Row(children: [
+            _stat('🌹', '${st.roses}', 'ورود مستلمة'),
+            const SizedBox(width: 8),
+            _stat('🎁', '${st.gifts}', 'هدايا'),
+            const SizedBox(width: 8),
+            _stat('⭐', '${st.kickCost}', 'المستوى'),
+          ]),
+          const SizedBox(height: 16),
+          Align(
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(s.isMe ? 'أصدقائي' : 'الأصدقاء المشتركون',
+                style: const TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+          ),
+          const SizedBox(height: 8),
+          if (mutual.isEmpty)
+            const Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: Text('لا يوجد أصدقاء مشتركون', style: TextStyle(color: Pal.muted, fontSize: 13)),
+            )
+          else
+            SizedBox(
+              height: 66,
+              child: ListView(scrollDirection: Axis.horizontal, children: [
+                for (final f in mutual)
+                  Padding(
+                    padding: const EdgeInsetsDirectional.only(end: 12),
+                    child: Column(children: [
+                      AvatarView(id: f.avatar, size: 40),
+                      const SizedBox(height: 3),
+                      Text(f.name, style: const TextStyle(color: Pal.muted, fontSize: 11)),
+                    ]),
+                  ),
+              ]),
+            ),
+          const SizedBox(height: 16),
+          if (!s.isMe) GoldButton(label: 'إهداء هدية', icon: Icons.card_giftcard, onTap: () => showGiftSheet(context, target: s)),
+          if (!s.isMe && !isFriend) ...[
+            const SizedBox(height: 10),
+            GoldButton(
+              label: 'إضافة صديق',
+              icon: Icons.person_add_alt_1,
+              outlined: true,
+              onTap: () {
+                Friends.mine.add(s);
+                setState(() {});
+                _toastCtx(context, 'تمت إضافة ${s.name} إلى أصدقائك');
+              },
+            ),
+          ],
+          if (canKick) ...[
+            const SizedBox(height: 10),
+            TextButton.icon(
+              onPressed: _confirmKick,
+              icon: const Icon(Icons.exit_to_app, color: Pal.red),
+              label: Text('طرد من الغرفة (${st.kickCost} عملة)', style: const TextStyle(color: Pal.red)),
+            ),
+          ],
+        ]),
+      ),
+    );
+  }
+}
+
+void showGiftSheet(BuildContext context, {SeatInfo? target}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Pal.card,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+    builder: (ctx) => rtl(_GiftSheet(target: target)),
+  );
+}
+
+class _GiftSheet extends StatefulWidget {
+  final SeatInfo? target;
+  const _GiftSheet({this.target});
+
+  @override
+  State<_GiftSheet> createState() => _GiftSheetState();
+}
+
+class _GiftSheetState extends State<_GiftSheet> {
+  SeatInfo? sel;
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.target != null && !widget.target!.isMe) sel = widget.target;
+  }
+
+  List<SeatInfo> get candidates {
+    final res = <SeatInfo>[];
+    final room = AppState.I.currentRoom;
+    if (room != null) {
+      for (final m in room.members) {
+        if (!m.isMe) res.add(m);
+      }
+    }
+    for (final f in Friends.mine) {
+      if (!res.any((x) => x.name == f.name)) res.add(f);
+    }
+    if (sel != null && !res.any((x) => x.name == sel!.name)) res.insert(0, sel!);
+    return res;
+  }
+
+  void _send(Gift g) {
+    if (sel == null) {
+      _toastCtx(context, 'اختر اللاعب الذي تريد إهداءه أولاً');
+      return;
+    }
+    if (UserData.coins < g.cost) {
+      _toastCtx(context, 'رصيدك لا يكفي. اشحن العملات أو جرّب عجلة الحظ');
+      return;
+    }
+    UserData.addCoins(-g.cost);
+    final st = Stats.of(sel!);
+    st.roses += g.roses;
+    if (g.roses == 0) st.gifts++;
+    SoundManager.coin();
+    _toastCtx(context, '${g.emoji} تم إهداء ${g.name} إلى ${sel!.name}');
+    setState(() {});
+  }
+
+  void _sendCoins(int n) {
+    if (sel == null) {
+      _toastCtx(context, 'اختر اللاعب الذي تريد إهداءه أولاً');
+      return;
+    }
+    if (UserData.coins < n) {
+      _toastCtx(context, 'رصيدك لا يكفي لإهداء $n عملة');
+      return;
+    }
+    UserData.addCoins(-n);
+    SoundManager.coin();
+    _toastCtx(context, '🪙 تم إهداء $n عملة إلى ${sel!.name}');
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final cands = candidates;
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
+        child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Center(child: Container(width: 44, height: 4, decoration: BoxDecoration(color: Colors.white24, borderRadius: BorderRadius.circular(2)))),
+          const SizedBox(height: 12),
+          Row(children: [
+            const Text('إهداء', style: TextStyle(color: Pal.gold, fontSize: 18, fontWeight: FontWeight.bold)),
+            const Spacer(),
+            const CoinChip(),
+          ]),
+          const SizedBox(height: 10),
+          SizedBox(
+            height: 72,
+            child: cands.isEmpty
+                ? const Center(child: Text('لا يوجد لاعبون لإهدائهم', style: TextStyle(color: Pal.muted)))
+                : ListView(scrollDirection: Axis.horizontal, children: [
+                    for (final c in cands)
+                      GestureDetector(
+                        onTap: () => setState(() => sel = c),
+                        child: Padding(
+                          padding: const EdgeInsetsDirectional.only(end: 12),
+                          child: Opacity(
+                            opacity: sel != null && sel!.name == c.name ? 1 : 0.55,
+                            child: Column(children: [
+                              AvatarView(id: c.avatar, size: 44, ring: sel != null && sel!.name == c.name),
+                              const SizedBox(height: 3),
+                              Text(c.name, style: const TextStyle(color: Colors.white, fontSize: 11)),
+                            ]),
+                          ),
+                        ),
+                      ),
+                  ]),
+          ),
+          const SizedBox(height: 8),
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                GridView.count(
+                  crossAxisCount: 4,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  crossAxisSpacing: 8,
+                  mainAxisSpacing: 8,
+                  childAspectRatio: 0.78,
+                  children: [
+                    for (final g in kGifts)
+                      GestureDetector(
+                        onTap: () => _send(g),
+                        child: Container(
+                          decoration: BoxDecoration(color: Pal.card2, borderRadius: BorderRadius.circular(14)),
+                          padding: const EdgeInsets.symmetric(vertical: 8),
+                          child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                            Text(g.emoji, style: const TextStyle(fontSize: 30)),
+                            const SizedBox(height: 4),
+                            Text(g.name, textAlign: TextAlign.center, style: const TextStyle(color: Colors.white, fontSize: 11)),
+                            const SizedBox(height: 2),
+                            Text('🪙 ${g.cost}', style: const TextStyle(color: Pal.gold, fontSize: 11, fontWeight: FontWeight.bold)),
+                          ]),
+                        ),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                const Text('إهداء عملات', style: TextStyle(color: Colors.white, fontSize: 14, fontWeight: FontWeight.bold)),
+                const SizedBox(height: 8),
+                Row(children: [
+                  for (final n in kCoinGifts)
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 3),
+                        child: SizedBox(
+                          height: 42,
+                          child: ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                                backgroundColor: Pal.gold, foregroundColor: Colors.black87, padding: EdgeInsets.zero),
+                            onPressed: () => _sendCoins(n),
+                            child: Text('$n 🪙', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                          ),
+                        ),
+                      ),
+                    ),
+                ]),
+              ]),
+            ),
+          ),
+        ]),
+      ),
+    );
+  }
+}
+
+// ================= القصص =================
+const List<List<Color>> kStoryStyles = [
+  [Color(0xFF6A1B9A), Color(0xFFD81B60)],
+  [Color(0xFF00897B), Color(0xFF26C6DA)],
+  [Color(0xFFFF8F00), Color(0xFFE53935)],
+  [Color(0xFF1E88E5), Color(0xFF5E35B1)],
+  [Color(0xFF43A047), Color(0xFFFFEB3B)],
+  [Color(0xFF263238), Color(0xFF546E7A)],
+];
+
+class Story {
+  final SeatInfo owner;
+  final String text;
+  final int style;
+  final DateTime time;
+  Story(this.owner, this.text, this.style, this.time);
+}
+
+class StoryService {
+  static final List<Story> stories = [];
+  static bool _seeded = false;
+
+  static void seed() {
+    if (_seeded) return;
+    _seeded = true;
+    const texts = [
+      'يوم جميل للعب 🎲',
+      'من يتحداني في الكيرم؟ 🎯',
+      'فزت للتو في الدومينو 🏆',
+      'صباح الخير يا أصدقاء ☀️',
+      'جولة لودو الليلة؟ 🌙',
+      'أحب سلم وثعبان 🐍',
+      'شكراً على الورود 🌹',
+      'أهلاً بالجميع 👋',
+    ];
+    for (int i = 0; i < texts.length && i < Bots.pool.length; i++) {
+      stories.add(Story(Bots.pool[i], texts[i], i % kStoryStyles.length, DateTime.now().subtract(Duration(hours: i * 2 + 1))));
+    }
+  }
+
+  static List<Story> active() =>
+      stories.where((s) => DateTime.now().difference(s.time).inHours < 24).toList();
+
+  static bool _same(SeatInfo a, SeatInfo b) => a.isMe == b.isMe && (a.isMe || a.name == b.name);
+
+  static bool hasStory(SeatInfo s) => active().any((x) => _same(x.owner, s));
+}
+
+String _ago(DateTime t) {
+  final m = DateTime.now().difference(t).inMinutes;
+  if (m < 1) return 'الآن';
+  if (m < 60) return 'قبل $m دقيقة';
+  return 'قبل ${m ~/ 60} ساعة';
+}
+
+class StoriesBar extends StatefulWidget {
+  const StoriesBar({super.key});
+
+  @override
+  State<StoriesBar> createState() => _StoriesBarState();
+}
+
+class _StoriesBarState extends State<StoriesBar> {
+  @override
+  void initState() {
+    super.initState();
+    StoryService.seed();
+  }
+
+  List<List<Story>> _groups() {
+    final map = <String, List<Story>>{};
+    for (final s in StoryService.active()) {
+      final k = s.owner.isMe ? 'me' : s.owner.name;
+      map.putIfAbsent(k, () => <Story>[]).add(s);
+    }
+    final keys = map.keys.toList();
+    keys.sort((a, b) => a == 'me' ? -1 : (b == 'me' ? 1 : 0));
+    return keys.map((k) => map[k]!).toList();
+  }
+
+  void _open(List<List<Story>> groups, int idx) {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (_) => StoryViewer(groups: groups, start: idx)))
+        .then((_) {
+      if (mounted) setState(() {});
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final groups = _groups();
+    final hasMine = groups.isNotEmpty && groups.first.first.owner.isMe;
+    final me = AppState.I.meSeat;
+    return SizedBox(
+      height: 92,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        children: [
+          Padding(
+            padding: const EdgeInsetsDirectional.only(end: 14),
+            child: Column(children: [
+              GestureDetector(
+                onTap: () => hasMine ? _open(groups, 0) : showCreateStory(context, () => setState(() {})),
+                child: Stack(clipBehavior: Clip.none, children: [
+                  Container(
+                    padding: const EdgeInsets.all(3),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: hasMine ? const LinearGradient(colors: [Pal.gold, Color(0xFFFF5F8D)]) : null,
+                      border: hasMine ? null : Border.all(color: Colors.white24, width: 2),
+                    ),
+                    child: AvatarView(id: me.avatar, size: 52),
+                  ),
+                  PositionedDirectional(
+                    bottom: -2,
+                    end: -2,
+                    child: GestureDetector(
+                      onTap: () => showCreateStory(context, () => setState(() {})),
+                      child: Container(
+                        width: 22,
+                        height: 22,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          color: Pal.gold,
+                          border: Border.all(color: Pal.bg, width: 2),
+                        ),
+                        child: const Icon(Icons.add, size: 16, color: Colors.black87),
+                      ),
+                    ),
+                  ),
+                ]),
+              ),
+              const SizedBox(height: 4),
+              const Text('قصتي', style: TextStyle(color: Colors.white70, fontSize: 11)),
+            ]),
+          ),
+          for (int i = 0; i < groups.length; i++)
+            if (!groups[i].first.owner.isMe)
+              Padding(
+                padding: const EdgeInsetsDirectional.only(end: 14),
+                child: GestureDetector(
+                  onTap: () => _open(groups, i),
+                  child: Column(children: [
+                    Container(
+                      padding: const EdgeInsets.all(3),
+                      decoration: const BoxDecoration(
+                        shape: BoxShape.circle,
+                        gradient: LinearGradient(colors: [Pal.gold, Color(0xFFFF5F8D)]),
+                      ),
+                      child: AvatarView(id: groups[i].first.owner.avatar, size: 52),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(groups[i].first.owner.name, style: const TextStyle(color: Colors.white70, fontSize: 11)),
+                  ]),
+                ),
+              ),
+        ],
+      ),
+    );
+  }
+}
+
+void showCreateStory(BuildContext context, VoidCallback onDone) {
+  final ctrl = TextEditingController();
+  int style = 0;
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Pal.card,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+    builder: (ctx) => rtl(StatefulBuilder(
+      builder: (ctx, setS) => Padding(
+        padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + MediaQuery.of(ctx).viewInsets.bottom),
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          const Text('قصة جديدة', style: TextStyle(color: Pal.gold, fontSize: 18, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 12),
+          Container(
+            height: 140,
+            alignment: Alignment.center,
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(18),
+              gradient: LinearGradient(colors: kStoryStyles[style]),
+            ),
+            child: TextField(
+              controller: ctrl,
+              maxLength: 120,
+              maxLines: 3,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold),
+              decoration: const InputDecoration(
+                hintText: 'اكتب قصتك هنا...',
+                hintStyle: TextStyle(color: Colors.white54),
+                counterText: '',
+                border: InputBorder.none,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
+            for (int i = 0; i < kStoryStyles.length; i++)
+              GestureDetector(
+                onTap: () => setS(() => style = i),
+                child: Container(
+                  width: 34,
+                  height: 34,
+                  margin: const EdgeInsets.symmetric(horizontal: 4),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: LinearGradient(colors: kStoryStyles[i]),
+                    border: Border.all(color: style == i ? Colors.white : Colors.transparent, width: 2.5),
+                  ),
+                ),
+              ),
+          ]),
+          const SizedBox(height: 14),
+          GoldButton(
+            label: 'نشر القصة',
+            onTap: () {
+              final t = ctrl.text.trim();
+              if (t.isEmpty) return;
+              StoryService.stories.add(Story(AppState.I.meSeat, t, style, DateTime.now()));
+              Navigator.of(ctx).pop();
+              onDone();
+            },
+          ),
+        ]),
+      ),
+    )),
+  );
+}
+
+class StoryViewer extends StatefulWidget {
+  final List<List<Story>> groups;
+  final int start;
+  const StoryViewer({super.key, required this.groups, required this.start});
+
+  @override
+  State<StoryViewer> createState() => _StoryViewerState();
+}
+
+class _StoryViewerState extends State<StoryViewer> {
+  int g = 0, i = 0;
+  double p = 0;
+  Timer? t;
+
+  @override
+  void initState() {
+    super.initState();
+    g = widget.start;
+    _restart();
+  }
+
+  @override
+  void dispose() {
+    t?.cancel();
+    super.dispose();
+  }
+
+  void _restart() {
+    t?.cancel();
+    p = 0;
+    t = Timer.periodic(const Duration(milliseconds: 50), (_) {
+      if (!mounted) return;
+      setState(() => p += 0.05 / 4.0);
+      if (p >= 1) _next();
+    });
+  }
+
+  void _next() {
+    final groups = widget.groups;
+    if (i + 1 < groups[g].length) {
+      setState(() => i++);
+      _restart();
+    } else if (g + 1 < groups.length) {
+      setState(() {
+        g++;
+        i = 0;
+      });
+      _restart();
+    } else {
+      t?.cancel();
+      Navigator.of(context).pop();
+    }
+  }
+
+  void _prev() {
+    if (i > 0) {
+      setState(() => i--);
+    } else if (g > 0) {
+      setState(() {
+        g--;
+        i = widget.groups[g].length - 1;
+      });
+    }
+    _restart();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final grp = widget.groups[g];
+    final s = grp[i];
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTapUp: (d) {
+          final w = MediaQuery.of(context).size.width;
+          if (d.globalPosition.dx > w / 2) {
+            _next();
+          } else {
+            _prev();
+          }
+        },
+        child: Container(
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+                begin: Alignment.topCenter, end: Alignment.bottomCenter, colors: kStoryStyles[s.style % kStoryStyles.length]),
+          ),
+          child: SafeArea(
+            child: rtl(Stack(children: [
+              Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(28),
+                  child: Text(s.text,
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white, fontSize: 28, fontWeight: FontWeight.w800, height: 1.5)),
+                ),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 0),
+                child: Column(children: [
+                  Row(children: [
+                    for (int k = 0; k < grp.length; k++)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 2),
+                          child: LinearProgressIndicator(
+                            value: k < i ? 1 : (k == i ? p.clamp(0.0, 1.0).toDouble() : 0),
+                            minHeight: 3,
+                            backgroundColor: Colors.white24,
+                            valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                      ),
+                  ]),
+                  const SizedBox(height: 10),
+                  Row(children: [
+                    AvatarView(id: s.owner.avatar, size: 36),
+                    const SizedBox(width: 8),
+                    Text(s.owner.isMe ? 'قصتي' : s.owner.name,
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+                    const SizedBox(width: 8),
+                    Text(_ago(s.time), style: const TextStyle(color: Colors.white70, fontSize: 12)),
+                    const Spacer(),
+                    IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.of(context).pop()),
+                  ]),
+                ]),
+              ),
+            ])),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 // ================= LUDO =================
 const List<Color> kLudoColors = [
@@ -1203,7 +2323,7 @@ class _LudoState extends State<LudoRoyalFull> with SingleTickerProviderStateMixi
                 tokens[q][j] = -1;
                 msg = '${names[p]} أكل قطعة ${names[q]}! 🔥';
               });
-              SoundManager.capture();
+              SoundManager.oops();
               bonus = true;
             }
           }
@@ -1223,12 +2343,16 @@ class _LudoState extends State<LudoRoyalFull> with SingleTickerProviderStateMixi
         busy = false;
         msg = 'فاز ${names[p]}!';
       });
-      if (p == 0) UserData.addCoins(100);
+      if (p == 0) {
+        UserData.win();
+      } else {
+        UserData.lose();
+      }
       if (!mounted) return;
       showWinDialog(
         context,
         p == 0 ? '🏆 مبروك، لقد فزت!' : 'انتهت اللعبة',
-        p == 0 ? 'ربحت 100 عملة. هل تلعب مرة أخرى؟' : 'الفائز هو ${names[p]}. حظاً أوفر في المرة القادمة!',
+        p == 0 ? 'ربحت 20 عملة. هل تلعب مرة أخرى؟' : 'خسرت 10 عملات. الفائز هو ${names[p]}. حظاً أوفر في المرة القادمة!',
         _reset,
       );
       return;
@@ -1416,9 +2540,9 @@ class _LudoState extends State<LudoRoyalFull> with SingleTickerProviderStateMixi
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
+    return GameFrame(
+      boardFrac: 0.47,
+      top: Container(
           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(color: Pal.card, borderRadius: BorderRadius.circular(8)),
@@ -1436,7 +2560,7 @@ class _LudoState extends State<LudoRoyalFull> with SingleTickerProviderStateMixi
             ],
           ),
         ),
-        Padding(
+      badges: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -1448,13 +2572,13 @@ class _LudoState extends State<LudoRoyalFull> with SingleTickerProviderStateMixi
                 color: kLudoColors[p],
                 badge: '${homeCount(p)}/4',
                 active: turn == p && !gameOver,
+                seat: seats[p],
+                onKick: p == 0 ? null : () => setState(() => seats[p] = Seats.replacement(seats)),
               ),
             ),
           ),
         ),
-        Expanded(
-          flex: 5,
-          child: LayoutBuilder(builder: (context, cons) {
+      board: LayoutBuilder(builder: (context, cons) {
             final bs = math.min(cons.maxWidth - 16, cons.maxHeight - 8);
             if (bs <= 0) return const SizedBox.shrink();
             return Center(
@@ -1497,9 +2621,8 @@ class _LudoState extends State<LudoRoyalFull> with SingleTickerProviderStateMixi
               ),
             );
           }),
-        ),
-        Expanded(flex: 2, child: ChatPanel(messages: publicChat)),
-        ChatAndControlsBar(
+      chat: ChatPanel(messages: publicChat),
+      bar: ChatAndControlsBar(
           onSendChat: (txt) {
             setState(() => publicChat.add('${AppState.I.myName}: $txt'));
             Future.delayed(const Duration(milliseconds: 1200), () {
@@ -1510,7 +2633,6 @@ class _LudoState extends State<LudoRoyalFull> with SingleTickerProviderStateMixi
           onSendEmoji: (em) => setState(() => publicChat.add('${AppState.I.myName}: $em')),
           onSendRose: () => showRoseFeedback(context),
         ),
-      ],
     );
   }
 }
@@ -1933,14 +3055,18 @@ class _CarromProScreenState extends State<CarromProScreen> {
       over = true;
       final iWon = whiteLeft == 0;
       msg = iWon ? 'فزت بالمباراة! 🏆' : 'فاز الخصم بالمباراة';
-      if (iWon) UserData.addCoins(100);
+      if (iWon) {
+        UserData.win();
+      } else {
+        UserData.lose();
+      }
       eng.striker.out = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         showWinDialog(
           context,
           iWon ? '🏆 مبروك، لقد فزت!' : 'انتهت المباراة',
-          iWon ? 'أسقطت كل قطعك البيضاء وربحت 100 عملة.' : 'أسقط الخصم كل قطعه. حاول مرة أخرى!',
+          iWon ? 'أسقطت كل قطعك البيضاء وربحت 20 عملة.' : 'أسقط الخصم كل قطعه وخسرت 10 عملات. حاول مرة أخرى!',
           _reset,
         );
       });
@@ -2027,10 +3153,10 @@ class _CarromProScreenState extends State<CarromProScreen> {
   @override
   Widget build(BuildContext context) {
     final screenW = MediaQuery.of(context).size.width;
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+    return GameFrame(
+      boardFrac: 0.45,
+      top: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: Row(
             children: [
               GestureDetector(
@@ -2058,9 +3184,7 @@ class _CarromProScreenState extends State<CarromProScreen> {
             ],
           ),
         ),
-        Expanded(
-          flex: 4,
-          child: Center(
+      board: Center(
             child: LayoutBuilder(builder: (c, cons) {
               final bs = math.min(screenW - 24, cons.maxHeight);
               if (bs <= 0) return const SizedBox.shrink();
@@ -2097,9 +3221,8 @@ class _CarromProScreenState extends State<CarromProScreen> {
               );
             }),
           ),
-        ),
-        // شريط تحريك القاطع
-        Padding(
+      midH: 44,
+      mid: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 0),
           child: SliderTheme(
             data: SliderTheme.of(context).copyWith(
@@ -2126,23 +3249,20 @@ class _CarromProScreenState extends State<CarromProScreen> {
             ),
           ),
         ),
-        Padding(
+      badges: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
             children: [
-              PlayerBadge(name: '${seats[0].name} ⚪', color: Colors.blueGrey, avatar: seats[0].avatar, badge: '$myScore', active: myTurn && !over),
+              PlayerBadge(name: '${seats[0].name} ⚪', color: Colors.blueGrey, avatar: seats[0].avatar, badge: '$myScore', active: myTurn && !over, seat: seats[0]),
               Text('${_count(CKind.white, out: true)} / ${_count(CKind.white)}   ·   ${_count(CKind.black, out: true)} / ${_count(CKind.black)}',
                   style: const TextStyle(color: Colors.white54, fontSize: 11)),
-              PlayerBadge(name: '${seats[1].name} ⚫', color: Colors.deepPurple, avatar: seats[1].avatar, badge: '$botScore', active: !myTurn && !over),
+              PlayerBadge(name: '${seats[1].name} ⚫', color: Colors.deepPurple, avatar: seats[1].avatar, badge: '$botScore', active: !myTurn && !over, seat: seats[1], onKick: () => setState(() => seats[1] = Seats.replacement(seats))),
             ],
           ),
         ),
-        Expanded(
-          flex: 3,
-          child: ChatPanel(messages: messages.map((m) => "${m['user']}: ${m['text']}").toList()),
-        ),
-        ChatAndControlsBar(
+      chat: ChatPanel(messages: messages.map((m) => "${m['user']}: ${m['text']}").toList()),
+      bar: ChatAndControlsBar(
           onSendChat: (txt) {
             setState(() => messages.add({"user": AppState.I.myName, "text": txt}));
             Future.delayed(const Duration(milliseconds: 1200), () {
@@ -2153,7 +3273,6 @@ class _CarromProScreenState extends State<CarromProScreen> {
           onSendEmoji: (em) => setState(() => messages.add({"user": AppState.I.myName, "text": em})),
           onSendRose: () => showRoseFeedback(context),
         ),
-      ],
     );
   }
 
@@ -2545,7 +3664,7 @@ class _SnakeState extends State<SnakeLadderRoyal> {
           pos[p] = kSnakes[here]!;
           msg = '${names[p]} لدغه ثعبان 🐍 إلى ${pos[p]}';
         });
-        SoundManager.capture();
+        SoundManager.oops();
         extra = false;
       } else {
         setState(() => msg = '${names[p]} وصل إلى $here');
@@ -2558,12 +3677,16 @@ class _SnakeState extends State<SnakeLadderRoyal> {
         busy = false;
         msg = 'فاز ${names[p]}!';
       });
-      if (p == 0) UserData.addCoins(100);
+      if (p == 0) {
+        UserData.win();
+      } else {
+        UserData.lose();
+      }
       if (!mounted) return;
       showWinDialog(
         context,
         p == 0 ? '🏆 مبروك، لقد فزت!' : 'انتهت اللعبة',
-        p == 0 ? 'ربحت 100 عملة. هل تلعب مرة أخرى؟' : 'الفائز هو ${names[p]}. حظاً أوفر!',
+        p == 0 ? 'ربحت 20 عملة. هل تلعب مرة أخرى؟' : 'خسرت 10 عملات. الفائز هو ${names[p]}. حظاً أوفر!',
         _reset,
       );
       return;
@@ -2629,9 +3752,9 @@ class _SnakeState extends State<SnakeLadderRoyal> {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Container(
+    return GameFrame(
+      boardFrac: 0.44,
+      top: Container(
           margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(color: Pal.card, borderRadius: BorderRadius.circular(8)),
@@ -2649,7 +3772,7 @@ class _SnakeState extends State<SnakeLadderRoyal> {
             ],
           ),
         ),
-        Padding(
+      badges: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -2661,13 +3784,13 @@ class _SnakeState extends State<SnakeLadderRoyal> {
                 color: kSnakeColors[p],
                 badge: '${pos[p]}',
                 active: turn == p && !gameOver,
+                seat: seats[p],
+                onKick: p == 0 ? null : () => setState(() => seats[p] = Seats.replacement(seats)),
               ),
             ),
           ),
         ),
-        Expanded(
-          flex: 5,
-          child: LayoutBuilder(builder: (context, cons) {
+      board: LayoutBuilder(builder: (context, cons) {
             final bs = math.min(cons.maxWidth - 16, cons.maxHeight - 8);
             if (bs <= 0) return const SizedBox.shrink();
             return Center(
@@ -2691,9 +3814,8 @@ class _SnakeState extends State<SnakeLadderRoyal> {
               ),
             );
           }),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 4),
+      midH: 64,
+      mid: Center(
           child: DiceFace(
             value: dice,
             size: 54,
@@ -2702,9 +3824,9 @@ class _SnakeState extends State<SnakeLadderRoyal> {
             rolling: rolling,
             onTap: roll,
           ),
-        ),
-        Expanded(flex: 2, child: ChatPanel(messages: publicChat)),
-        ChatAndControlsBar(
+      ),
+      chat: ChatPanel(messages: publicChat),
+      bar: ChatAndControlsBar(
           onSendChat: (txt) {
             setState(() => publicChat.add('${AppState.I.myName}: $txt'));
             Future.delayed(const Duration(milliseconds: 1200), () {
@@ -2715,7 +3837,6 @@ class _SnakeState extends State<SnakeLadderRoyal> {
           onSendEmoji: (em) => setState(() => publicChat.add('${AppState.I.myName}: $em')),
           onSendRose: () => showRoseFeedback(context),
         ),
-      ],
     );
   }
 }
@@ -3163,6 +4284,7 @@ class _GameScreenState extends State<GameScreen> {
           const SizedBox(width: 10),
         ],
       ),
+      resizeToAvoidBottomInset: false,
       body: _body(),
     );
   }
@@ -3291,6 +4413,22 @@ class HomeTab extends StatelessWidget {
             ),
             const Text('🏆', style: TextStyle(fontSize: 46)),
           ]),
+        ),
+        _section('القصص'),
+        const StoriesBar(),
+        ValueListenableBuilder<int>(
+          valueListenable: UserData.tick,
+          builder: (c, _, __) => UserData.coins < 10
+              ? GestureDetector(
+                  onTap: onShop,
+                  child: Container(
+                    margin: const EdgeInsets.only(top: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: Pal.card, borderRadius: BorderRadius.circular(16), border: Border.all(color: Pal.gold)),
+                    child: const Text('🎡 انتهت عملاتك! ادخل المتجر ثم عجلة الحظ لتربح عملات مجانية', style: TextStyle(color: Pal.gold, fontWeight: FontWeight.bold)),
+                  ),
+                )
+              : const SizedBox.shrink(),
         ),
         _section('الألعاب'),
         GridView.count(
@@ -3850,7 +4988,7 @@ class _SettingsState extends State<SettingsScreen> {
             child: Column(children: [
               _row(
                 Icons.vibration,
-                'الاهتزاز والمؤثرات',
+                'الأصوات والمؤثرات (إيقاف = كتم)',
                 Switch(value: SoundManager.enabled, onChanged: (v) => setState(() => SoundManager.enabled = v)),
               ),
               const Divider(height: 1, color: Colors.white12),
@@ -4192,12 +5330,16 @@ class _DominoState extends State<DominoGame> {
               ? 'فاز الفريق الآخر'
               : 'تعادل';
     });
-    if (winTeam == 0) UserData.addCoins(100);
+    if (winTeam == 0) {
+      UserData.win();
+    } else if (winTeam == 1) {
+      UserData.lose();
+    }
     if (!mounted) return;
     showWinDialog(
       context,
       winTeam == 0 ? '🏆 مبروك، فاز فريقك!' : (winTeam == 1 ? 'انتهت اللعبة' : 'تعادل'),
-      winTeam == 0 ? '$body\nربحت 100 عملة.' : body,
+      winTeam == 0 ? '$body\nربحت 20 عملة.' : (winTeam == 1 ? '$body\nخسرت 10 عملات.' : body),
       _newGame,
     );
   }
@@ -4215,123 +5357,154 @@ class _DominoState extends State<DominoGame> {
         avatar: seats[p].avatar,
         badge: '${hands[p].length}',
         active: turn == p && !over,
+        seat: seats[p],
+        onKick: p == 0 ? null : () => setState(() => seats[p] = Seats.replacement(seats)),
       );
 
   @override
   Widget build(BuildContext context) {
     final me = hands[0];
     final myTurn = turn == 0 && !over && started;
-    return Column(
-      children: [
-        Container(
-          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-          decoration: BoxDecoration(color: Pal.card, borderRadius: BorderRadius.circular(8)),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Expanded(
-                child: Text(msg,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold)),
-              ),
-              const SizedBox(width: 8),
-              const Text('أنت وشريكك (المقابل) ضد الخصمين', style: TextStyle(color: Colors.white54, fontSize: 10)),
-            ],
-          ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [_badge(3), _badge(2), _badge(1)],
-          ),
-        ),
-        Expanded(
-          flex: 5,
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(18),
-              gradient: const RadialGradient(colors: [Color(0xFF1B7A4B), Color(0xFF0B4A2C)]),
-              border: Border.all(color: const Color(0xFFFFD700), width: 3),
-              boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 10)],
+    return GameFrame(
+      boardFrac: 0.36,
+      top: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+        decoration: BoxDecoration(color: Pal.card, borderRadius: BorderRadius.circular(8)),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(msg,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold)),
             ),
-            child: LayoutBuilder(builder: (context, cons) {
-              final w = math.max(16.0, math.min(30.0, (cons.maxWidth - 28) / 14));
-              if (chain.isEmpty) {
-                return const Center(child: Text('🀄', style: TextStyle(fontSize: 40, color: Colors.white24)));
-              }
-              return Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(10),
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    runAlignment: WrapAlignment.center,
-                    crossAxisAlignment: WrapCrossAlignment.center,
-                    spacing: 3,
-                    runSpacing: 5,
-                    children: [
-                      for (int i = 0; i < chain.length; i++)
-                        DominoTile(
-                          a: chain[i].l,
-                          b: chain[i].r,
-                          w: w,
-                          vertical: chain[i].l == chain[i].r,
-                          highlight: myTurn && (i == 0 || i == chain.length - 1),
-                        ),
-                    ],
+            const SizedBox(width: 8),
+            const Text('أنت وشريكك ضد الخصمين', style: TextStyle(color: Colors.white54, fontSize: 10)),
+          ],
+        ),
+      ),
+      board: Container(
+        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: const RadialGradient(colors: [Color(0xFF1B7A4B), Color(0xFF0B4A2C)]),
+          border: Border.all(color: const Color(0xFFFFD700), width: 3),
+          boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 10)],
+        ),
+        child: LayoutBuilder(builder: (context, cons) {
+          if (chain.isEmpty) {
+            return const Center(child: Text('🀄', style: TextStyle(fontSize: 40, color: Colors.white24)));
+          }
+          final n = chain.length;
+          final aw = cons.maxWidth - 20;
+          final ah = cons.maxHeight - 14;
+          double w = 12;
+          int perRow = 1;
+          for (double c = 30; c >= 12; c -= 1) {
+            final pr = math.max(1, (aw / (2 * c + 3)).floor());
+            final rows = (n / pr).ceil();
+            if (rows * (c + 6) <= ah) {
+              w = c;
+              perRow = pr;
+              break;
+            }
+            w = c;
+            perRow = pr;
+          }
+          final rows = <Widget>[];
+          for (int r = 0; r * perRow < n; r++) {
+            final from = r * perRow;
+            final to = math.min(n, from + perRow);
+            final rev = r.isOdd;
+            final idx = [for (int i = from; i < to; i++) i];
+            final order = rev ? idx.reversed.toList() : idx;
+            rows.add(Padding(
+              padding: const EdgeInsets.symmetric(vertical: 3),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (final i in order)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 1.5),
+                      child: DominoTile(
+                        a: rev ? chain[i].r : chain[i].l,
+                        b: rev ? chain[i].l : chain[i].r,
+                        w: w,
+                        highlight: myTurn && (i == 0 || i == n - 1),
+                      ),
+                    ),
+                ],
+              ),
+            ));
+          }
+          return Center(child: Column(mainAxisSize: MainAxisSize.min, children: rows));
+        }),
+      ),
+      midH: 126,
+      mid: Column(
+        children: [
+          SizedBox(
+            height: 46,
+            child: selected == null
+                ? const SizedBox.shrink()
+                : Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+                    child: Row(children: [
+                      Expanded(
+                          child: GoldButton(
+                              label: 'الطرف الأيسر ($leftEnd)', outlined: true, onTap: () => _human(selected!, true))),
+                      const SizedBox(width: 10),
+                      Expanded(child: GoldButton(label: 'الطرف الأيمن ($rightEnd)', onTap: () => _human(selected!, false))),
+                    ]),
                   ),
-                ),
+          ),
+          SizedBox(
+            height: 80,
+            child: LayoutBuilder(builder: (context, cons) {
+              final tw = math.max(18.0, math.min(36.0, (cons.maxWidth - 24) / 7 - 8));
+              return Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  for (final t in me)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 3),
+                      child: DominoTile(
+                        a: t.a,
+                        b: t.b,
+                        w: tw,
+                        vertical: true,
+                        highlight: myTurn && _fits(t) && selected == null,
+                        dim: myTurn && !_fits(t),
+                        onTap: () => _tapTile(t),
+                      ),
+                    ),
+                ],
               );
             }),
           ),
+        ],
+      ),
+      badges: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceAround,
+          children: [_badge(0), _badge(1), _badge(2), _badge(3)],
         ),
-        if (selected != null)
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
-            child: Row(children: [
-              Expanded(child: GoldButton(label: 'الطرف الأيسر ($leftEnd)', outlined: true, onTap: () => _human(selected!, true))),
-              const SizedBox(width: 10),
-              Expanded(child: GoldButton(label: 'الطرف الأيمن ($rightEnd)', onTap: () => _human(selected!, false))),
-            ]),
-          ),
-        SizedBox(
-          height: 74,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-            children: [
-              for (final t in me)
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 3),
-                  child: DominoTile(
-                    a: t.a,
-                    b: t.b,
-                    w: 32,
-                    vertical: true,
-                    highlight: myTurn && _fits(t) && selected == null,
-                    dim: myTurn && !_fits(t),
-                    onTap: () => _tapTile(t),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        Expanded(flex: 2, child: ChatPanel(messages: chat)),
-        ChatAndControlsBar(
-          onSendChat: (txt) {
-            setState(() => chat.add('${AppState.I.myName}: $txt'));
-            Future.delayed(const Duration(milliseconds: 1200), () {
-              if (!mounted) return;
-              setState(() => chat.add('${names[1 + rnd.nextInt(3)]}: ${BotChat.random()}'));
-            });
-          },
-          onSendEmoji: (em) => setState(() => chat.add('${AppState.I.myName}: $em')),
-          onSendRose: () => showRoseFeedback(context),
-        ),
-      ],
+      ),
+      chat: ChatPanel(messages: chat),
+      bar: ChatAndControlsBar(
+        onSendChat: (txt) {
+          setState(() => chat.add('${AppState.I.myName}: $txt'));
+          Future.delayed(const Duration(milliseconds: 1200), () {
+            if (!mounted) return;
+            setState(() => chat.add('${names[1 + rnd.nextInt(3)]}: ${BotChat.random()}'));
+          });
+        },
+        onSendEmoji: (em) => setState(() => chat.add('${AppState.I.myName}: $em')),
+        onSendRose: () => showRoseFeedback(context),
+      ),
     );
   }
 }
@@ -4358,46 +5531,212 @@ const List<int> kTierCoins = [500, 1500, 5000, 12000];
 const List<int> kTierRoses = [10, 30, 100, 250];
 
 const List<Country> kCountries = [
-  Country('العراق', '🇮🇶', '+964', 'د.ع', [
-    Carrier('زين العراق', Color(0xFF8E24AA)),
-    Carrier('آسياسيل', Color(0xFFE53935)),
-    Carrier('كورك', Color(0xFF1E88E5)),
-  ], [5000, 10000, 25000, 50000]),
-  Country('السعودية', '🇸🇦', '+966', 'ر.س', [
-    Carrier('STC', Color(0xFF6A1B9A)),
-    Carrier('موبايلي', Color(0xFF00897B)),
-    Carrier('زين السعودية', Color(0xFFD81B60)),
-  ], [10, 20, 50, 100]),
-  Country('مصر', '🇪🇬', '+20', 'ج.م', [
-    Carrier('فودافون', Color(0xFFE53935)),
-    Carrier('أورنج', Color(0xFFFB8C00)),
-    Carrier('اتصالات', Color(0xFF43A047)),
-    Carrier('WE', Color(0xFF5E35B1)),
-  ], [10, 25, 50, 100]),
-  Country('الإمارات', '🇦🇪', '+971', 'د.إ', [
-    Carrier('اتصالات e&', Color(0xFF43A047)),
-    Carrier('دو du', Color(0xFF1E88E5)),
-  ], [10, 25, 50, 100]),
-  Country('الكويت', '🇰🇼', '+965', 'د.ك', [
-    Carrier('زين', Color(0xFF8E24AA)),
-    Carrier('أوريدو', Color(0xFFE53935)),
-    Carrier('STC', Color(0xFF6A1B9A)),
-  ], [2, 5, 10, 20]),
-  Country('الأردن', '🇯🇴', '+962', 'د.أ', [
-    Carrier('زين', Color(0xFF8E24AA)),
-    Carrier('أورنج', Color(0xFFFB8C00)),
-    Carrier('أمنية', Color(0xFF1E88E5)),
-  ], [5, 10, 20, 50]),
-  Country('قطر', '🇶🇦', '+974', 'ر.ق', [
-    Carrier('أوريدو', Color(0xFFE53935)),
-    Carrier('فودافون', Color(0xFFC62828)),
-  ], [10, 20, 50, 100]),
-  Country('المغرب', '🇲🇦', '+212', 'د.م', [
-    Carrier('اتصالات المغرب', Color(0xFF1565C0)),
-    Carrier('أورنج', Color(0xFFFB8C00)),
-    Carrier('إنوي', Color(0xFF7E57C2)),
-  ], [20, 50, 100, 200]),
+  Country('العراق', '🇮🇶', '+964', 'د.ع', [Carrier('زين العراق', Color(0xFF8E24AA)),Carrier('آسياسيل', Color(0xFFE53935)),Carrier('كورك', Color(0xFF1E88E5))], [5000, 10000, 25000, 50000]),
+  Country('السعودية', '🇸🇦', '+966', 'ر.س', [Carrier('STC', Color(0xFF8E24AA)),Carrier('موبايلي', Color(0xFF00897B)),Carrier('زين السعودية', Color(0xFFD81B60))], [10, 20, 50, 100]),
+  Country('مصر', '🇪🇬', '+20', 'ج.م', [Carrier('فودافون', Color(0xFFE53935)),Carrier('أورنج', Color(0xFFFB8C00)),Carrier('اتصالات', Color(0xFF43A047)),Carrier('WE', Color(0xFF5E35B1))], [10, 25, 50, 100]),
+  Country('الإمارات', '🇦🇪', '+971', 'د.إ', [Carrier('اتصالات e&', Color(0xFF43A047)),Carrier('دو du', Color(0xFF1E88E5))], [10, 25, 50, 100]),
+  Country('الكويت', '🇰🇼', '+965', 'د.ك', [Carrier('زين', Color(0xFF8E24AA)),Carrier('أوريدو', Color(0xFFE53935)),Carrier('STC', Color(0xFF6A1B9A))], [2, 5, 10, 20]),
+  Country('الأردن', '🇯🇴', '+962', 'د.أ', [Carrier('زين', Color(0xFF8E24AA)),Carrier('أورنج', Color(0xFFFB8C00)),Carrier('أمنية', Color(0xFF1E88E5))], [5, 10, 20, 50]),
+  Country('قطر', '🇶🇦', '+974', 'ر.ق', [Carrier('أوريدو', Color(0xFFE53935)),Carrier('فودافون', Color(0xFFC62828))], [10, 20, 50, 100]),
+  Country('المغرب', '🇲🇦', '+212', 'د.م', [Carrier('اتصالات المغرب', Color(0xFF1565C0)),Carrier('أورنج', Color(0xFFFB8C00)),Carrier('إنوي', Color(0xFF7E57C2))], [20, 50, 100, 200]),
+  Country('السودان', '🇸🇩', '+249', 'ج.س', [Carrier('زين السودان', Color(0xFF8E24AA)),Carrier('MTN', Color(0xFFFBC02D)),Carrier('سوداني', Color(0xFF43A047))], [1000, 2000, 5000, 10000]),
+  Country('ليبيا', '🇱🇾', '+218', 'د.ل', [Carrier('ليبيانا', Color(0xFFFB8C00)),Carrier('المدار', Color(0xFF1E88E5))], [5, 10, 20, 50]),
+  Country('تونس', '🇹🇳', '+216', 'د.ت', [Carrier('أوريدو تونس', Color(0xFFE53935)),Carrier('تونس تيليكوم', Color(0xFF1E88E5)),Carrier('أورنج', Color(0xFFFB8C00))], [5, 10, 20, 50]),
+  Country('الجزائر', '🇩🇿', '+213', 'د.ج', [Carrier('موبيليس', Color(0xFF43A047)),Carrier('جيزي', Color(0xFFE53935)),Carrier('أوريدو', Color(0xFFC62828))], [500, 1000, 2000, 5000]),
+  Country('لبنان', '🇱🇧', '+961', '$', [Carrier('ألفا', Color(0xFFE53935)),Carrier('تاتش', Color(0xFF1E88E5))], [5, 10, 20, 50]),
+  Country('سوريا', '🇸🇾', '+963', 'ل.س', [Carrier('سيريتل', Color(0xFFE53935)),Carrier('MTN', Color(0xFFFBC02D))], [10000, 25000, 50000, 100000]),
+  Country('اليمن', '🇾🇪', '+967', 'ر.ي', [Carrier('يمن موبايل', Color(0xFF43A047)),Carrier('سبأفون', Color(0xFF1E88E5)),Carrier('واي', Color(0xFFFB8C00))], [1000, 2000, 5000, 10000]),
+  Country('عُمان', '🇴🇲', '+968', 'ر.ع', [Carrier('عمانتل', Color(0xFF1E88E5)),Carrier('أوريدو', Color(0xFFE53935))], [2, 5, 10, 20]),
+  Country('البحرين', '🇧🇭', '+973', 'د.ب', [Carrier('بتلكو', Color(0xFF1E88E5)),Carrier('زين', Color(0xFF8E24AA)),Carrier('STC', Color(0xFF6A1B9A))], [2, 5, 10, 20]),
+  Country('فلسطين', '🇵🇸', '+970', '₪', [Carrier('جوال', Color(0xFFFB8C00)),Carrier('أوريدو', Color(0xFFE53935))], [10, 20, 50, 100]),
+  Country('موريتانيا', '🇲🇷', '+222', 'أوقية', [Carrier('ماتل', Color(0xFF43A047)),Carrier('شنقيتل', Color(0xFFFB8C00)),Carrier('موريتل', Color(0xFF1E88E5))], [200, 500, 1000, 2000]),
+  Country('الصومال', '🇸🇴', '+252', '$', [Carrier('هرمود', Color(0xFF43A047)),Carrier('تيليسوم', Color(0xFF1E88E5))], [2, 5, 10, 20]),
+  Country('جيبوتي', '🇩🇯', '+253', 'ف.ج', [Carrier('جيبوتي تيليكوم', Color(0xFF1E88E5))], [500, 1000, 2000, 5000]),
+  Country('جزر القمر', '🇰🇲', '+269', 'ف.ق', [Carrier('تيليما', Color(0xFFE53935)),Carrier('هورية', Color(0xFF43A047))], [1000, 2000, 5000, 10000]),
 ];
+
+// ================= عجلة الحظ =================
+const List<int> kWheel = [10, 0, 20, 0, 30, 0, 40, 0];
+
+class _WheelPainter extends CustomPainter {
+  const _WheelPainter();
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 4;
+    const cols = [Color(0xFF8E24AA), Color(0xFF37474F)];
+    for (int i = 0; i < 8; i++) {
+      final a0 = -math_pi / 2 + i * math_pi / 4;
+      canvas.drawArc(Rect.fromCircle(center: c, radius: r), a0, math_pi / 4, true,
+          Paint()..color = kWheel[i] == 0 ? cols[1] : (i % 4 == 0 ? const Color(0xFFE65100) : cols[0]));
+      canvas.drawArc(
+          Rect.fromCircle(center: c, radius: r),
+          a0,
+          math_pi / 4,
+          true,
+          Paint()
+            ..color = Colors.white24
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = 2);
+      final mid = a0 + math_pi / 8;
+      final p = c + Offset(math.cos(mid), math.sin(mid)) * (r * 0.68);
+      final tp = TextPainter(
+        text: TextSpan(
+            text: kWheel[i] == 0 ? '💀' : '${kWheel[i]}',
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w900, fontSize: kWheel[i] == 0 ? 26 : 24)),
+        textDirection: TextDirection.ltr,
+      )..layout();
+      canvas.save();
+      canvas.translate(p.dx, p.dy);
+      canvas.rotate(mid + math_pi / 2);
+      tp.paint(canvas, Offset(-tp.width / 2, -tp.height / 2));
+      canvas.restore();
+    }
+    canvas.drawCircle(c, r * 0.14, Paint()..color = Pal.gold);
+    canvas.drawCircle(
+        c,
+        r,
+        Paint()
+          ..color = Pal.gold
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter old) => false;
+}
+
+class WheelView extends StatefulWidget {
+  const WheelView({super.key});
+  @override
+  State<WheelView> createState() => _WheelViewState();
+}
+
+class _WheelViewState extends State<WheelView> with SingleTickerProviderStateMixin {
+  late final AnimationController ctrl;
+  double from = 0, to = 0;
+  bool spinning = false;
+  final math.Random rnd = math.Random();
+
+  @override
+  void initState() {
+    super.initState();
+    ctrl = AnimationController(vsync: this, duration: const Duration(milliseconds: 4200));
+  }
+
+  @override
+  void dispose() {
+    ctrl.dispose();
+    super.dispose();
+  }
+
+  int _pick() {
+    // أوزان قوية للفوز: 10(30) 20(25) 30(15) 40(5) جمجمة(25 موزعة على 4 خانات)
+    final r = rnd.nextInt(100);
+    if (r < 30) return 0;
+    if (r < 55) return 2;
+    if (r < 70) return 4;
+    if (r < 75) return 6;
+    return [1, 3, 5, 7][rnd.nextInt(4)];
+  }
+
+  void _spin() {
+    if (spinning) return;
+    if (!UserData.canSpin) {
+      _toastCtx(context, 'استخدمت محاولتك اليوم. عد غداً 🎡');
+      return;
+    }
+    UserData.markSpun();
+    final i = _pick();
+    final target = 2 * math_pi * 6 - (i + 0.5) * math_pi / 4;
+    setState(() {
+      spinning = true;
+      from = to % (2 * math_pi);
+      to = target;
+    });
+    ctrl.forward(from: 0).then((_) {
+      if (!mounted) return;
+      final prize = kWheel[i];
+      setState(() => spinning = false);
+      if (prize > 0) {
+        UserData.addCoins(prize);
+        SoundManager.coin();
+        _toastCtx(context, '🎉 ربحت $prize عملة من عجلة الحظ!');
+      } else {
+        _toastCtx(context, '💀 جمجمة! حظ أوفر غداً');
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final can = UserData.canSpin;
+    return Column(children: [
+      const SizedBox(height: 6),
+      const Text('عجلة الحظ 🎡', style: TextStyle(color: Pal.gold, fontSize: 20, fontWeight: FontWeight.w900)),
+      const SizedBox(height: 4),
+      const Text('لفة واحدة يومياً، والجائزة الكبرى 40 عملة', style: TextStyle(color: Pal.muted, fontSize: 12)),
+      const SizedBox(height: 14),
+      SizedBox(
+        width: 270,
+        height: 290,
+        child: Stack(alignment: Alignment.topCenter, children: [
+          Positioned(
+            top: 16,
+            child: AnimatedBuilder(
+              animation: ctrl,
+              builder: (c, _) {
+                final t = Curves.easeOutCubic.transform(ctrl.value);
+                final ang = from + (to - from) * t;
+                return Transform.rotate(
+                  angle: ang,
+                  child: const SizedBox(width: 260, height: 260, child: CustomPaint(painter: _WheelPainter())),
+                );
+              },
+            ),
+          ),
+          const Icon(Icons.arrow_drop_down, color: Colors.white, size: 46),
+        ]),
+      ),
+      const SizedBox(height: 8),
+      GoldButton(label: can ? 'لُف العجلة' : 'عد غداً', icon: Icons.casino, busy: spinning, onTap: can ? _spin : null),
+      const SizedBox(height: 22),
+      ValueListenableBuilder<int>(
+        valueListenable: UserData.tick,
+        builder: (c, _, __) {
+          final prog = (UserData.earned / 5000).clamp(0.0, 1.0).toDouble();
+          return Container(
+            padding: const EdgeInsets.all(14),
+            decoration: BoxDecoration(color: Pal.card, borderRadius: BorderRadius.circular(18)),
+            child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+              const Text('مكافأة الإنجاز 🏅', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 4),
+              Text('كل 5000 عملة تربحها تحصل على 500 عملة ذهبية', style: const TextStyle(color: Pal.muted, fontSize: 12)),
+              const SizedBox(height: 10),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: LinearProgressIndicator(value: prog, minHeight: 10, backgroundColor: Colors.white12, color: Pal.gold),
+              ),
+              const SizedBox(height: 4),
+              Text('${UserData.earned} / 5000', style: const TextStyle(color: Pal.muted, fontSize: 11)),
+              const SizedBox(height: 10),
+              GoldButton(
+                label: 'استلام 500 عملة',
+                onTap: UserData.earned >= 5000
+                    ? () {
+                        UserData.claimMilestone();
+                        SoundManager.coin();
+                        _toastCtx(context, '🎉 تم استلام 500 عملة ذهبية');
+                      }
+                    : null,
+              ),
+            ]),
+          );
+        },
+      ),
+    ]);
+  }
+}
 
 class ShopView extends StatefulWidget {
   const ShopView({super.key});
@@ -4437,6 +5776,7 @@ class _ShopViewState extends State<ShopView> {
     if (ok) {
       UserData.addCoins(kTierCoins[tier]);
       UserData.addRoses(kTierRoses[tier]);
+      Stats.mine.kickCost += 10;
       pin.clear();
       showDialog<void>(
         context: context,
@@ -4496,11 +5836,12 @@ class _ShopViewState extends State<ShopView> {
           decoration: BoxDecoration(color: Pal.card, borderRadius: BorderRadius.circular(16)),
           child: Row(children: [
             _seg('شحن العملات', 0),
-            _seg('متجر الهدايا', 1),
+            _seg('الهدايا', 1),
+            _seg('عجلة الحظ', 2),
           ]),
         ),
         const SizedBox(height: 16),
-        if (seg == 0) ..._topup() else ..._gifts(),
+        if (seg == 0) ..._topup() else if (seg == 1) ..._gifts() else const WheelView(),
       ],
     ));
   }
@@ -4675,9 +6016,32 @@ class _ShopViewState extends State<ShopView> {
       );
 
   List<Widget> _gifts() => [
-        _gift('🌹', 'وردة', 1, 10),
-        _gift('💐', 'باقة ورد', 5, 45),
-        _gift('🌹', 'حديقة ورد', 20, 160),
-        _gift('👑', 'صندوق التاج', 50, 350),
+        const Text('اختر هدية وأرسلها لأي لاعب أو صديق، أو أهدِ عملات مباشرة', style: TextStyle(color: Pal.muted, fontSize: 12)),
+        const SizedBox(height: 12),
+        GridView.count(
+          crossAxisCount: 3,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 0.9,
+          children: [
+            for (final g in kGifts)
+              GestureDetector(
+                onTap: () => showGiftSheet(context),
+                child: Container(
+                  decoration: BoxDecoration(color: Pal.card, borderRadius: BorderRadius.circular(16)),
+                  child: Column(mainAxisAlignment: MainAxisAlignment.center, children: [
+                    Text(g.emoji, style: const TextStyle(fontSize: 34)),
+                    const SizedBox(height: 4),
+                    Text(g.name, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                    Text('🪙 ${g.cost}', style: const TextStyle(color: Pal.gold, fontWeight: FontWeight.bold, fontSize: 12)),
+                  ]),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 14),
+        GoldButton(label: 'إهداء الآن', icon: Icons.card_giftcard, onTap: () => showGiftSheet(context)),
       ];
 }
