@@ -308,7 +308,7 @@ class AppState extends ChangeNotifier {
   static final AppState I = AppState._();
 
   Profile? me;
-  bool aimDirect = true;
+  bool aimDirect = false; // الضرب عكس اتجاه السحب (مثل المقلاع)
   bool welcomeShown = false;
   GameRoom? currentRoom;
 
@@ -458,6 +458,13 @@ class AuthService {
 }
 
 class PaymentService {
+  /// دفع ببطاقة بنكية. التطبيق لا يستقبل رقم البطاقة أبداً:
+  /// في النسخة الحقيقية تُفتح صفحة الدفع الآمنة لمزوّد الدفع ثم يؤكد الخادم العملية.
+  static Future<bool> cardCheckout(String country, String scheme, int pack) async {
+    await Future.delayed(const Duration(milliseconds: 1400));
+    return kDemoMode; // تجريبي: ينجح بدون خصم أي مبلغ
+  }
+
   static Future<bool> redeemCard(String pin) async {
     await Future.delayed(const Duration(milliseconds: 1500));
     if (!kDemoMode) return false;
@@ -3551,9 +3558,17 @@ class SnakeBoardPainter extends CustomPainter {
       }
     });
 
-    // الثعابين
+    // الثعابين (جسم متدرج الحجم بجلد منقوش ورأس واقعي)
+    const palettes = [
+      [Color(0xFF2E7D32), Color(0xFF1B5E20), Color(0xFFC5E1A5)],
+      [Color(0xFF6D4C41), Color(0xFF3E2723), Color(0xFFFFE0B2)],
+      [Color(0xFFC62828), Color(0xFF7F0000), Color(0xFFFFCDD2)],
+      [Color(0xFF00695C), Color(0xFF004D40), Color(0xFFB2DFDB)],
+      [Color(0xFF6A1B9A), Color(0xFF38006B), Color(0xFFE1BEE7)],
+    ];
     int k = 0;
     kSnakes.forEach((a, b) {
+      final pal = palettes[k % palettes.length];
       final head = snakeCellCenter(a) * ce;
       final tail = snakeCellCenter(b) * ce;
       final v = tail - head;
@@ -3562,39 +3577,118 @@ class SnakeBoardPainter extends CustomPainter {
       final nrm = Offset(-d.dy, d.dx);
       final sign = k.isEven ? 1.0 : -1.0;
       k++;
-      final amp = ce * 0.9 * sign;
-      final path = Path()..moveTo(head.dx, head.dy);
-      const seg = 24;
-      for (int i = 1; i <= seg; i++) {
+      final amp = ce * 0.75 * sign;
+      const seg = 60;
+      final pts = <Offset>[];
+      for (int i = 0; i <= seg; i++) {
         final t = i / seg;
-        final off = math.sin(t * math.pi * 3) * amp * (1 - 0.3 * t);
-        final pt = head + v * t + nrm * off;
-        path.lineTo(pt.dx, pt.dy);
+        final off = math.sin(t * math.pi * 3.2) * amp * (0.35 + 0.65 * math.sin(t * math.pi).abs() + 0.2);
+        pts.add(head + v * t + nrm * off);
       }
+      double rad(int i) {
+        final t = i / seg;
+        final neck = t < 0.06 ? 0.85 + t * 2.5 : 1.0;
+        return ce * (0.07 + 0.15 * (1 - t) * neck);
+      }
+
+      // الظل
+      for (int i = seg; i >= 0; i--) {
+        canvas.drawCircle(pts[i] + Offset(ce * 0.05, ce * 0.07), rad(i), Paint()..color = Colors.black26);
+      }
+      // الجسم من الذيل إلى الرأس
+      for (int i = seg; i >= 0; i--) {
+        canvas.drawCircle(pts[i], rad(i), Paint()..color = pal[0]);
+      }
+      // البطن الفاتح على الحافة السفلى
+      for (int i = seg; i >= 1; i--) {
+        canvas.drawCircle(pts[i] + nrm * (rad(i) * 0.15), rad(i) * 0.45, Paint()..color = pal[2].withOpacity(0.55));
+      }
+      // لمعان الظهر
+      for (int i = seg; i >= 1; i--) {
+        canvas.drawCircle(pts[i] - nrm * (rad(i) * 0.28), rad(i) * 0.38, Paint()..color = Color.lerp(pal[0], Colors.white, 0.38)!.withOpacity(0.55));
+      }
+      // أحزمة داكنة وحراشف
+      for (int i = 3; i < seg - 1; i += 3) {
+        final tg = pts[i + 1] - pts[i - 1];
+        final tl = tg.distance == 0 ? 1.0 : tg.distance;
+        final nn = Offset(-tg.dy / tl, tg.dx / tl);
+        final r = rad(i);
+        canvas.drawLine(
+          pts[i] + nn * r * 0.9,
+          pts[i] - nn * r * 0.9,
+          Paint()
+            ..color = pal[1].withOpacity(0.55)
+            ..strokeWidth = ce * 0.055
+            ..strokeCap = StrokeCap.round,
+        );
+        final dot = Paint()..color = pal[2].withOpacity(0.5);
+        canvas.drawCircle(pts[i] + nn * r * 0.35, r * 0.13, dot);
+        canvas.drawCircle(pts[i] - nn * r * 0.35, r * 0.13, dot);
+      }
+      // الحواف
+      for (int i = seg; i >= 0; i -= 2) {
+        canvas.drawCircle(
+            pts[i],
+            rad(i),
+            Paint()
+              ..color = pal[1].withOpacity(0.35)
+              ..style = PaintingStyle.stroke
+              ..strokeWidth = ce * 0.012);
+      }
+      // الرأس
+      final ang = math.atan2(-d.dy, -d.dx); // الرأس يواجه عكس اتجاه الجسم
+      canvas.save();
+      canvas.translate(head.dx, head.dy);
+      canvas.rotate(ang);
+      final hr = ce * 0.24;
+      // اللسان المشقوق
+      final tongue = Path()
+        ..moveTo(hr * 0.95, 0)
+        ..lineTo(hr * 1.6, 0)
+        ..moveTo(hr * 1.6, 0)
+        ..lineTo(hr * 1.9, -hr * 0.28)
+        ..moveTo(hr * 1.6, 0)
+        ..lineTo(hr * 1.9, hr * 0.28);
       canvas.drawPath(
-        path,
+        tongue,
         Paint()
-          ..color = const Color(0xFF2E7D32)
+          ..color = const Color(0xFFE53935)
           ..style = PaintingStyle.stroke
-          ..strokeWidth = ce * 0.22
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round,
+          ..strokeWidth = ce * 0.04
+          ..strokeCap = StrokeCap.round,
       );
+      final hp = Path()
+        ..moveTo(hr * 1.4, 0)
+        ..quadraticBezierTo(hr * 1.0, -hr * 1.0, -hr * 0.55, -hr * 0.9)
+        ..quadraticBezierTo(-hr * 1.0, 0, -hr * 0.55, hr * 0.9)
+        ..quadraticBezierTo(hr * 1.0, hr * 1.0, hr * 1.4, 0)
+        ..close();
+      canvas.drawPath(hp, Paint()..color = pal[0]);
       canvas.drawPath(
-        path,
-        Paint()
-          ..color = const Color(0xFF81C784)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = ce * 0.08
-          ..strokeCap = StrokeCap.round
-          ..strokeJoin = StrokeJoin.round,
-      );
-      canvas.drawCircle(head, ce * 0.2, Paint()..color = const Color(0xFF1B5E20));
-      canvas.drawCircle(head + const Offset(-3, -2), 2, Paint()..color = Colors.white);
-      canvas.drawCircle(head + const Offset(3, -2), 2, Paint()..color = Colors.white);
-      canvas.drawCircle(head + const Offset(-3, -2), 1, Paint()..color = Colors.black);
-      canvas.drawCircle(head + const Offset(3, -2), 1, Paint()..color = Colors.black);
-      canvas.drawCircle(tail, ce * 0.07, Paint()..color = const Color(0xFF2E7D32));
+          hp,
+          Paint()
+            ..color = pal[1]
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = ce * 0.035);
+      final mark = Path()
+        ..moveTo(-hr * 0.4, -hr * 0.45)
+        ..lineTo(hr * 0.1, 0)
+        ..lineTo(-hr * 0.4, hr * 0.45);
+      canvas.drawPath(
+          mark,
+          Paint()
+            ..color = pal[1].withOpacity(0.8)
+            ..style = PaintingStyle.stroke
+            ..strokeWidth = ce * 0.04
+            ..strokeCap = StrokeCap.round);
+      for (final sgn in [-1.0, 1.0]) {
+        final e = Offset(hr * 0.55, sgn * hr * 0.5);
+        canvas.drawCircle(e, hr * 0.3, Paint()..color = const Color(0xFFFFEB3B));
+        canvas.drawOval(Rect.fromCenter(center: e, width: hr * 0.12, height: hr * 0.4), Paint()..color = Colors.black);
+        canvas.drawCircle(e + Offset(-hr * 0.07, -hr * 0.08), hr * 0.05, Paint()..color = Colors.white);
+        canvas.drawCircle(Offset(hr * 1.05, sgn * hr * 0.22), hr * 0.06, Paint()..color = pal[1]);
+      }
+      canvas.restore();
     });
   }
 
@@ -4430,6 +4524,8 @@ class HomeTab extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text('اختر لعبتك يا ${AppState.I.myName} وابدأ التحدي',
                     style: const TextStyle(color: Colors.white70, fontSize: 13)),
+                const SizedBox(height: 4),
+                Text('ID: ${AppState.I.myId}', textDirection: TextDirection.ltr, style: const TextStyle(color: Colors.white, fontSize: 12, fontWeight: FontWeight.bold)),
               ]),
             ),
             const Text('🏆', style: TextStyle(fontSize: 46)),
@@ -5760,6 +5856,36 @@ class _WheelViewState extends State<WheelView> with SingleTickerProviderStateMix
   }
 }
 
+const List<String> kPackUsd = ['0.99', '2.99', '7.99', '17.99'];
+
+/// أنواع البطاقات المتاحة حسب الدولة (تقريبية، راجع مزوّد الدفع)
+List<String> cardSchemes(String country) {
+  switch (country) {
+    case 'مصر':
+      return ['Visa', 'Mastercard', 'Meeza ميزة'];
+    case 'السعودية':
+      return ['مدى mada', 'Visa', 'Mastercard'];
+    case 'الكويت':
+      return ['KNET كي نت', 'Visa', 'Mastercard'];
+    case 'البحرين':
+      return ['BENEFIT بنفت', 'Visa', 'Mastercard'];
+    case 'عُمان':
+      return ['OmanNet', 'Visa', 'Mastercard'];
+    case 'قطر':
+      return ['NAPS', 'Visa', 'Mastercard'];
+    case 'المغرب':
+      return ['CMI', 'Visa', 'Mastercard'];
+    case 'الجزائر':
+      return ['CIB', 'الذهبية Edahabia', 'Visa', 'Mastercard'];
+    case 'تونس':
+      return ['e-DINAR', 'Visa', 'Mastercard'];
+    case 'العراق':
+      return ['Visa', 'Mastercard', 'Qi Card'];
+    default:
+      return ['Visa', 'Mastercard'];
+  }
+}
+
 class ShopView extends StatefulWidget {
   const ShopView({super.key});
 
@@ -5770,6 +5896,7 @@ class ShopView extends StatefulWidget {
 class _ShopViewState extends State<ShopView> {
   int seg = 0; // 0 شحن ، 1 هدايا
   int country = 0, carrier = 0, tier = 1;
+  int mode = 0, scheme = 0, pack = 1;
   bool busy = false;
   final TextEditingController pin = TextEditingController();
 
@@ -5838,6 +5965,7 @@ class _ShopViewState extends State<ShopView> {
                   setState(() {
                     country = i;
                     carrier = 0;
+                    scheme = 0;
                   });
                   Navigator.of(ctx).pop();
                 },
@@ -5891,7 +6019,147 @@ class _ShopViewState extends State<ShopView> {
         child: Text(t, style: const TextStyle(color: Pal.muted, fontSize: 13, fontWeight: FontWeight.w600)),
       );
 
-  List<Widget> _topup() {
+  Widget _modeBtn(String t, int i) => Expanded(
+        child: GestureDetector(
+          onTap: () => setState(() => mode = i),
+          child: Container(
+            padding: const EdgeInsets.symmetric(vertical: 10),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(12),
+              border: Border.all(color: mode == i ? Pal.gold : Colors.white24, width: 1.5),
+              color: mode == i ? Pal.card2 : Colors.transparent,
+            ),
+            child: Text(t, style: TextStyle(color: mode == i ? Pal.gold : Pal.muted, fontWeight: FontWeight.bold, fontSize: 13)),
+          ),
+        ),
+      );
+
+  List<Widget> _topup() => [
+        Row(children: [
+          _modeBtn('📱 كرت شحن موبايل', 0),
+          const SizedBox(width: 10),
+          _modeBtn('💳 فيزا / ماستر', 1),
+        ]),
+        const SizedBox(height: 14),
+        ...(mode == 0 ? _topupMobile() : _topupCard()),
+      ];
+
+  Future<void> _payCard() async {
+    final c = kCountries[country];
+    final schemes = cardSchemes(c.name);
+    final sc = schemes[scheme.clamp(0, schemes.length - 1)];
+    setState(() => busy = true);
+    final ok = await PaymentService.cardCheckout(c.name, sc, pack);
+    if (!mounted) return;
+    setState(() => busy = false);
+    if (ok) {
+      UserData.addCoins(kTierCoins[pack]);
+      UserData.addRoses(kTierRoses[pack]);
+      Stats.mine.kickCost += 10;
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => rtl(AlertDialog(
+          backgroundColor: Pal.card,
+          title: const Text('تمت العملية 🎉', style: TextStyle(color: Pal.gold, fontWeight: FontWeight.bold)),
+          content: Text('أضيف ${kTierCoins[pack]} عملة و ${kTierRoses[pack]} وردة إلى رصيدك.', style: const TextStyle(color: Colors.white)),
+          actions: [TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('حسناً'))],
+        )),
+      );
+    } else {
+      _toast('تعذر إتمام الدفع. حاول مجدداً');
+    }
+  }
+
+  List<Widget> _topupCard() {
+    final c = kCountries[country];
+    final schemes = cardSchemes(c.name);
+    final sIdx = scheme.clamp(0, schemes.length - 1);
+    return [
+      _label('1. اختر دولتك'),
+      GestureDetector(
+        onTap: _pickCountry,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(color: Pal.card, borderRadius: BorderRadius.circular(14)),
+          child: Row(children: [
+            Text(c.flag, style: const TextStyle(fontSize: 24)),
+            const SizedBox(width: 10),
+            Expanded(child: Text(c.name, style: const TextStyle(color: Colors.white, fontSize: 15))),
+            const Icon(Icons.keyboard_arrow_down, color: Pal.muted),
+          ]),
+        ),
+      ),
+      const SizedBox(height: 14),
+      _label('2. نوع البطاقة'),
+      Wrap(
+        spacing: 8,
+        runSpacing: 8,
+        children: [
+          for (int i = 0; i < schemes.length; i++)
+            GestureDetector(
+              onTap: () => setState(() => scheme = i),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                decoration: BoxDecoration(
+                  color: sIdx == i ? Pal.card2 : Pal.card,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: sIdx == i ? Pal.gold : Colors.white24, width: 1.5),
+                ),
+                child: Text('💳 ${schemes[i]}', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13)),
+              ),
+            ),
+        ],
+      ),
+      const SizedBox(height: 14),
+      _label('3. اختر الباقة'),
+      GridView.count(
+        crossAxisCount: 2,
+        shrinkWrap: true,
+        physics: const NeverScrollableScrollPhysics(),
+        crossAxisSpacing: 10,
+        mainAxisSpacing: 10,
+        childAspectRatio: 1.9,
+        children: [
+          for (int i = 0; i < 4; i++)
+            GestureDetector(
+              onTap: () => setState(() => pack = i),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(16),
+                  gradient: pack == i ? const LinearGradient(colors: [Color(0xFF5E2A7A), Color(0xFF8E3CB0)]) : null,
+                  color: pack == i ? null : Pal.card,
+                  border: Border.all(color: pack == i ? Pal.gold : Colors.transparent, width: 2),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text('${kTierCoins[i]} عملة', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                    const SizedBox(height: 3),
+                    Text('${kPackUsd[i]} USD  +  ${kTierRoses[i]} 🌹', style: const TextStyle(color: Pal.gold, fontSize: 12)),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+      const SizedBox(height: 16),
+      GoldButton(label: 'ادفع بالبطاقة', icon: Icons.lock, busy: busy, onTap: _payCard),
+      const SizedBox(height: 10),
+      Text(
+        kDemoMode
+            ? 'وضع تجريبي: لا يُخصم أي مبلغ ولا تُدخل بيانات بطاقتك.'
+            : 'يتم الدفع عبر صفحة آمنة من مزوّد الدفع، ولا يستقبل التطبيق بيانات بطاقتك.',
+        textAlign: TextAlign.center,
+        style: const TextStyle(color: Pal.muted, fontSize: 11),
+      ),
+    ];
+  }
+
+  List<Widget> _topupMobile() {
     final c = kCountries[country];
     return [
       _label('1. اختر دولتك'),
