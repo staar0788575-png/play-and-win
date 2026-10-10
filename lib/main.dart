@@ -3,6 +3,8 @@ import 'dart:math' as math;
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'dart:typed_data';
 
 void main() {
   runApp(const PlayAndWinApp());
@@ -703,12 +705,14 @@ class UserData {
   }
 
   static void win() {
+    SoundManager.win();
     coins += 20;
     earned += 20;
     _notify();
   }
 
   static void lose() {
+    SoundManager.lose();
     coins = math.max(0, coins - 10);
     _notify();
   }
@@ -754,40 +758,196 @@ class BotChat {
 // ================= الصوت والاهتزاز =================
 class SoundManager {
   static bool enabled = true;
+  static double volume = 0.8;
   static FlutterTts? _tts;
   static bool _ttsReady = false;
+  static final Map<String, Uint8List> _cache = {};
+  static final math.Random _rnd = math.Random();
+  static int _lastMs = 0;
 
-  static void _click() {
+  // ---------- توليد المؤثرات برمجياً (WAV) ----------
+  static const int _sr = 22050;
+
+  static List<double> _tone(double f, double dur, {double decay = 9, double vol = 0.6, double slide = 0}) {
+    final n = (dur * _sr).round();
+    final out = List<double>.filled(n, 0);
+    double ph = 0;
+    for (int i = 0; i < n; i++) {
+      final t = i / _sr;
+      final fr = f + slide * (t / dur);
+      ph += 2 * math.pi * fr / _sr;
+      final env = math.exp(-decay * t) * math.min(1.0, i / 60.0);
+      out[i] = math.sin(ph) * env * vol;
+    }
+    return out;
+  }
+
+  static List<double> _noise(double dur, {double decay = 40, double vol = 0.5}) {
+    final n = (dur * _sr).round();
+    double lp = 0;
+    return List<double>.generate(n, (i) {
+      lp = lp * 0.55 + (_rnd.nextDouble() * 2 - 1) * 0.45;
+      return lp * math.exp(-decay * i / _sr) * vol;
+    });
+  }
+
+  static void _add(List<double> base, List<double> x, double at) {
+    final o = (at * _sr).round();
+    for (int i = 0; i < x.length && o + i < base.length; i++) {
+      base[o + i] += x[i];
+    }
+  }
+
+  static Uint8List _wav(List<double> s) {
+    final n = s.length;
+    final b = ByteData(44 + n * 2);
+    void str(int o, String t) {
+      for (int i = 0; i < t.length; i++) {
+        b.setUint8(o + i, t.codeUnitAt(i));
+      }
+    }
+
+    str(0, 'RIFF');
+    b.setUint32(4, 36 + n * 2, Endian.little);
+    str(8, 'WAVE');
+    str(12, 'fmt ');
+    b.setUint32(16, 16, Endian.little);
+    b.setUint16(20, 1, Endian.little);
+    b.setUint16(22, 1, Endian.little);
+    b.setUint32(24, _sr, Endian.little);
+    b.setUint32(28, _sr * 2, Endian.little);
+    b.setUint16(32, 2, Endian.little);
+    b.setUint16(34, 16, Endian.little);
+    str(36, 'data');
+    b.setUint32(40, n * 2, Endian.little);
+    for (int i = 0; i < n; i++) {
+      final v = (s[i].clamp(-1.0, 1.0) * 32000).round();
+      b.setInt16(44 + i * 2, v, Endian.little);
+    }
+    return b.buffer.asUint8List();
+  }
+
+  static Uint8List _make(String k) {
+    List<double> s;
+    switch (k) {
+      case 'dice':
+        s = List<double>.filled((0.55 * _sr).round(), 0);
+        for (int i = 0; i < 8; i++) {
+          final at = i * 0.06 + (i * i) * 0.004;
+          _add(s, _noise(0.03, decay: 90, vol: 0.55), at);
+          _add(s, _tone(260 + _rnd.nextInt(180).toDouble(), 0.05, decay: 60, vol: 0.3), at);
+        }
+        break;
+      case 'move':
+        s = _tone(520, 0.07, decay: 55, vol: 0.5);
+        _add(s, _noise(0.02, decay: 120, vol: 0.25), 0);
+        break;
+      case 'hit':
+        s = _noise(0.09, decay: 55, vol: 0.6);
+        _add(s, _tone(180, 0.12, decay: 35, vol: 0.5), 0);
+        break;
+      case 'pocket':
+        s = _tone(300, 0.22, decay: 14, vol: 0.55, slide: -160);
+        _add(s, _noise(0.04, decay: 80, vol: 0.3), 0);
+        break;
+      case 'coin':
+        s = List<double>.filled((0.38 * _sr).round(), 0);
+        _add(s, _tone(988, 0.2, decay: 12, vol: 0.45), 0);
+        _add(s, _tone(1319, 0.26, decay: 10, vol: 0.45), 0.08);
+        break;
+      case 'win':
+        s = List<double>.filled((0.9 * _sr).round(), 0);
+        const notes = [523.0, 659.0, 784.0, 1047.0];
+        for (int i = 0; i < notes.length; i++) {
+          _add(s, _tone(notes[i], 0.3, decay: 7, vol: 0.4), i * 0.14);
+        }
+        break;
+      case 'lose':
+        s = List<double>.filled((0.7 * _sr).round(), 0);
+        const notes = [392.0, 330.0, 262.0];
+        for (int i = 0; i < notes.length; i++) {
+          _add(s, _tone(notes[i], 0.3, decay: 8, vol: 0.4), i * 0.18);
+        }
+        break;
+      case 'up':
+        s = _tone(400, 0.35, decay: 5, vol: 0.45, slide: 700);
+        break;
+      case 'snake':
+        s = _tone(700, 0.45, decay: 4, vol: 0.45, slide: -520);
+        break;
+      case 'pass':
+        s = _tone(200, 0.18, decay: 18, vol: 0.5);
+        break;
+      case 'pop':
+        s = _tone(760, 0.06, decay: 60, vol: 0.4, slide: 500);
+        break;
+      default: // pen / bonk كرتوني
+        s = _tone(240, 0.3, decay: 9, vol: 0.6, slide: -140);
+        _add(s, _noise(0.03, decay: 90, vol: 0.4), 0);
+    }
+    return _wav(s);
+  }
+
+  static void _play(String k, {double vol = 1.0, int minGap = 0}) {
+    if (!enabled || volume <= 0) return;
+    final now = DateTime.now().millisecondsSinceEpoch;
+    if (now - _lastMs < minGap) return;
+    _lastMs = now;
     try {
-      SystemSound.play(SystemSoundType.click);
+      final bytes = _cache.putIfAbsent(k, () => _make(k));
+      final p = AudioPlayer();
+      p.onPlayerComplete.listen((_) => p.dispose());
+      p.play(BytesSource(bytes), volume: (volume * vol).clamp(0.0, 1.0).toDouble()).catchError((_) {});
     } catch (_) {}
   }
 
   static void dice() {
     if (!enabled) return;
     HapticFeedback.mediumImpact();
-    _click();
+    _play('dice');
   }
 
   static void move() {
-    if (enabled) HapticFeedback.lightImpact();
+    if (!enabled) return;
+    HapticFeedback.lightImpact();
+    _play('move', minGap: 70);
+  }
+
+  static void hit() {
+    if (!enabled) return;
+    HapticFeedback.mediumImpact();
+    _play('hit');
+  }
+
+  static void pocket() {
+    if (!enabled) return;
+    HapticFeedback.heavyImpact();
+    _play('pocket');
   }
 
   static void coin() {
     if (!enabled) return;
     HapticFeedback.selectionClick();
-    _click();
+    _play('coin');
   }
 
   static void capture() {
-    if (enabled) HapticFeedback.heavyImpact();
+    if (!enabled) return;
+    HapticFeedback.heavyImpact();
+    _play('pocket');
   }
+
+  static void win() => _play('win');
+  static void lose() => _play('lose');
+  static void up() => _play('up');
+  static void pass() => _play('pass');
+  static void pop() => _play('pop', minGap: 80);
 
   /// صوت القلم + "ارررجع يالمبي" عند أكل قطعة أو الوقوف على رأس ثعبان
   static Future<void> oops() async {
     if (!enabled) return;
     HapticFeedback.heavyImpact();
-    _click();
+    _play('bonk');
     try {
       if (_tts == null) {
         _tts = FlutterTts();
@@ -796,6 +956,7 @@ class SoundManager {
         await _tts!.setSpeechRate(0.4);
         _ttsReady = true;
       }
+      await _tts!.setVolume(volume.clamp(0.0, 1.0).toDouble());
       if (_ttsReady) await _tts!.speak('ارررجع يالمبي');
     } catch (_) {}
   }
@@ -832,6 +993,7 @@ class _ChatAndControlsBarState extends State<ChatAndControlsBar> {
   void _send() {
     final text = chatCtrl.text.trim();
     if (text.isEmpty) return;
+    SoundManager.pop();
     widget.onSendChat(text);
     chatCtrl.clear();
   }
@@ -1180,6 +1342,7 @@ class GameFrame extends StatelessWidget {
   final Widget chat;
   final Widget bar;
   final double boardFrac;
+  final double topH;
 
   const GameFrame({
     super.key,
@@ -1191,6 +1354,7 @@ class GameFrame extends StatelessWidget {
     required this.chat,
     required this.bar,
     this.boardFrac = 0.46,
+    this.topH = 36,
   });
 
   @override
@@ -1199,9 +1363,9 @@ class GameFrame extends StatelessWidget {
     final kbOpen = kb > 0;
     return LayoutBuilder(builder: (context, cons) {
       final full = cons.maxHeight;
-      final topH = top == null ? 0.0 : 36.0;
+      final th = top == null ? 0.0 : topH;
       final boardH = full * boardFrac;
-      final boardTop = kbOpen ? 0.0 : topH;
+      final boardTop = kbOpen ? 0.0 : th;
       final midShown = mid != null && !kbOpen;
       final upper = boardTop + boardH + (midShown ? midH : 0.0);
       final lowerH = kbOpen ? math.max(full - upper - kb, 92.0) : math.max(full - upper, 0.0);
@@ -1209,7 +1373,7 @@ class GameFrame extends StatelessWidget {
         clipBehavior: Clip.hardEdge,
         children: [
           if (top != null)
-            Positioned(left: 0, right: 0, top: 0, height: topH, child: Visibility(visible: !kbOpen, child: top!)),
+            Positioned(left: 0, right: 0, top: 0, height: th, child: Visibility(visible: !kbOpen, child: top!)),
           Positioned(left: 0, right: 0, top: boardTop, height: boardH, child: board),
           if (mid != null)
             Positioned(
@@ -3028,9 +3192,9 @@ class _CarromProScreenState extends State<CarromProScreen> {
     final out = eng.step(0.016);
     if (out.isNotEmpty) {
       shotPocketed.addAll(out);
-      SoundManager.capture();
-    } else if (shotByMe && eng.lastImpact > 1.2) {
-      SoundManager.move();
+      SoundManager.pocket();
+    } else if (eng.lastImpact > 1.2) {
+      SoundManager.hit();
     }
     if (!eng.anyMoving) {
       shotActive = false;
@@ -3170,7 +3334,7 @@ class _CarromProScreenState extends State<CarromProScreen> {
     if (len < 0.03) return;
     final power = (len / 0.30).clamp(0.0, 1.0).toDouble();
     final dir = v / len;
-    SoundManager.dice();
+    SoundManager.hit();
     setState(() {
       _launch(dir * (0.9 + power * 2.9), true);
       msg = 'تم التصويب...';
@@ -3771,7 +3935,7 @@ class _SnakeState extends State<SnakeLadderRoyal> {
           pos[p] = kLadders[here]!;
           msg = '${names[p]} صعد سلماً 🪜 إلى ${pos[p]}';
         });
-        SoundManager.capture();
+        SoundManager.up();
       } else if (kSnakes.containsKey(here)) {
         await Future.delayed(const Duration(milliseconds: 350));
         if (!mounted || g != gen) return;
@@ -4393,6 +4557,14 @@ class _GameScreenState extends State<GameScreen> {
           ],
         ]),
         actions: [
+          GestureDetector(
+            onTap: () => setState(() {
+              SoundManager.enabled = !SoundManager.enabled;
+              if (SoundManager.enabled) SoundManager.coin();
+            }),
+            child: Icon(SoundManager.enabled ? Icons.volume_up : Icons.volume_off, color: Colors.white, size: 24),
+          ),
+          const SizedBox(width: 10),
           HelpButton(gameId: widget.gameId),
           const SizedBox(width: 8),
           const Center(child: CoinChip()),
@@ -5111,6 +5283,19 @@ class _SettingsState extends State<SettingsScreen> {
               ),
               const Divider(height: 1, color: Colors.white12),
               _row(
+                Icons.volume_up,
+                'مستوى الصوت',
+                SizedBox(
+                  width: 150,
+                  child: Slider(
+                    value: SoundManager.volume,
+                    onChanged: (v) => setState(() => SoundManager.volume = v),
+                    onChangeEnd: (_) => SoundManager.coin(),
+                  ),
+                ),
+              ),
+              const Divider(height: 1, color: Colors.white12),
+              _row(
                 Icons.sports_esports,
                 'اتجاه التصويب في الكيرم',
                 SegmentedButton<bool>(
@@ -5180,7 +5365,7 @@ class DominoTile extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: BorderRadius.circular(w * 0.18),
             gradient: const LinearGradient(
-                begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFFFFFFFF), Color(0xFFEDE3CC)]),
+                begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [Color(0xFFFFFDF2), Color(0xFFEBE0C6)]),
             border: Border.all(color: highlight ? Pal.gold : Colors.black45, width: highlight ? 2.5 : 1),
             boxShadow: [
               BoxShadow(
@@ -5215,6 +5400,7 @@ class _DominoPainter extends CustomPainter {
     } else {
       canvas.drawLine(Offset(side, side * 0.12), Offset(side, side * 0.88), line);
     }
+    canvas.drawCircle(vertical ? Offset(side / 2, side) : Offset(side, side / 2), side * 0.07, Paint()..color = const Color(0xFFB07A55));
     final pip = Paint()..color = const Color(0xFF212121);
     void draw(Rect r, int v) {
       final pips = _PipsPainter.layout[v];
@@ -5260,6 +5446,8 @@ class _DominoState extends State<DominoGame> {
   int turn = 0, passes = 0, gen = 0;
   bool over = false, started = false;
   _DTile? selected;
+  List<int> pts = [0, 0, 0, 0];
+  bool matchOver = false;
   String msg = 'جاري توزيع القطع...';
   final List<String> chat = ['سلطان: بالتوفيق للجميع 🍀'];
 
@@ -5358,6 +5546,7 @@ class _DominoState extends State<DominoGame> {
     final p = turn;
     final playable = hands[p].where(_fits).toList();
     if (playable.isEmpty) {
+      SoundManager.pass();
       setState(() => msg = '${names[p]} لا يملك قطعة مناسبة (دق) 🛑');
       passes++;
       await Future.delayed(const Duration(milliseconds: 1000));
@@ -5440,6 +5629,16 @@ class _DominoState extends State<DominoGame> {
       winTeam = s0 < s1 ? 0 : 1;
       body = 'انغلقت اللعبة. نقاط فريقك $s0 ونقاط الخصم $s1';
     }
+    final gain = winTeam == 0 ? (blocked ? s1 - s0 : s1) : (winTeam == 1 ? (blocked ? s0 - s1 : s0) : 0);
+    if (winTeam == 0) {
+      pts[0] += gain;
+      pts[2] += gain;
+    } else if (winTeam == 1) {
+      pts[1] += gain;
+      pts[3] += gain;
+    }
+    matchOver = pts.any((x) => x >= 50);
+    if (matchOver) body = '$body\nانتهت المباراة عند 50 نقطة!';
     setState(() {
       over = true;
       msg = winTeam == 0
@@ -5464,56 +5663,100 @@ class _DominoState extends State<DominoGame> {
 
   void _newGame() {
     setState(() {
+      if (matchOver) {
+        pts = [0, 0, 0, 0];
+        matchOver = false;
+      }
       _deal();
     });
   }
 
   // ---------- الواجهة ----------
-  Widget _badge(int p) => PlayerBadge(
-        name: names[p],
-        color: Colors.blueGrey,
-        avatar: seats[p].avatar,
-        badge: '${hands[p].length}',
-        active: turn == p && !over,
-        seat: seats[p],
+  Widget _player(int p) {
+    final s = seats[p];
+    final active = turn == p && !over;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => showPlayerProfile(
+        context,
+        s,
         onKick: p == 0 ? null : () => setState(() => seats[p] = Seats.replacement(seats)),
-      );
+      ),
+      child: SizedBox(
+        width: 80,
+        child: Column(mainAxisSize: MainAxisSize.min, children: [
+          Stack(clipBehavior: Clip.none, children: [
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 250),
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: active ? const Color(0xFFB2FF59) : Colors.white24, width: active ? 3 : 1.5),
+                boxShadow: active ? [BoxShadow(color: const Color(0xFFB2FF59).withOpacity(0.6), blurRadius: 12)] : const [],
+              ),
+              child: AvatarView(id: s.avatar, size: 48),
+            ),
+            Positioned(
+              top: -5,
+              right: -8,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+                decoration: BoxDecoration(color: Colors.amber, borderRadius: BorderRadius.circular(8)),
+                child: Text('${hands[p].length}', style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.black)),
+              ),
+            ),
+          ]),
+          const SizedBox(height: 3),
+          Text(s.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: active ? Colors.white : Colors.white70, fontSize: 11)),
+          const SizedBox(height: 2),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
+            decoration: BoxDecoration(
+              color: const Color(0xFF0B3B3A),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: Colors.white24),
+            ),
+            child: Text('${pts[p]}/50', style: const TextStyle(color: Color(0xFFFFE082), fontWeight: FontWeight.bold, fontSize: 12)),
+          ),
+        ]),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     final me = hands[0];
     final myTurn = turn == 0 && !over && started;
     return GameFrame(
-      boardFrac: 0.36,
-      top: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-        decoration: BoxDecoration(color: Pal.card, borderRadius: BorderRadius.circular(8)),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Expanded(
-              child: Text(msg,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold)),
-            ),
-            const SizedBox(width: 8),
-            const Text('أنت وشريكك ضد الخصمين', style: TextStyle(color: Colors.white54, fontSize: 10)),
-          ],
+      boardFrac: 0.30,
+      topH: 124,
+      top: Column(children: [
+        Container(
+          height: 28,
+          width: double.infinity,
+          margin: const EdgeInsets.fromLTRB(10, 4, 10, 2),
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(8)),
+          child: Text(msg, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.amber, fontSize: 11, fontWeight: FontWeight.bold)),
         ),
-      ),
+        Expanded(
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [_player(0), _player(1), _player(2), _player(3)],
+          ),
+        ),
+      ]),
       board: Container(
         margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(18),
-          gradient: const RadialGradient(colors: [Color(0xFF1B7A4B), Color(0xFF0B4A2C)]),
-          border: Border.all(color: const Color(0xFFFFD700), width: 3),
+          borderRadius: BorderRadius.circular(22),
+          gradient: const RadialGradient(radius: 0.9, colors: [Color(0xFF1FB5AA), Color(0xFF0B6B66)]),
+          border: Border.all(color: const Color(0xFF5D4037), width: 5),
           boxShadow: const [BoxShadow(color: Colors.black54, blurRadius: 10)],
         ),
         child: LayoutBuilder(builder: (context, cons) {
           if (chain.isEmpty) {
-            return const Center(child: Text('🀄', style: TextStyle(fontSize: 40, color: Colors.white24)));
+            return const Center(child: Text('DOMINO', style: TextStyle(fontSize: 34, color: Colors.white12, fontWeight: FontWeight.w900, letterSpacing: 4)));
           }
           final n = chain.length;
           final aw = cons.maxWidth - 20;
@@ -5523,13 +5766,9 @@ class _DominoState extends State<DominoGame> {
           for (double c = 30; c >= 12; c -= 1) {
             final pr = math.max(1, (aw / (2 * c + 3)).floor());
             final rows = (n / pr).ceil();
-            if (rows * (c + 6) <= ah) {
-              w = c;
-              perRow = pr;
-              break;
-            }
             w = c;
             perRow = pr;
+            if (rows * (c + 6) <= ah) break;
           }
           final rows = <Widget>[];
           for (int r = 0; r * perRow < n; r++) {
@@ -5560,7 +5799,7 @@ class _DominoState extends State<DominoGame> {
           return Center(child: Column(mainAxisSize: MainAxisSize.min, children: rows));
         }),
       ),
-      midH: 126,
+      midH: 150,
       mid: Column(
         children: [
           SizedBox(
@@ -5570,20 +5809,19 @@ class _DominoState extends State<DominoGame> {
                 : Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
                     child: Row(children: [
-                      Expanded(
-                          child: GoldButton(
-                              label: 'الطرف الأيسر ($leftEnd)', outlined: true, onTap: () => _human(selected!, true))),
+                      Expanded(child: GoldButton(label: 'الطرف الأيسر ($leftEnd)', outlined: true, onTap: () => _human(selected!, true))),
                       const SizedBox(width: 10),
                       Expanded(child: GoldButton(label: 'الطرف الأيمن ($rightEnd)', onTap: () => _human(selected!, false))),
                     ]),
                   ),
           ),
           SizedBox(
-            height: 80,
+            height: 100,
             child: LayoutBuilder(builder: (context, cons) {
-              final tw = math.max(18.0, math.min(36.0, (cons.maxWidth - 24) / 7 - 8));
+              final tw = math.max(20.0, math.min(40.0, (cons.maxWidth - 24) / 7 - 8));
               return Row(
                 mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
                   for (final t in me)
                     Padding(
@@ -5604,13 +5842,7 @@ class _DominoState extends State<DominoGame> {
           ),
         ],
       ),
-      badges: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: [_badge(0), _badge(1), _badge(2), _badge(3)],
-        ),
-      ),
+      badges: const SizedBox.shrink(),
       chat: ChatPanel(messages: chat),
       bar: ChatAndControlsBar(
         onSendChat: (txt) {
