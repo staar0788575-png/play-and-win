@@ -831,12 +831,14 @@ class SoundManager {
     List<double> s;
     switch (k) {
       case 'dice':
-        s = List<double>.filled((0.55 * _sr).round(), 0);
-        for (int i = 0; i < 8; i++) {
-          final at = i * 0.06 + (i * i) * 0.004;
-          _add(s, _noise(0.03, decay: 90, vol: 0.55), at);
-          _add(s, _tone(260 + _rnd.nextInt(180).toDouble(), 0.05, decay: 60, vol: 0.3), at);
+        s = List<double>.filled((0.6 * _sr).round(), 0);
+        for (int i = 0; i < 5; i++) {
+          final at = i * 0.085 + i * i * 0.006;
+          final v = 0.42 - i * 0.05;
+          _add(s, _tone(190.0 + i * 22, 0.07, decay: 42, vol: v), at);
+          _add(s, _tone(380.0 + i * 30, 0.04, decay: 70, vol: v * 0.45), at);
         }
+        _add(s, _tone(300, 0.12, decay: 26, vol: 0.38), 0.46);
         break;
       case 'move':
         s = _tone(520, 0.07, decay: 55, vol: 0.5);
@@ -3067,8 +3069,7 @@ class CarromEngine {
   }
 
   // ---------- ذكاء اللاعب الآلي (يلعب من الأعلى) ----------
-  BotShot planBotShot(CKind own, math.Random rnd) {
-    const y = 0.20;
+  BotShot planBotShot(CKind own, math.Random rnd, {double y = 0.20}) {
     BotShot? best;
     double bestScore = -1e9;
     final targets = pieces.where((p) => !p.out && (p.kind == own || p.kind == CKind.queen)).toList();
@@ -3132,11 +3133,14 @@ class CarromProScreen extends StatefulWidget {
 
 class _CarromProScreenState extends State<CarromProScreen> {
   final CarromEngine eng = CarromEngine();
-  final List<SeatInfo> seats = Seats.players(2);
+  final List<SeatInfo> seats = Seats.players(4);
   final math.Random rnd = math.Random();
   Timer? timer;
 
-  bool myTurn = true, over = false, shotActive = false, shotByMe = true;
+  /// اللاعب الحالي 0..3 : الفريق الأبيض (0 و2) من الأسفل، والأسود (1 و3) من الأعلى
+  int cur = 0, shotCur = 0;
+  bool get myTurn => cur == 0;
+  bool over = false, shotActive = false, shotByMe = true;
   int gen = 0;
   int queenBy = 0; // 0 لا أحد ، 1 أنت ، 2 الخصم
   double sliderX = 0.5;
@@ -3176,12 +3180,13 @@ class _CarromProScreenState extends State<CarromProScreen> {
   void _placeStriker() {
     eng.striker.out = false;
     eng.striker.vel = Offset.zero;
-    eng.striker.pos = myTurn ? Offset(sliderX, 0.80) : const Offset(0.5, 0.20);
+    eng.striker.pos = cur == 0 ? Offset(sliderX, 0.80) : (cur == 2 ? const Offset(0.5, 0.80) : const Offset(0.5, 0.20));
     eng.step(0);
   }
 
   void _launch(Offset vel, bool byMe) {
     shotByMe = byMe;
+    shotCur = cur;
     shotPocketed = [];
     eng.striker.vel = vel;
     shotActive = true;
@@ -3205,7 +3210,7 @@ class _CarromProScreenState extends State<CarromProScreen> {
 
   void _resolve() {
     final mineKind = shotByMe ? CKind.white : CKind.black;
-    final who = shotByMe ? seats[0].name : seats[1].name;
+    final who = seats[shotCur].name;
     final foul = shotPocketed.any((p) => p.kind == CKind.striker);
     bool gotOwn = false;
     bool queenIn = false;
@@ -3246,7 +3251,7 @@ class _CarromProScreenState extends State<CarromProScreen> {
     if (whiteLeft == 0 || blackLeft == 0) {
       over = true;
       final iWon = whiteLeft == 0;
-      msg = iWon ? 'فزت بالمباراة! 🏆' : 'فاز الخصم بالمباراة';
+      msg = iWon ? 'فاز فريقك بالمباراة! 🏆' : 'فاز الفريق الآخر بالمباراة';
       if (iWon) {
         UserData.win();
       } else {
@@ -3266,27 +3271,28 @@ class _CarromProScreenState extends State<CarromProScreen> {
     }
 
     final extra = gotOwn && !foul;
-    myTurn = extra ? shotByMe : !shotByMe;
+    cur = extra ? shotCur : (shotCur + 1) % 4;
     _placeStriker();
-    msg = '$m — ${myTurn ? 'دورك' : 'دور الخصم'}';
-    if (!myTurn) _botTurn();
+    msg = '$m — ${cur == 0 ? 'دورك' : 'دور ${seats[cur].name}'}';
+    if (cur != 0) _botTurn();
   }
 
   Future<void> _botTurn() async {
     final g = gen;
     await Future.delayed(const Duration(milliseconds: 900));
-    if (!mounted || g != gen || over || myTurn) return;
-    final shot = eng.planBotShot(CKind.black, rnd);
-    eng.striker.pos = Offset(shot.x, 0.20);
+    if (!mounted || g != gen || over || cur == 0) return;
+    final botY = cur == 2 ? 0.80 : 0.20;
+    final shot = eng.planBotShot(cur.isEven ? CKind.white : CKind.black, rnd, y: botY);
+    eng.striker.pos = Offset(shot.x, botY);
     eng.step(0);
     setState(() {});
     await Future.delayed(const Duration(milliseconds: 650));
-    if (!mounted || g != gen || over || myTurn) return;
+    if (!mounted || g != gen || over || cur == 0) return;
     final a = (rnd.nextDouble() - 0.5) * 0.06;
     final d = shot.dir;
     final rd = Offset(d.dx * math.cos(a) - d.dy * math.sin(a), d.dx * math.sin(a) + d.dy * math.cos(a));
     setState(() {
-      _launch(rd * shot.speed, false);
+      _launch(rd * shot.speed, cur.isEven);
     });
   }
 
@@ -3294,7 +3300,7 @@ class _CarromProScreenState extends State<CarromProScreen> {
     gen++;
     setState(() {
       eng.reset();
-      myTurn = true;
+      cur = 0;
       over = false;
       shotActive = false;
       queenBy = 0;
@@ -3442,16 +3448,27 @@ class _CarromProScreenState extends State<CarromProScreen> {
           ),
         ),
       badges: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 2),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              PlayerBadge(name: '${seats[0].name} ⚪', color: Colors.blueGrey, avatar: seats[0].avatar, badge: '$myScore', active: myTurn && !over, seat: seats[0]),
-              Text('${_count(CKind.white, out: true)} / ${_count(CKind.white)}   ·   ${_count(CKind.black, out: true)} / ${_count(CKind.black)}',
-                  style: const TextStyle(color: Colors.white54, fontSize: 11)),
-              PlayerBadge(name: '${seats[1].name} ⚫', color: Colors.deepPurple, avatar: seats[1].avatar, badge: '$botScore', active: !myTurn && !over, seat: seats[1], onKick: () => setState(() => seats[1] = Seats.replacement(seats))),
-            ],
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          child: Column(mainAxisSize: MainAxisSize.min, children: [
+            Text('فريق ⚪ ${_count(CKind.white, out: true)}/${_count(CKind.white)}   ·   فريق ⚫ ${_count(CKind.black, out: true)}/${_count(CKind.black)}',
+                style: const TextStyle(color: Colors.white54, fontSize: 11)),
+            const SizedBox(height: 2),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                for (int p = 0; p < 4; p++)
+                  PlayerBadge(
+                    name: '${seats[p].name} ${p.isEven ? '⚪' : '⚫'}',
+                    color: p.isEven ? Colors.blueGrey : Colors.deepPurple,
+                    avatar: seats[p].avatar,
+                    badge: '${p.isEven ? myScore : botScore}',
+                    active: cur == p && !over,
+                    seat: seats[p],
+                    onKick: p == 0 ? null : () => setState(() => seats[p] = Seats.replacement(seats)),
+                  ),
+              ],
+            ),
+          ]),
         ),
       chat: ChatPanel(messages: messages.map((m) => "${m['user']}: ${m['text']}").toList()),
       bar: ChatAndControlsBar(
@@ -5426,6 +5443,14 @@ class _DTile {
   bool has(int v) => a == v || b == v;
 }
 
+class _Pl {
+  final int i;
+  double x, y;
+  final bool vert;
+  final int a, b;
+  _Pl(this.i, this.x, this.y, this.vert, this.a, this.b);
+}
+
 class _DPlaced {
   final int l, r;
   const _DPlaced(this.l, this.r);
@@ -5672,6 +5697,51 @@ class _DominoState extends State<DominoGame> {
   }
 
   // ---------- الواجهة ----------
+  /// يرتّب السلسلة على شكل ثعبان: صفوف أفقية وقطعة عمودية عند كل زاوية، والمزدوج عمودي
+  List<_Pl> _layoutChain(double u, double W) {
+    final res = <_Pl>[];
+    final n = chain.length;
+    double top = u * 0.6;
+    int dir = 1;
+    double x = 0;
+    int i = 0;
+    while (i < n) {
+      final c = chain[i];
+      final dbl = c.l == c.r;
+      final tw = dbl ? u : 2 * u;
+      final last = i == n - 1;
+      bool fits;
+      if (dir == 1) {
+        fits = last ? x + tw <= W : x + tw + u <= W;
+      } else {
+        fits = last ? x - tw >= 0 : x - tw - u >= 0;
+      }
+      if (fits) {
+        if (dir == 1) {
+          res.add(_Pl(i, x, dbl ? top - u / 2 : top, dbl, c.l, c.r));
+          x += tw;
+        } else {
+          res.add(_Pl(i, x - tw, dbl ? top - u / 2 : top, dbl, dbl ? c.l : c.r, dbl ? c.r : c.l));
+          x -= tw;
+        }
+        i++;
+      } else {
+        // قطعة الزاوية (عمودية)
+        if (dir == 1) {
+          res.add(_Pl(i, x, top, true, c.l, c.r));
+          x = x + u;
+        } else {
+          res.add(_Pl(i, x - u, top, true, c.l, c.r));
+          x = x - u;
+        }
+        top += 2 * u;
+        dir = -dir;
+        i++;
+      }
+    }
+    return res;
+  }
+
   Widget _player(int p) {
     final s = seats[p];
     final active = turn == p && !over;
@@ -5758,45 +5828,48 @@ class _DominoState extends State<DominoGame> {
           if (chain.isEmpty) {
             return const Center(child: Text('DOMINO', style: TextStyle(fontSize: 34, color: Colors.white12, fontWeight: FontWeight.w900, letterSpacing: 4)));
           }
+          final aw = cons.maxWidth - 24;
+          final ah = cons.maxHeight - 16;
+          List<_Pl> pl = [];
+          double u = 8, bw = 0, bh = 0;
+          for (double c = 17; c >= 7; c -= 0.5) {
+            pl = _layoutChain(c, aw);
+            double minX = 1e9, maxX = -1e9, maxY = 0;
+            for (final p in pl) {
+              minX = math.min(minX, p.x);
+              maxX = math.max(maxX, p.x + (p.vert ? c : 2 * c));
+              maxY = math.max(maxY, p.y + (p.vert ? 2 * c : c));
+            }
+            u = c;
+            bw = maxX - minX;
+            bh = maxY + c;
+            final shift = minX;
+            for (final p in pl) {
+              p.x -= shift;
+            }
+            if (bh <= ah) break;
+          }
           final n = chain.length;
-          final aw = cons.maxWidth - 20;
-          final ah = cons.maxHeight - 14;
-          double w = 12;
-          int perRow = 1;
-          for (double c = 30; c >= 12; c -= 1) {
-            final pr = math.max(1, (aw / (2 * c + 3)).floor());
-            final rows = (n / pr).ceil();
-            w = c;
-            perRow = pr;
-            if (rows * (c + 6) <= ah) break;
-          }
-          final rows = <Widget>[];
-          for (int r = 0; r * perRow < n; r++) {
-            final from = r * perRow;
-            final to = math.min(n, from + perRow);
-            final rev = r.isOdd;
-            final idx = [for (int i = from; i < to; i++) i];
-            final order = rev ? idx.reversed.toList() : idx;
-            rows.add(Padding(
-              padding: const EdgeInsets.symmetric(vertical: 3),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  for (final i in order)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 1.5),
-                      child: DominoTile(
-                        a: rev ? chain[i].r : chain[i].l,
-                        b: rev ? chain[i].l : chain[i].r,
-                        w: w,
-                        highlight: myTurn && (i == 0 || i == n - 1),
-                      ),
+          return Center(
+            child: SizedBox(
+              width: bw,
+              height: bh,
+              child: Stack(clipBehavior: Clip.none, children: [
+                for (final p in pl)
+                  Positioned(
+                    left: p.x,
+                    top: p.y,
+                    child: DominoTile(
+                      a: p.a,
+                      b: p.b,
+                      w: u,
+                      vertical: p.vert,
+                      highlight: myTurn && (p.i == 0 || p.i == n - 1),
                     ),
-                ],
-              ),
-            ));
-          }
-          return Center(child: Column(mainAxisSize: MainAxisSize.min, children: rows));
+                  ),
+              ]),
+            ),
+          );
         }),
       ),
       midH: 150,
