@@ -22,6 +22,10 @@ const bool kDemoMode = true;
 /// ثم اجعلها true (إعلان بانر في الرئيسية + إعلان مكافأة لعملات مجانية).
 const bool kAdsEnabled = false;
 
+/// نسخة متجر Google Play: تُخفي الدفع بالبطاقات وكروت الموبايل.
+/// الشراء يكون عبر Google Play Billing فقط (متطلب من جوجل للعملات الافتراضية).
+const bool kPlayStoreBuild = true;
+
 class AdService {
   /// إعلان مكافأة: يعيد true إذا شاهده اللاعب كاملاً (معطّل الآن)
   static Future<bool> showRewarded() async {
@@ -326,6 +330,18 @@ class AppState extends ChangeNotifier {
 
   void changed() => notifyListeners();
 
+  /// حذف الحساب وكل البيانات المحلية (يُربط لاحقاً بحذف بيانات الخادم)
+  void deleteAccount() {
+    StoryService.stories.removeWhere((x) => x.owner.isMe);
+    Stats.resetMine();
+    UserData.reset();
+    Friends.mine
+      ..clear()
+      ..addAll(Friends.list);
+    Blocks.names.clear();
+    logout();
+  }
+
   void logout() {
     me = null;
     welcomeShown = false;
@@ -465,6 +481,13 @@ class PaymentService {
   static Future<bool> cardCheckout(String country, String scheme, int pack) async {
     await Future.delayed(const Duration(milliseconds: 1400));
     return kDemoMode; // تجريبي: ينجح بدون خصم أي مبلغ
+  }
+
+  /// شراء عملات عبر Google Play Billing.
+  /// TODO: ربط حزمة in_app_purchase وتعريف المنتجات في Play Console، ثم التحقق من الإيصال من جهة الخادم.
+  static Future<bool> playPurchase(int pack) async {
+    await Future.delayed(const Duration(milliseconds: 900));
+    return kDemoMode; // تجريبي: لا يُخصم أي مبلغ
   }
 
   static Future<bool> redeemCard(String pin) async {
@@ -724,6 +747,14 @@ class UserData {
     _notify();
   }
 
+  static void reset() {
+    coins = 1200;
+    freeRoses = 5;
+    earned = 0;
+    _lastSpin = '';
+    _notify();
+  }
+
   static bool useRose() {
     if (freeRoses <= 0) return false;
     freeRoses--;
@@ -753,6 +784,140 @@ class BotChat {
     'جاي عليك الدور 😎',
   ];
   static String random() => replies[_r.nextInt(replies.length)];
+}
+
+
+// ================= السلامة: الحظر والإبلاغ والشروط =================
+class Blocks {
+  static final Set<String> names = <String>{};
+  static final ValueNotifier<int> tick = ValueNotifier<int>(0);
+
+  static String _clean(String n) => n.replaceAll('🤖', '').trim();
+
+  static bool isBlocked(String n) => names.contains(_clean(n));
+
+  static void block(String n) {
+    names.add(_clean(n));
+    tick.value = tick.value + 1;
+  }
+}
+
+class Reports {
+  static final List<String> log = <String>[];
+
+  /// تُحفظ البلاغات محلياً الآن. عند ربط الخادم تُرسل لفريق المراجعة.
+  static void add(String who, String reason) {
+    log.add('$who | $reason | ${DateTime.now().toIso8601String()}');
+  }
+}
+
+class Moderation {
+  /// قائمة أساسية قابلة للتوسعة. عند ربط الخادم تُضاف مراجعة من جهة الخادم أيضاً.
+  static const List<String> _bad = [
+    'ابن الكلب',
+    'يا كلب',
+    'يا حمار',
+    'يا حقير',
+    'يا زبالة',
+    'fuck',
+    'shit',
+    'bitch',
+  ];
+
+  static bool hasBad(String t) {
+    final x = t.toLowerCase();
+    for (final w in _bad) {
+      if (x.contains(w)) return true;
+    }
+    return false;
+  }
+
+  static String clean(String t) {
+    var x = t;
+    for (final w in _bad) {
+      x = x.replaceAll(RegExp(RegExp.escape(w), caseSensitive: false), '***');
+    }
+    return x;
+  }
+}
+
+const List<String> kReportReasons = [
+  'إساءة أو شتائم',
+  'إزعاج أو رسائل مكررة',
+  'احتيال أو طلب مال',
+  'محتوى غير لائق',
+  'سبب آخر',
+];
+
+/// نافذة الإبلاغ والحظر. تعيد true إذا قام المستخدم بحظر الشخص.
+Future<bool> showReportBlockSheet(BuildContext context, String who) async {
+  final name = Blocks._clean(who);
+  final res = await showModalBottomSheet<String>(
+    context: context,
+    backgroundColor: Pal.card,
+    shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+    builder: (ctx) => rtl(SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 14, 16, 10),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('الإبلاغ عن $name',
+                style: const TextStyle(color: Pal.gold, fontSize: 17, fontWeight: FontWeight.bold)),
+            const SizedBox(height: 6),
+            for (final r in kReportReasons)
+              ListTile(
+                dense: true,
+                leading: const Icon(Icons.flag_outlined, color: Pal.gold),
+                title: Text(r, style: const TextStyle(color: Colors.white)),
+                onTap: () => Navigator.of(ctx).pop('report:$r'),
+              ),
+            const Divider(color: Colors.white12),
+            ListTile(
+              dense: true,
+              leading: const Icon(Icons.block, color: Pal.red),
+              title: Text('حظر $name (لن ترى رسائله ولا قصصه)', style: const TextStyle(color: Pal.red)),
+              onTap: () => Navigator.of(ctx).pop('block'),
+            ),
+          ],
+        ),
+      ),
+    )),
+  );
+  if (res == null || !context.mounted) return false;
+  if (res == 'block') {
+    Blocks.block(name);
+    _toastCtx(context, 'تم حظر $name');
+    return true;
+  }
+  Reports.add(name, res.substring(7));
+  _toastCtx(context, 'تم إرسال البلاغ. شكراً لمساعدتك في إبقاء اللعبة آمنة');
+  return false;
+}
+
+const String kTermsText =
+    '1. العملات والورود والهدايا افتراضية، تُستخدم داخل التطبيق فقط، ولا قيمة نقدية لها، ولا تُستبدل بمال أو جوائز حقيقية، ولا يجوز بيعها أو شراؤها خارج التطبيق.\n\n'
+    '2. التطبيق للتسلية فقط ولا يتضمن أي مراهنة بأموال حقيقية. عجلة الحظ مجانية ولفتها يومية.\n\n'
+    '3. يُمنع: الشتائم والتحرش والتنمر وخطاب الكراهية والمحتوى الجنسي أو العنيف، وانتحال شخصية الآخرين، وطلب المال أو البيانات الشخصية من اللاعبين.\n\n'
+    '4. يمكنك الإبلاغ عن أي لاعب أو قصة أو رسالة وحظره: من ملف اللاعب، أو بالضغط المطوّل على الرسالة. نراجع البلاغات وقد نحذف المحتوى المخالف أو نوقف الحساب.\n\n'
+    '5. بعض اللاعبين في هذه النسخة لاعبون آليون (بوتات) وتظهر بجانب أسمائهم علامة 🤖.\n\n'
+    '6. نجمع أقل قدر من البيانات: الاسم المستعار والصورة الرمزية ووسيلة الدخول (رقم الهاتف أو حساب جوجل) وبيانات اللعب. لا نبيع بياناتك، ولا يطلب التطبيق بيانات بطاقتك المصرفية، فالدفع يتم عبر Google Play.\n\n'
+    '7. يمكنك حذف حسابك وبياناتك في أي وقت من: الإعدادات ← حذف الحساب.\n\n'
+    '8. بالموافقة تؤكد أن عمرك 13 سنة أو أكثر.';
+
+void showTerms(BuildContext context) {
+  showDialog<void>(
+    context: context,
+    builder: (ctx) => rtl(AlertDialog(
+      backgroundColor: Pal.card,
+      title: const Text('شروط الاستخدام وسياسة الخصوصية', style: TextStyle(color: Pal.gold, fontSize: 16)),
+      content: const SingleChildScrollView(
+        child: Text(kTermsText, style: TextStyle(color: Colors.white, fontSize: 13, height: 1.6)),
+      ),
+      actions: [TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('حسناً'))],
+    )),
+  );
 }
 
 // ================= الصوت والاهتزاز =================
@@ -996,7 +1161,7 @@ class _ChatAndControlsBarState extends State<ChatAndControlsBar> {
     final text = chatCtrl.text.trim();
     if (text.isEmpty) return;
     SoundManager.pop();
-    widget.onSendChat(text);
+    widget.onSendChat(Moderation.clean(text));
     chatCtrl.clear();
   }
 
@@ -1081,6 +1246,14 @@ class ChatTicker extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    String? last;
+    for (int k = messages.length - 1; k >= 0; k--) {
+      final m = messages[k];
+      final i = m.indexOf(':');
+      if (i > 0 && Blocks.isBlocked(m.substring(0, i))) continue;
+      last = m;
+      break;
+    }
     return Container(
       height: 22,
       width: double.infinity,
@@ -1089,7 +1262,7 @@ class ChatTicker extends StatelessWidget {
       alignment: Alignment.centerLeft,
       decoration: BoxDecoration(color: Colors.black26, borderRadius: BorderRadius.circular(8)),
       child: Text(
-        messages.isEmpty ? '💬 الدردشة العامة' : messages.last,
+        last ?? '💬 الدردشة العامة',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: const TextStyle(color: Colors.white70, fontSize: 11),
@@ -1286,47 +1459,62 @@ class ChatPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-      decoration: BoxDecoration(color: Colors.black.withOpacity(0.28), borderRadius: BorderRadius.circular(12)),
-      child: messages.isEmpty
-          ? const Center(child: Text('💬 الدردشة العامة', style: TextStyle(color: Colors.white38, fontSize: 12)))
-          : ListView.builder(
-              reverse: true,
-              itemCount: messages.length,
-              itemBuilder: (c, i) {
-                final m = messages[messages.length - 1 - i];
-                final idx = m.indexOf(':');
-                final who = idx > 0 ? m.substring(0, idx) : '';
-                final txt = idx > 0 ? m.substring(idx + 1).trim() : m;
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 2),
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                          decoration: BoxDecoration(color: Pal.card2, borderRadius: BorderRadius.circular(12)),
-                          child: RichText(
-                            text: TextSpan(
-                              children: [
-                                if (who.isNotEmpty)
-                                  TextSpan(
-                                    text: '$who  ',
-                                    style: const TextStyle(color: Pal.gold, fontSize: 11, fontWeight: FontWeight.bold),
+    return ValueListenableBuilder<int>(
+      valueListenable: Blocks.tick,
+      builder: (c0, _, __) {
+        final visible = messages.where((m) {
+          final i = m.indexOf(':');
+          return !(i > 0 && Blocks.isBlocked(m.substring(0, i)));
+        }).toList();
+        return Container(
+          margin: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(color: Colors.black.withOpacity(0.28), borderRadius: BorderRadius.circular(12)),
+          child: visible.isEmpty
+              ? const Center(
+                  child: Text('💬 الدردشة العامة (اضغط مطولاً على رسالة للإبلاغ أو الحظر)',
+                      textAlign: TextAlign.center, style: TextStyle(color: Colors.white38, fontSize: 12)))
+              : ListView.builder(
+                  reverse: true,
+                  itemCount: visible.length,
+                  itemBuilder: (c, i) {
+                    final m = visible[visible.length - 1 - i];
+                    final idx = m.indexOf(':');
+                    final who = idx > 0 ? m.substring(0, idx) : '';
+                    final txt = idx > 0 ? m.substring(idx + 1).trim() : m;
+                    final canReport = who.isNotEmpty && Blocks._clean(who) != AppState.I.myName;
+                    return Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 2),
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: GestureDetector(
+                              onLongPress: canReport ? () => showReportBlockSheet(context, who) : null,
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                                decoration: BoxDecoration(color: Pal.card2, borderRadius: BorderRadius.circular(12)),
+                                child: RichText(
+                                  text: TextSpan(
+                                    children: [
+                                      if (who.isNotEmpty)
+                                        TextSpan(
+                                          text: '$who  ',
+                                          style: const TextStyle(color: Pal.gold, fontSize: 11, fontWeight: FontWeight.bold),
+                                        ),
+                                      TextSpan(text: txt, style: const TextStyle(color: Colors.white, fontSize: 12)),
+                                    ],
                                   ),
-                                TextSpan(text: txt, style: const TextStyle(color: Colors.white, fontSize: 12)),
-                              ],
+                                ),
+                              ),
                             ),
                           ),
-                        ),
+                        ],
                       ),
-                    ],
-                  ),
-                );
-              },
-            ),
+                    );
+                  },
+                ),
+        );
+      },
     );
   }
 }
@@ -1430,6 +1618,7 @@ class Stats {
         return st;
       });
   static Stat get mine => _m.putIfAbsent('me', () => Stat());
+  static void resetMine() => _m.remove('me');
 
   static int idOf(SeatInfo s) {
     if (s.isMe) return AppState.I.myId;
@@ -1505,7 +1694,8 @@ class PlayerBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final body = _PlayerBadgeBody(name: name, color: color, badge: badge, active: active, avatar: avatar);
+    final label = (seat != null && seat!.isBot && !seat!.isMe) ? '$name 🤖' : name;
+    final body = _PlayerBadgeBody(name: label, color: color, badge: badge, active: active, avatar: avatar);
     if (seat == null) return body;
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
@@ -1604,6 +1794,11 @@ class _ProfileSheetState extends State<_ProfileSheet> {
           AvatarView(id: s.avatar, size: 78, ring: StoryService.hasStory(s)),
           const SizedBox(height: 8),
           Text(s.name, style: const TextStyle(color: Colors.white, fontSize: 19, fontWeight: FontWeight.bold)),
+          if (s.isBot && !s.isMe)
+            const Padding(
+              padding: EdgeInsets.only(top: 2),
+              child: Text('🤖 لاعب آلي', style: TextStyle(color: Pal.muted, fontSize: 12)),
+            ),
           GestureDetector(
             onTap: () {
               Clipboard.setData(ClipboardData(text: '$id'));
@@ -1669,6 +1864,15 @@ class _ProfileSheetState extends State<_ProfileSheet> {
               label: Text('طرد من الغرفة (${st.kickCost} عملة)', style: const TextStyle(color: Pal.red)),
             ),
           ],
+          if (!s.isMe)
+            TextButton.icon(
+              onPressed: () async {
+                final blocked = await showReportBlockSheet(context, s.name);
+                if (blocked && mounted) Navigator.of(context).pop();
+              },
+              icon: const Icon(Icons.flag_outlined, color: Pal.muted, size: 18),
+              label: const Text('إبلاغ / حظر', style: TextStyle(color: Pal.muted)),
+            ),
         ]),
       ),
     );
@@ -1836,6 +2040,9 @@ class _GiftSheetState extends State<_GiftSheet> {
                       ),
                     ),
                 ]),
+                const SizedBox(height: 8),
+                const Text('العملات والهدايا افتراضية داخل التطبيق فقط ولا قيمة نقدية لها.',
+                    style: TextStyle(color: Pal.muted, fontSize: 11)),
               ]),
             ),
           ),
@@ -1917,6 +2124,7 @@ class _StoriesBarState extends State<StoriesBar> {
   List<List<Story>> _groups() {
     final map = <String, List<Story>>{};
     for (final s in StoryService.active()) {
+      if (!s.owner.isMe && Blocks.isBlocked(s.owner.name)) continue;
       final k = s.owner.isMe ? 'me' : s.owner.name;
       map.putIfAbsent(k, () => <Story>[]).add(s);
     }
@@ -2064,7 +2272,7 @@ void showCreateStory(BuildContext context, VoidCallback onDone) {
           GoldButton(
             label: 'نشر القصة',
             onTap: () {
-              final t = ctrl.text.trim();
+              final t = Moderation.clean(ctrl.text.trim());
               if (t.isEmpty) return;
               StoryService.stories.add(Story(AppState.I.meSeat, t, style, DateTime.now()));
               Navigator.of(ctx).pop();
@@ -2195,11 +2403,25 @@ class _StoryViewerState extends State<StoryViewer> {
                   Row(children: [
                     AvatarView(id: s.owner.avatar, size: 36),
                     const SizedBox(width: 8),
-                    Text(s.owner.isMe ? 'قصتي' : s.owner.name,
+                    Text(s.owner.isMe ? 'قصتي' : (s.owner.isBot ? '${s.owner.name} 🤖' : s.owner.name),
                         style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
                     const SizedBox(width: 8),
                     Text(_ago(s.time), style: const TextStyle(color: Colors.white70, fontSize: 12)),
                     const Spacer(),
+                    if (!s.owner.isMe)
+                      IconButton(
+                        icon: const Icon(Icons.flag_outlined, color: Colors.white),
+                        onPressed: () async {
+                          t?.cancel();
+                          final blocked = await showReportBlockSheet(context, s.owner.name);
+                          if (!mounted) return;
+                          if (blocked) {
+                            Navigator.of(context).pop();
+                          } else {
+                            _restart();
+                          }
+                        },
+                      ),
                     IconButton(icon: const Icon(Icons.close, color: Colors.white), onPressed: () => Navigator.of(context).pop()),
                   ]),
                 ]),
@@ -2821,7 +3043,7 @@ class _LudoState extends State<LudoRoyalFull> with SingleTickerProviderStateMixi
             setState(() => publicChat.add('${AppState.I.myName}: $txt'));
             Future.delayed(const Duration(milliseconds: 1200), () {
               if (!mounted) return;
-              setState(() => publicChat.add('${names[1 + rnd.nextInt(3)]}: ${BotChat.random()}'));
+              setState(() => publicChat.add('${names[1 + rnd.nextInt(3)]} 🤖: ${BotChat.random()}'));
             });
           },
           onSendEmoji: (em) => setState(() => publicChat.add('${AppState.I.myName}: $em')),
@@ -4127,7 +4349,7 @@ class _SnakeState extends State<SnakeLadderRoyal> {
             setState(() => publicChat.add('${AppState.I.myName}: $txt'));
             Future.delayed(const Duration(milliseconds: 1200), () {
               if (!mounted) return;
-              setState(() => publicChat.add('${names[1 + rnd.nextInt(3)]}: ${BotChat.random()}'));
+              setState(() => publicChat.add('${names[1 + rnd.nextInt(3)]} 🤖: ${BotChat.random()}'));
             });
           },
           onSendEmoji: (em) => setState(() => publicChat.add('${AppState.I.myName}: $em')),
@@ -4150,6 +4372,7 @@ class _LoginState extends State<LoginScreen> {
   int step = 0; // 0 اختيار ، 1 هاتف ، 2 رمز ، 3 الملف الشخصي
   int country = 0, avatar = 0;
   bool busy = false;
+  bool accepted = false;
   String? error;
   String method = 'phone', contact = '';
   final TextEditingController phoneCtrl = TextEditingController();
@@ -4235,6 +4458,10 @@ class _LoginState extends State<LoginScreen> {
     final n = nameCtrl.text.trim();
     if (n.length < 2) {
       setState(() => error = 'اكتب اسماً من حرفين على الأقل');
+      return;
+    }
+    if (Moderation.hasBad(n)) {
+      setState(() => error = 'الاسم يحتوي على كلمات غير لائقة، اختر اسماً آخر');
       return;
     }
     AppState.I.setProfile(Profile(name: n, avatar: avatar, method: method, contact: contact));
@@ -4335,16 +4562,37 @@ class _LoginState extends State<LoginScreen> {
 
   List<Widget> _choose() => [
         _title('أهلاً بك', 'اختر طريقة تسجيل الدخول'),
+        Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          Checkbox(value: accepted, activeColor: Pal.gold, onChanged: (v) => setState(() => accepted = v ?? false)),
+          Expanded(
+            child: GestureDetector(
+              onTap: () => showTerms(context),
+              child: const Padding(
+                padding: EdgeInsets.only(top: 12),
+                child: Text('أوافق على شروط الاستخدام وسياسة الخصوصية (اضغط للقراءة)، وأؤكد أن عمري 13 سنة أو أكثر',
+                    style: TextStyle(color: Pal.muted, fontSize: 12, height: 1.5, decoration: TextDecoration.underline)),
+              ),
+            ),
+          ),
+        ]),
+        const SizedBox(height: 12),
         GoldButton(
           label: 'الدخول برقم الهاتف',
           icon: Icons.phone_android,
-          onTap: () => setState(() {
-            step = 1;
-            error = null;
-          }),
+          onTap: accepted
+              ? () => setState(() {
+                    step = 1;
+                    error = null;
+                  })
+              : null,
         ),
         const SizedBox(height: 12),
-        GoldButton(label: 'المتابعة بحساب جوجل', icon: Icons.account_circle, outlined: true, busy: busy, onTap: _google),
+        GoldButton(
+            label: 'المتابعة بحساب جوجل',
+            icon: Icons.account_circle,
+            outlined: true,
+            busy: busy,
+            onTap: accepted ? _google : null),
       ];
 
   List<Widget> _phone() => [
@@ -5157,7 +5405,7 @@ class _ChatRoomState extends State<ChatRoomScreen> {
     Future.delayed(const Duration(milliseconds: 1300), () {
       if (!mounted) return;
       final o = others[rnd.nextInt(others.length)];
-      setState(() => msgs.add('${o.name}: ${BotChat.random()}'));
+      setState(() => msgs.add('${o.name}${o.isBot ? " 🤖" : ""}: ${BotChat.random()}'));
     });
   }
 
@@ -5214,7 +5462,7 @@ class _SettingsState extends State<SettingsScreen> {
           TextButton(
             onPressed: () {
               final n = ctrl.text.trim();
-              if (n.length >= 2) {
+              if (n.length >= 2 && !Moderation.hasBad(n)) {
                 AppState.I.me!.name = n;
                 AppState.I.changed();
                 setState(() {});
@@ -5222,6 +5470,31 @@ class _SettingsState extends State<SettingsScreen> {
               Navigator.of(ctx).pop();
             },
             child: const Text('حفظ'),
+          ),
+        ],
+      )),
+    );
+  }
+
+  void _deleteAccount() {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => rtl(AlertDialog(
+        backgroundColor: Pal.card,
+        title: const Text('حذف الحساب', style: TextStyle(color: Pal.red)),
+        content: const Text(
+          'سيتم حذف حسابك وكل بياناتك (الاسم والعملات والقصص والأصدقاء) نهائياً ولا يمكن التراجع. هل أنت متأكد؟',
+          style: TextStyle(color: Colors.white, height: 1.5),
+        ),
+        actions: [
+          TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('إلغاء')),
+          TextButton(
+            onPressed: () {
+              Navigator.of(ctx).pop();
+              Navigator.of(context).popUntil((r) => r.isFirst);
+              AppState.I.deleteAccount();
+            },
+            child: const Text('حذف نهائياً', style: TextStyle(color: Pal.red)),
           ),
         ],
       )),
@@ -5339,6 +5612,18 @@ class _SettingsState extends State<SettingsScreen> {
               Navigator.of(context).popUntil((r) => r.isFirst);
               AppState.I.logout();
             }),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            decoration: BoxDecoration(color: Pal.card, borderRadius: BorderRadius.circular(20)),
+            child: Column(children: [
+              _row(Icons.privacy_tip_outlined, 'شروط الاستخدام وسياسة الخصوصية',
+                  const Icon(Icons.chevron_left, color: Pal.muted),
+                  onTap: () => showTerms(context)),
+              const Divider(height: 1, color: Colors.white12),
+              _row(Icons.delete_forever, 'حذف الحساب', const Icon(Icons.chevron_left, color: Pal.red),
+                  onTap: _deleteAccount),
+            ]),
           ),
           const SizedBox(height: 20),
           const Center(child: Text('Play & Win', style: TextStyle(color: Colors.white24, fontSize: 12))),
@@ -5776,7 +6061,7 @@ class _DominoState extends State<DominoGame> {
             ),
           ]),
           const SizedBox(height: 3),
-          Text(s.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: active ? Colors.white : Colors.white70, fontSize: 11)),
+          Text((s.isBot && !s.isMe) ? '${s.name} 🤖' : s.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: TextStyle(color: active ? Colors.white : Colors.white70, fontSize: 11)),
           const SizedBox(height: 2),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 2),
@@ -5922,7 +6207,7 @@ class _DominoState extends State<DominoGame> {
           setState(() => chat.add('${AppState.I.myName}: $txt'));
           Future.delayed(const Duration(milliseconds: 1200), () {
             if (!mounted) return;
-            setState(() => chat.add('${names[1 + rnd.nextInt(3)]}: ${BotChat.random()}'));
+            setState(() => chat.add('${names[1 + rnd.nextInt(3)]} 🤖: ${BotChat.random()}'));
           });
         },
         onSendEmoji: (em) => setState(() => chat.add('${AppState.I.myName}: $em')),
@@ -6123,6 +6408,18 @@ class _WheelViewState extends State<WheelView> with SingleTickerProviderStateMix
       ),
       const SizedBox(height: 8),
       GoldButton(label: can ? 'لُف العجلة' : 'عد غداً', icon: Icons.casino, busy: spinning, onTap: can ? _spin : null),
+      const SizedBox(height: 12),
+      Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: Pal.card, borderRadius: BorderRadius.circular(14)),
+        child: const Text(
+          'العجلة مجانية بالكامل (لفة يومية) ولا تُباع لفّات إضافية.\n'
+          'احتمالات النتائج: 10 عملات 30% · 20 عملة 25% · 30 عملة 15% · 40 عملة 5% · جمجمة 25%.\n'
+          'العملات افتراضية للعب داخل التطبيق فقط، ولا تُستبدل بمال أو جوائز حقيقية.',
+          style: TextStyle(color: Pal.muted, fontSize: 11, height: 1.6),
+        ),
+      ),
       const SizedBox(height: 22),
       ValueListenableBuilder<int>(
         valueListenable: UserData.tick,
@@ -6340,7 +6637,7 @@ class _ShopViewState extends State<ShopView> {
         ),
       );
 
-  List<Widget> _topup() => [
+  List<Widget> _topup() => kPlayStoreBuild ? _topupPlay() : [
         Row(children: [
           _modeBtn('📱 كرت شحن موبايل', 0),
           const SizedBox(width: 10),
@@ -6348,6 +6645,81 @@ class _ShopViewState extends State<ShopView> {
         ]),
         const SizedBox(height: 14),
         ...(mode == 0 ? _topupMobile() : _topupCard()),
+      ];
+
+  Future<void> _payPlay() async {
+    setState(() => busy = true);
+    final ok = await PaymentService.playPurchase(pack);
+    if (!mounted) return;
+    setState(() => busy = false);
+    if (ok) {
+      UserData.addCoins(kTierCoins[pack]);
+      UserData.addRoses(kTierRoses[pack]);
+      Stats.mine.kickCost += 10;
+      showDialog<void>(
+        context: context,
+        builder: (ctx) => rtl(AlertDialog(
+          backgroundColor: Pal.card,
+          title: const Text('تمت العملية 🎉', style: TextStyle(color: Pal.gold, fontWeight: FontWeight.bold)),
+          content: Text('أضيف ${kTierCoins[pack]} عملة و ${kTierRoses[pack]} وردة إلى رصيدك.', style: const TextStyle(color: Colors.white)),
+          actions: [TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('حسناً'))],
+        )),
+      );
+    } else {
+      _toast('لم تكتمل عملية الشراء. لم يُخصم أي مبلغ');
+    }
+  }
+
+  List<Widget> _topupPlay() => [
+        _label('اختر الباقة'),
+        GridView.count(
+          crossAxisCount: 2,
+          shrinkWrap: true,
+          physics: const NeverScrollableScrollPhysics(),
+          crossAxisSpacing: 10,
+          mainAxisSpacing: 10,
+          childAspectRatio: 1.9,
+          children: [
+            for (int i = 0; i < 4; i++)
+              GestureDetector(
+                onTap: () => setState(() => pack = i),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 180),
+                  padding: const EdgeInsets.all(10),
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: pack == i ? const LinearGradient(colors: [Color(0xFF5E2A7A), Color(0xFF8E3CB0)]) : null,
+                    color: pack == i ? null : Pal.card,
+                    border: Border.all(color: pack == i ? Pal.gold : Colors.transparent, width: 2),
+                  ),
+                  child: Column(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text('${kTierCoins[i]} عملة', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15)),
+                      const SizedBox(height: 3),
+                      Text('+ ${kTierRoses[i]} 🌹', style: const TextStyle(color: Pal.gold, fontSize: 12)),
+                    ],
+                  ),
+                ),
+              ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        GoldButton(label: 'شراء عبر Google Play', icon: Icons.shopping_cart, busy: busy, onTap: _payPlay),
+        const SizedBox(height: 10),
+        Text(
+          kDemoMode
+              ? 'وضع تجريبي: لا يُخصم أي مبلغ.'
+              : 'يتم الدفع عبر Google Play، ويظهر السعر النهائي عند تأكيد الشراء.',
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: Pal.muted, fontSize: 11),
+        ),
+        const SizedBox(height: 6),
+        const Text(
+          'العملات افتراضية للعب داخل التطبيق فقط، ولا تُستبدل بمال أو جوائز حقيقية.',
+          textAlign: TextAlign.center,
+          style: TextStyle(color: Pal.muted, fontSize: 11),
+        ),
       ];
 
   Future<void> _payCard() async {
@@ -6638,5 +7010,8 @@ class _ShopViewState extends State<ShopView> {
         ),
         const SizedBox(height: 14),
         GoldButton(label: 'إهداء الآن', icon: Icons.card_giftcard, onTap: () => showGiftSheet(context)),
+        const SizedBox(height: 10),
+        const Text('العملات والهدايا افتراضية داخل التطبيق فقط ولا قيمة نقدية لها.',
+            textAlign: TextAlign.center, style: TextStyle(color: Pal.muted, fontSize: 11)),
       ];
 }
