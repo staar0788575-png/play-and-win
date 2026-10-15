@@ -2,11 +2,10 @@ plugins {
     id "com.android.application"
     id "org.jetbrains.kotlin.android"
     id "dev.flutter.flutter-gradle-plugin"
-    id "com.google.gms.google-services"
 }
 
 android {
-    namespace "com.example.play_and_win"
+    namespace "com.mahmoued.playandwin"
     compileSdk 34
 
     compileOptions {
@@ -19,18 +18,32 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.play_and_win"
+        applicationId "com.mahmoued.playandwin"
         minSdk 21
         targetSdk 34
-        versionCode 1
-        versionName "1.0.0"
+        versionCode flutter.versionCode
+        versionName flutter.versionName
         multiDexEnabled true
+    }
+
+    signingConfigs {
+        release {
+            if (System.getenv("CM_KEYSTORE_PATH")) {
+                storeFile file(System.getenv("CM_KEYSTORE_PATH"))
+                storePassword System.getenv("CM_KEYSTORE_PASSWORD")
+                keyAlias System.getenv("CM_KEY_ALIAS")
+                keyPassword System.getenv("CM_KEY_PASSWORD")
+            }
+        }
     }
 
     buildTypes {
         release {
-            // TODO: Add your own signing config for the release build.
-            // SigningConfig signingConfigs.debug
+            if (System.getenv("CM_KEYSTORE_PATH")) {
+                signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug
+            }
         }
     }
 }
