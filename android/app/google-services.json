@@ -1,7 +1,7 @@
 {
   "project_info": {
     "project_number": "608375477910",
-    "project_id": "blay-and-win.firebasestorage.app",
+    "project_id": "blay-and-win",
     "storage_bucket": "blay-and-win.firebasestorage.app"
   },
   "client": [
@@ -15,7 +15,26 @@
       "oauth_client": [],
       "api_key": [
         {
-          "current_key": "AIzaSyDpzbKgYtF1noyDRL4U4q0RbUwNSUoUp8"
+          "current_key": "AIzaSyDpzbKg1YT1moyDRL4U4q0RbUwNSUoUPr8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608375477910:android:ee29903756fe3b3a6494b7",
+        "android_client_info": {
+          "package_name": "com.mahmoued.playandwin"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpzbKg1YT1moyDRL4U4q0RbUwNSUoUPr8"
         }
       ],
       "services": {
