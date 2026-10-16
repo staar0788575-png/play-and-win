@@ -1,0 +1,76 @@
+{
+  "project_info": {
+    "project_number": "608375477910",
+    "project_id": "blay-and-win",
+    "storage_bucket": "blay-and-win.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608375477910:android:83abde8a79cf48d56494b7",
+        "android_client_info": {
+          "package_name": "com.example.play_and_win"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "608375477910-5429205d0r3rdj2k5r7k60emtnr27opu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpzbKg1YT1moyDRL4U4q0RbUwNSUoUPr8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "608375477910-5429205d0r3rdj2k5r7k60emtnr27opu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:608375477910:android:ee29903756fe3b3a6494b7",
+        "android_client_info": {
+          "package_name": "com.mahmoued.playandwin"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "608375477910-jnvob97laqifnq3v5stfq9e4pbmb63g6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.mahmoued.playandwin",
+            "certificate_hash": "f81218a3f5127ab5dca22d87a38b89aca775583a"
+          }
+        },
+        {
+          "client_id": "608375477910-5429205d0r3rdj2k5r7k60emtnr27opu.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDpzbKg1YT1moyDRL4U4q0RbUwNSUoUPr8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "608375477910-5429205d0r3rdj2k5r7k60emtnr27opu.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
