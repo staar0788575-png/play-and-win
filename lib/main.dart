@@ -12,13 +12,17 @@ import 'package:google_sign_in/google_sign_in.dart' show GoogleSignIn;
 /// يصبح true عندما يعمل Firebase بنجاح على الجهاز
 bool kFirebaseReady = false;
 
+/// آخر خطأ من Firebase (للتشخيص)
+String kFirebaseError = '';
+
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
     await Firebase.initializeApp();
     kFirebaseReady = true;
-  } catch (_) {
+  } catch (e) {
     kFirebaseReady = false;
+    kFirebaseError = 'init: $e';
   }
   runApp(const PlayAndWinApp());
 }
@@ -498,10 +502,12 @@ class AuthService {
             avatar: 0,
             method: 'google',
             contact: u.email ?? u.uid);
-      } catch (_) {
+      } catch (e) {
+        kFirebaseError = 'signin: $e';
         return null;
       }
     }
+    if (kFirebaseError.isNotEmpty) return null;
     await Future.delayed(const Duration(milliseconds: 900));
     if (!kDemoMode) return null;
     return Profile(name: 'لاعب جوجل', avatar: 0, method: 'google', contact: 'google-demo');
@@ -4482,7 +4488,7 @@ class _LoginState extends State<LoginScreen> {
         avatar = p.avatar;
         step = 3;
       } else {
-        error = 'تعذر الدخول بحساب جوجل حالياً';
+        error = kFirebaseError.isEmpty ? 'تعذر الدخول بحساب جوجل حالياً' : 'تعذر الدخول: $kFirebaseError';
       }
     });
   }
