@@ -515,7 +515,11 @@ class AuthService {
             method: 'google',
             contact: u.email ?? u.uid);
       } catch (e) {
-        kFirebaseError = 'signin: $e';
+        String sig = '';
+        try {
+          sig = await const MethodChannel('pw/sig').invokeMethod<String>('sha1') ?? '';
+        } catch (_) {}
+        kFirebaseError = 'signin: $e | SHA1: $sig';
         return null;
       }
     }
