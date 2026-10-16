@@ -517,9 +517,12 @@ class AuthService {
       } catch (e) {
         String sig = '';
         try {
-          sig = await const MethodChannel('pw/sig').invokeMethod<String>('sha1') ?? '';
-        } catch (_) {}
-        kFirebaseError = 'signin: $e | SHA1: $sig';
+          final r = await const MethodChannel('pw/sig').invokeMethod<String>('sha1');
+          sig = r == null ? 'NULL' : r;
+        } catch (e2) {
+          sig = 'ERR $e2';
+        }
+        kFirebaseError = 'signin: $e\n\nSHA1:\n$sig';
         return null;
       }
     }
@@ -4554,6 +4557,7 @@ class _LoginState extends State<LoginScreen> {
                         padding: const EdgeInsets.only(top: 12),
                         child: Text(error!,
                             textAlign: TextAlign.center,
+                            textDirection: TextDirection.ltr,
                             style: const TextStyle(color: Pal.red, fontSize: 13)),
                       ),
                     if (kDemoMode)
