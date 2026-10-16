@@ -8,6 +8,7 @@ import 'dart:typed_data';
 import 'package:firebase_core/firebase_core.dart' show Firebase, FirebaseOptions;
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, GoogleAuthProvider;
 import 'package:google_sign_in/google_sign_in.dart' show GoogleSignIn;
+import 'package:package_info_plus/package_info_plus.dart' show PackageInfo;
 
 /// يصبح true عندما يعمل Firebase بنجاح على الجهاز
 bool kFirebaseReady = false;
@@ -517,8 +518,8 @@ class AuthService {
       } catch (e) {
         String sig = '';
         try {
-          final r = await const MethodChannel('pw/sig').invokeMethod<String>('sha1');
-          sig = r == null ? 'NULL' : r;
+          final pi = await PackageInfo.fromPlatform();
+          sig = pi.buildSignature.isEmpty ? 'EMPTY' : pi.buildSignature;
         } catch (e2) {
           sig = 'ERR $e2';
         }
