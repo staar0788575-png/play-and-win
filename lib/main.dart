@@ -5,12 +5,24 @@ import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:typed_data';
-import 'package:firebase_core/firebase_core.dart' show Firebase;
+import 'package:firebase_core/firebase_core.dart' show Firebase, FirebaseOptions;
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, GoogleAuthProvider;
 import 'package:google_sign_in/google_sign_in.dart' show GoogleSignIn;
 
 /// يصبح true عندما يعمل Firebase بنجاح على الجهاز
 bool kFirebaseReady = false;
+
+/// إعدادات Firebase لتطبيق com.mahmoued.playandwin (من google-services.json)
+const FirebaseOptions kFirebaseOptions = FirebaseOptions(
+  apiKey: 'AIzaSyDpzbKg1YT1moyDRL4U4q0RbUwNSUoUPr8',
+  appId: '1:608375477910:android:ee29903756fe3b3a6494b7',
+  messagingSenderId: '608375477910',
+  projectId: 'blay-and-win',
+  storageBucket: 'blay-and-win.firebasestorage.app',
+);
+
+/// معرّف عميل الويب (مطلوب للحصول على idToken عند الدخول بجوجل)
+const String kGoogleServerClientId = '608375477910-5429205d0r3rdj2k5r7k60emtnr27opu.apps.googleusercontent.com';
 
 /// آخر خطأ من Firebase (للتشخيص)
 String kFirebaseError = '';
@@ -18,7 +30,7 @@ String kFirebaseError = '';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
   try {
-    await Firebase.initializeApp();
+    await Firebase.initializeApp(options: kFirebaseOptions);
     kFirebaseReady = true;
   } catch (e) {
     kFirebaseReady = false;
@@ -488,7 +500,7 @@ class AuthService {
   static Future<Profile?> signInWithGoogle() async {
     if (kFirebaseReady) {
       try {
-        final g = GoogleSignIn();
+        final g = GoogleSignIn(serverClientId: kGoogleServerClientId);
         final acc = await g.signIn();
         if (acc == null) return null; // أُلغي الدخول
         final ga = await acc.authentication;
