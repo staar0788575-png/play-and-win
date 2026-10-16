@@ -5,8 +5,21 @@ import 'package:flutter/services.dart';
 import 'package:flutter_tts/flutter_tts.dart';
 import 'package:audioplayers/audioplayers.dart';
 import 'dart:typed_data';
+import 'package:firebase_core/firebase_core.dart' show Firebase;
+import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, GoogleAuthProvider;
+import 'package:google_sign_in/google_sign_in.dart' show GoogleSignIn;
 
-void main() {
+/// يصبح true عندما يعمل Firebase بنجاح على الجهاز
+bool kFirebaseReady = false;
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  try {
+    await Firebase.initializeApp();
+    kFirebaseReady = true;
+  } catch (_) {
+    kFirebaseReady = false;
+  }
   runApp(const PlayAndWinApp());
 }
 
@@ -469,6 +482,26 @@ class AuthService {
   }
 
   static Future<Profile?> signInWithGoogle() async {
+    if (kFirebaseReady) {
+      try {
+        final g = GoogleSignIn();
+        final acc = await g.signIn();
+        if (acc == null) return null; // أُلغي الدخول
+        final ga = await acc.authentication;
+        final cred = GoogleAuthProvider.credential(accessToken: ga.accessToken, idToken: ga.idToken);
+        final res = await FirebaseAuth.instance.signInWithCredential(cred);
+        final u = res.user;
+        if (u == null) return null;
+        final nm = (u.displayName ?? '').trim();
+        return Profile(
+            name: nm.isEmpty ? 'لاعب' : nm,
+            avatar: 0,
+            method: 'google',
+            contact: u.email ?? u.uid);
+      } catch (_) {
+        return null;
+      }
+    }
     await Future.delayed(const Duration(milliseconds: 900));
     if (!kDemoMode) return null;
     return Profile(name: 'لاعب جوجل', avatar: 0, method: 'google', contact: 'google-demo');
