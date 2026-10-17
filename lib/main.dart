@@ -526,6 +526,22 @@ class AuthService {
           errs += (useServer ? 'A(with server id): ' : 'B(no server id): ') + e.toString() + '\n\n';
         }
       }
+      // المحاولة الثالثة: دخول Firebase عبر صفحة جوجل في المتصفح (لا يعتمد على بصمة التطبيق)
+      try {
+        final res = await FirebaseAuth.instance.signInWithProvider(GoogleAuthProvider());
+        final u = res.user;
+        if (u != null) {
+          kFirebaseError = '';
+          final nm = (u.displayName ?? '').trim();
+          return Profile(
+              name: nm.isEmpty ? 'لاعب' : nm,
+              avatar: 0,
+              method: 'google',
+              contact: u.email ?? u.uid);
+        }
+      } catch (e) {
+        errs += 'C(provider): ' + e.toString() + '\n\n';
+      }
       String sig = '';
       try {
         final pi = await PackageInfo.fromPlatform();
