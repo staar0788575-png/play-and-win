@@ -500,32 +500,41 @@ class AuthService {
 
   static Future<Profile?> signInWithGoogle() async {
     if (kFirebaseReady) {
-      try {
-        final g = GoogleSignIn(serverClientId: kGoogleServerClientId);
-        final acc = await g.signIn();
-        if (acc == null) return null; // أُلغي الدخول
-        final ga = await acc.authentication;
-        final cred = GoogleAuthProvider.credential(accessToken: ga.accessToken, idToken: ga.idToken);
-        final res = await FirebaseAuth.instance.signInWithCredential(cred);
-        final u = res.user;
-        if (u == null) return null;
-        final nm = (u.displayName ?? '').trim();
-        return Profile(
-            name: nm.isEmpty ? 'لاعب' : nm,
-            avatar: 0,
-            method: 'google',
-            contact: u.email ?? u.uid);
-      } catch (e) {
-        String sig = '';
+      String errs = '';
+      // المحاولة الأولى مع serverClientId، والثانية بدونه
+      for (final useServer in [true, false]) {
         try {
-          final pi = await PackageInfo.fromPlatform();
-          sig = pi.buildSignature.isEmpty ? 'EMPTY' : pi.buildSignature;
-        } catch (e2) {
-          sig = 'ERR $e2';
+          final g = useServer ? GoogleSignIn(serverClientId: kGoogleServerClientId) : GoogleSignIn();
+          try {
+            await g.signOut();
+          } catch (_) {}
+          final acc = await g.signIn();
+          if (acc == null) return null; // أُلغي الدخول
+          final ga = await acc.authentication;
+          final cred = GoogleAuthProvider.credential(accessToken: ga.accessToken, idToken: ga.idToken);
+          final res = await FirebaseAuth.instance.signInWithCredential(cred);
+          final u = res.user;
+          if (u == null) return null;
+          kFirebaseError = '';
+          final nm = (u.displayName ?? '').trim();
+          return Profile(
+              name: nm.isEmpty ? 'لاعب' : nm,
+              avatar: 0,
+              method: 'google',
+              contact: u.email ?? u.uid);
+        } catch (e) {
+          errs += (useServer ? 'A(with server id): ' : 'B(no server id): ') + e.toString() + '\n\n';
         }
-        kFirebaseError = 'signin: $e\n\nSHA1:\n$sig';
-        return null;
       }
+      String sig = '';
+      try {
+        final pi = await PackageInfo.fromPlatform();
+        sig = pi.buildSignature.isEmpty ? 'EMPTY' : pi.buildSignature;
+      } catch (e2) {
+        sig = 'ERR $e2';
+      }
+      kFirebaseError = errs + 'SHA1:\n' + sig;
+      return null;
     }
     if (kFirebaseError.isNotEmpty) return null;
     await Future.delayed(const Duration(milliseconds: 900));
