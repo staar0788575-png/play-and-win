@@ -9,6 +9,7 @@ import 'package:firebase_core/firebase_core.dart' show Firebase, FirebaseOptions
 import 'package:firebase_auth/firebase_auth.dart' show FirebaseAuth, GoogleAuthProvider;
 import 'package:google_sign_in/google_sign_in.dart' show GoogleSignIn;
 import 'package:package_info_plus/package_info_plus.dart' show PackageInfo;
+import 'package:cloud_firestore/cloud_firestore.dart' show FirebaseFirestore, SetOptions;
 
 /// يصبح true عندما يعمل Firebase بنجاح على الجهاز
 bool kFirebaseReady = false;
@@ -36,6 +37,10 @@ Future<void> main() async {
   } catch (e) {
     kFirebaseReady = false;
     kFirebaseError = 'init: $e';
+  }
+  if (kFirebaseReady) {
+    CloudSync.hook();
+    await CloudSync.restore(); // إبقاء اللاعب مسجلاً وتحميل بياناته
   }
   runApp(const PlayAndWinApp());
 }
@@ -350,7 +355,7 @@ class AppState extends ChangeNotifier {
 
   String get myName => me?.name ?? 'أنت';
   int get myAvatar => me?.avatar ?? 0;
-  final int myId = 1000000 + math.Random().nextInt(8999999);
+  int myId = 1000000 + math.Random().nextInt(8999999);
   SeatInfo get meSeat => SeatInfo(myName, myAvatar, isMe: true, isBot: false);
 
   void setProfile(Profile p) {
@@ -369,13 +374,21 @@ class AppState extends ChangeNotifier {
       ..clear()
       ..addAll(Friends.list);
     Blocks.names.clear();
-    logout();
+    CloudSync.deleteAccount(); // حذف بيانات الخادم وحساب الدخول
+    logout(save: false);
   }
 
-  void logout() {
+  void logout({bool save = true}) {
+    final wasCloud = save && CloudSync.leave();
     me = null;
     welcomeShown = false;
     currentRoom = null;
+    if (wasCloud) {
+      // تصفير الحالة المحلية حتى لا تنتقل بيانات هذا الحساب لحساب آخر
+      UserData.reset();
+      Stats.resetMine();
+      myId = 1000000 + math.Random().nextInt(8999999);
+    }
     notifyListeners();
   }
 }
@@ -558,6 +571,191 @@ class AuthService {
     await Future.delayed(const Duration(milliseconds: 900));
     if (!kDemoMode) return null;
     return Profile(name: 'لاعب جوجل', avatar: 0, method: 'google', contact: 'google-demo');
+  }
+}
+
+// ---------- حفظ بيانات اللاعب في السحابة (Firestore) ----------
+class _CloudObserver with WidgetsBindingObserver {
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.inactive ||
+        state == AppLifecycleState.detached) {
+      CloudSync.flush();
+    }
+  }
+}
+
+class CloudSync {
+  static Timer? _timer;
+  static bool _hooked = false;
+  static bool _applying = false;
+  static String _lastSaved = '';
+  static String lastError = '';
+
+  static String? get uid => kFirebaseReady ? FirebaseAuth.instance.currentUser?.uid : null;
+
+  static int asInt(dynamic v, int def) => v is num ? v.toInt() : def;
+
+  /// يربط الحفظ التلقائي بتغيّر الرصيد، ويحفظ عند خروج التطبيق للخلفية
+  static void hook() {
+    if (_hooked) return;
+    _hooked = true;
+    UserData.tick.addListener(schedule);
+    WidgetsBinding.instance.addObserver(_CloudObserver());
+  }
+
+  /// حفظ مؤجَّل: مرة كل 3 ثوانٍ كحد أقصى مهما تكررت التغييرات
+  static void schedule() {
+    if (_applying || uid == null || AppState.I.me == null) return;
+    if (_timer?.isActive ?? false) return;
+    _timer = Timer(const Duration(seconds: 3), () {
+      save();
+    });
+  }
+
+  static Map<String, dynamic> _toMap() => {
+        'name': AppState.I.myName,
+        'avatar': AppState.I.myAvatar,
+        'pid': AppState.I.myId,
+        'coins': UserData.coins,
+        'freeRoses': UserData.freeRoses,
+        'earned': UserData.earned,
+        'lastSpin': UserData._lastSpin,
+      };
+
+  static String _sig(Map<String, dynamic> m) => m.values.join('|');
+
+  static Future<void> save() async {
+    final id = uid;
+    if (id == null || AppState.I.me == null) return;
+    await _write(id, _toMap());
+  }
+
+  static Future<void> _write(String id, Map<String, dynamic> m) async {
+    final sig = _sig(m);
+    if (sig == _lastSaved) return; // لا تغيير منذ آخر حفظ
+    try {
+      final data = Map<String, dynamic>.from(m);
+      data['updatedAt'] = DateTime.now().millisecondsSinceEpoch;
+      await FirebaseFirestore.instance.collection('users').doc(id).set(data, SetOptions(merge: true));
+      _lastSaved = sig;
+      lastError = '';
+    } catch (e) {
+      lastError = e.toString();
+    }
+  }
+
+  /// حفظ فوري (عند الخروج للخلفية)
+  static Future<void> flush() async {
+    _timer?.cancel();
+    await save();
+  }
+
+  /// يقرأ بيانات اللاعب الحالي؛ null إن لم يكن له حساب محفوظ بعد
+  static Future<Map<String, dynamic>?> fetch() async {
+    final id = uid;
+    if (id == null) return null;
+    final snap = await FirebaseFirestore.instance.collection('users').doc(id).get();
+    if (!snap.exists) return null;
+    return snap.data();
+  }
+
+  /// يطبّق البيانات المحمّلة على حالة اللعبة
+  static void apply(Map<String, dynamic> d) {
+    _applying = true;
+    UserData.coins = asInt(d['coins'], 1200);
+    UserData.freeRoses = asInt(d['freeRoses'], 5);
+    UserData.earned = asInt(d['earned'], 0);
+    UserData._lastSpin = (d['lastSpin'] ?? '').toString();
+    final pid = asInt(d['pid'], 0);
+    if (pid > 0) AppState.I.myId = pid;
+    UserData._notify();
+    _applying = false;
+    _lastSaved = _sig({
+      'name': (d['name'] ?? '').toString(),
+      'avatar': asInt(d['avatar'], 0),
+      'pid': AppState.I.myId,
+      'coins': UserData.coins,
+      'freeRoses': UserData.freeRoses,
+      'earned': UserData.earned,
+      'lastSpin': UserData._lastSpin,
+    });
+  }
+
+  /// عند فتح التطبيق: إن كان اللاعب مسجلاً من قبل ندخله مباشرة
+  static Future<void> restore() async {
+    try {
+      final u = FirebaseAuth.instance.currentUser;
+      if (u == null) return;
+      final d = await fetch().timeout(const Duration(seconds: 5));
+      if (d == null) return;
+      apply(d);
+      final nm = (d['name'] ?? '').toString().trim();
+      AppState.I.me = Profile(
+          name: nm.isEmpty ? 'لاعب' : nm,
+          avatar: asInt(d['avatar'], 0),
+          method: 'google',
+          contact: u.email ?? u.uid);
+    } catch (e) {
+      lastError = 'restore: $e';
+    }
+  }
+
+  /// تسجيل الخروج: يحفظ آخر حالة ثم يخرج من الحساب. يعيد true إذا كان الحساب سحابياً
+  static bool leave() {
+    final id = uid;
+    if (id == null) return false;
+    _timer?.cancel();
+    final m = _toMap(); // نلتقط البيانات الآن قبل تصفير الحالة
+    () async {
+      await _write(id, m);
+      _lastSaved = '';
+      try {
+        await FirebaseAuth.instance.signOut();
+      } catch (_) {}
+      try {
+        await GoogleSignIn().signOut();
+      } catch (_) {}
+    }();
+    return true;
+  }
+
+  /// حذف الحساب نهائياً من الخادم: بيانات Firestore ثم حساب الدخول
+  static Future<void> deleteAccount() async {
+    _timer?.cancel();
+    final id = uid;
+    final u = kFirebaseReady ? FirebaseAuth.instance.currentUser : null;
+    if (id == null || u == null) return;
+    try {
+      await FirebaseFirestore.instance.collection('users').doc(id).delete();
+    } catch (e) {
+      lastError = 'delete data: $e';
+    }
+    try {
+      await u.delete();
+    } catch (_) {
+      // قد يتطلب دخولاً حديثاً: نعيد التحقق بحساب جوجل ثم نحذف
+      try {
+        final g = GoogleSignIn(serverClientId: kGoogleServerClientId);
+        final acc = await g.signIn();
+        if (acc != null) {
+          final ga = await acc.authentication;
+          final cred = GoogleAuthProvider.credential(accessToken: ga.accessToken, idToken: ga.idToken);
+          await u.reauthenticateWithCredential(cred);
+          await u.delete();
+        }
+      } catch (e2) {
+        lastError = 'delete auth: $e2';
+      }
+    }
+    _lastSaved = '';
+    try {
+      await FirebaseAuth.instance.signOut();
+    } catch (_) {}
+    try {
+      await GoogleSignIn().signOut();
+    } catch (_) {}
   }
 }
 
@@ -4526,17 +4724,45 @@ class _LoginState extends State<LoginScreen> {
     });
     final p = await AuthService.signInWithGoogle();
     if (!mounted) return;
+    if (p == null) {
+      setState(() {
+        busy = false;
+        error = kFirebaseError.isEmpty ? 'تعذر الدخول بحساب جوجل حالياً' : 'تعذر الدخول: $kFirebaseError';
+      });
+      return;
+    }
+    // هل لهذا الحساب بيانات محفوظة؟ (لاعب قديم)
+    Map<String, dynamic>? cloud;
+    if (CloudSync.uid != null) {
+      try {
+        cloud = await CloudSync.fetch();
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          busy = false;
+          error = 'تعذر تحميل بياناتك من الخادم:\n$e';
+        });
+        return;
+      }
+    }
+    if (!mounted) return;
+    if (cloud != null) {
+      CloudSync.apply(cloud);
+      final nm = (cloud['name'] ?? '').toString().trim();
+      AppState.I.setProfile(Profile(
+          name: nm.isEmpty ? p.name : nm,
+          avatar: CloudSync.asInt(cloud['avatar'], 0),
+          method: 'google',
+          contact: p.contact));
+      return;
+    }
     setState(() {
       busy = false;
-      if (p != null) {
-        method = 'google';
-        contact = p.contact;
-        nameCtrl.text = p.name;
-        avatar = p.avatar;
-        step = 3;
-      } else {
-        error = kFirebaseError.isEmpty ? 'تعذر الدخول بحساب جوجل حالياً' : 'تعذر الدخول: $kFirebaseError';
-      }
+      method = 'google';
+      contact = p.contact;
+      nameCtrl.text = p.name;
+      avatar = p.avatar;
+      step = 3;
     });
   }
 
@@ -4551,6 +4777,7 @@ class _LoginState extends State<LoginScreen> {
       return;
     }
     AppState.I.setProfile(Profile(name: n, avatar: avatar, method: method, contact: contact));
+    CloudSync.save(); // حساب جديد: احفظ بياناته فوراً
   }
 
   @override
@@ -5552,6 +5779,7 @@ class _SettingsState extends State<SettingsScreen> {
               if (n.length >= 2 && !Moderation.hasBad(n)) {
                 AppState.I.me!.name = n;
                 AppState.I.changed();
+                CloudSync.schedule();
                 setState(() {});
               }
               Navigator.of(ctx).pop();
@@ -5605,6 +5833,7 @@ class _SettingsState extends State<SettingsScreen> {
                   onTap: () {
                     AppState.I.me!.avatar = i;
                     AppState.I.changed();
+                    CloudSync.schedule();
                     setState(() {});
                     Navigator.of(ctx).pop();
                   },
