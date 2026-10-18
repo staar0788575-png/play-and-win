@@ -1187,13 +1187,16 @@ Future<bool> showReportBlockSheet(BuildContext context, String who) async {
   return false;
 }
 
+const String kPrivacyUrl = 'https://staar0788575-png.github.io/play-and-win/privacy.html';
+const String kSupportEmail = 'playandwin005@gmail.com';
+
 const String kTermsText =
     '1. العملات والورود والهدايا افتراضية، تُستخدم داخل التطبيق فقط، ولا قيمة نقدية لها، ولا تُستبدل بمال أو جوائز حقيقية، ولا يجوز بيعها أو شراؤها خارج التطبيق.\n\n'
     '2. التطبيق للتسلية فقط ولا يتضمن أي مراهنة بأموال حقيقية. عجلة الحظ مجانية ولفتها يومية.\n\n'
     '3. يُمنع: الشتائم والتحرش والتنمر وخطاب الكراهية والمحتوى الجنسي أو العنيف، وانتحال شخصية الآخرين، وطلب المال أو البيانات الشخصية من اللاعبين.\n\n'
     '4. يمكنك الإبلاغ عن أي لاعب أو قصة أو رسالة وحظره: من ملف اللاعب، أو بالضغط المطوّل على الرسالة. نراجع البلاغات وقد نحذف المحتوى المخالف أو نوقف الحساب.\n\n'
     '5. بعض اللاعبين في هذه النسخة لاعبون آليون (بوتات) وتظهر بجانب أسمائهم علامة 🤖.\n\n'
-    '6. نجمع أقل قدر من البيانات: الاسم المستعار والصورة الرمزية ووسيلة الدخول (رقم الهاتف أو حساب جوجل) وبيانات اللعب. لا نبيع بياناتك، ولا يطلب التطبيق بيانات بطاقتك المصرفية، فالدفع يتم عبر Google Play.\n\n'
+    '6. نجمع أقل قدر من البيانات: الاسم المستعار والصورة الرمزية وبيانات حساب جوجل (الاسم والبريد) وبيانات اللعب. لا نبيع بياناتك، ولا يطلب التطبيق بيانات بطاقتك المصرفية، فالدفع يتم عبر Google Play.\n\n'
     '7. يمكنك حذف حسابك وبياناتك في أي وقت من: الإعدادات ← حذف الحساب.\n\n'
     '8. بالموافقة تؤكد أن عمرك 13 سنة أو أكثر.';
 
@@ -1203,10 +1206,28 @@ void showTerms(BuildContext context) {
     builder: (ctx) => rtl(AlertDialog(
       backgroundColor: Pal.card,
       title: const Text('شروط الاستخدام وسياسة الخصوصية', style: TextStyle(color: Pal.gold, fontSize: 16)),
-      content: const SingleChildScrollView(
-        child: Text(kTermsText, style: TextStyle(color: Colors.white, fontSize: 13, height: 1.6)),
+      content: SingleChildScrollView(
+        child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+          const Text(kTermsText, style: TextStyle(color: Colors.white, fontSize: 13, height: 1.6)),
+          const SizedBox(height: 14),
+          const Text('سياسة الخصوصية الكاملة على الإنترنت:', style: TextStyle(color: Pal.muted, fontSize: 12)),
+          const SelectableText(kPrivacyUrl, textDirection: TextDirection.ltr,
+              style: TextStyle(color: Pal.gold, fontSize: 12, decoration: TextDecoration.underline)),
+          const SizedBox(height: 6),
+          const Text('للتواصل: $kSupportEmail', textDirection: TextDirection.ltr,
+              style: TextStyle(color: Pal.muted, fontSize: 12)),
+        ]),
       ),
-      actions: [TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('حسناً'))],
+      actions: [
+        TextButton(
+          onPressed: () {
+            Clipboard.setData(const ClipboardData(text: kPrivacyUrl));
+            ScaffoldMessenger.maybeOf(context)?.showSnackBar(const SnackBar(content: Text('تم نسخ الرابط')));
+          },
+          child: const Text('نسخ الرابط'),
+        ),
+        TextButton(onPressed: () => Navigator.of(ctx).pop(), child: const Text('حسناً')),
+      ],
     )),
   );
 }
