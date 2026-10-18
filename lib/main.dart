@@ -53,6 +53,12 @@ Future<void> main() async {
 /// اجعلها false بعد ربط خدمات حقيقية (Firebase أو خادم خاص).
 const bool kDemoMode = true;
 
+/// الدخول برقم الهاتف تجريبي حتى الآن (يقبل أي رمز)، لذلك هو مخفي. فعّله بعد ربط Firebase Phone Auth.
+const bool kPhoneLoginEnabled = false;
+
+/// إظهار تفاصيل أخطاء الدخول التقنية (للتشخيص فقط). اجعلها false في النسخة العامة.
+const bool kShowDiagnostics = false;
+
 /// الإعلانات مقفولة حالياً. عند التفعيل لاحقاً اربطها بـ google_mobile_ads
 /// ثم اجعلها true (إعلان بانر في الرئيسية + إعلان مكافأة لعملات مجانية).
 const bool kAdsEnabled = false;
@@ -4728,7 +4734,9 @@ class _LoginState extends State<LoginScreen> {
     if (p == null) {
       setState(() {
         busy = false;
-        error = kFirebaseError.isEmpty ? 'تعذر الدخول بحساب جوجل حالياً' : 'تعذر الدخول: $kFirebaseError';
+        error = kShowDiagnostics && kFirebaseError.isNotEmpty
+            ? 'تعذر الدخول: $kFirebaseError'
+            : 'تعذر الدخول بحساب جوجل. تحقق من اتصالك بالإنترنت وحاول مرة أخرى';
       });
       return;
     }
@@ -4741,7 +4749,9 @@ class _LoginState extends State<LoginScreen> {
         if (!mounted) return;
         setState(() {
           busy = false;
-          error = 'تعذر تحميل بياناتك من الخادم:\n$e';
+          error = kShowDiagnostics
+              ? 'تعذر تحميل بياناتك من الخادم:\n$e'
+              : 'تعذر تحميل بياناتك. تحقق من اتصالك بالإنترنت وحاول مرة أخرى';
         });
         return;
       }
@@ -4814,10 +4824,10 @@ class _LoginState extends State<LoginScreen> {
                         padding: const EdgeInsets.only(top: 12),
                         child: Text(error!,
                             textAlign: TextAlign.center,
-                            textDirection: TextDirection.ltr,
+                            textDirection: kShowDiagnostics ? TextDirection.ltr : TextDirection.rtl,
                             style: const TextStyle(color: Pal.red, fontSize: 13)),
                       ),
-                    if (kDemoMode)
+                    if (kDemoMode && kPhoneLoginEnabled)
                       const Padding(
                         padding: EdgeInsets.only(top: 18),
                         child: Text('نسخة تجريبية: الدخول محلي حتى يتم ربط الخادم',
@@ -4892,17 +4902,19 @@ class _LoginState extends State<LoginScreen> {
           ),
         ]),
         const SizedBox(height: 12),
-        GoldButton(
-          label: 'الدخول برقم الهاتف',
-          icon: Icons.phone_android,
-          onTap: accepted
-              ? () => setState(() {
-                    step = 1;
-                    error = null;
-                  })
-              : null,
-        ),
-        const SizedBox(height: 12),
+        if (kPhoneLoginEnabled) ...[
+          GoldButton(
+            label: 'الدخول برقم الهاتف',
+            icon: Icons.phone_android,
+            onTap: accepted
+                ? () => setState(() {
+                      step = 1;
+                      error = null;
+                    })
+                : null,
+          ),
+          const SizedBox(height: 12),
+        ],
         GoldButton(
             label: 'المتابعة بحساب جوجل',
             icon: Icons.account_circle,
