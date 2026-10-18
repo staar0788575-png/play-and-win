@@ -5302,6 +5302,8 @@ class HomeTab extends StatelessWidget {
         ),
         const AdBanner(),
         _section('الألعاب'),
+        const _DailyWheelCard(),
+        const SizedBox(height: 12),
         GridView.count(
           crossAxisCount: 2,
           shrinkWrap: true,
@@ -5340,6 +5342,87 @@ class HomeTab extends StatelessWidget {
         ),
       ],
     );
+  }
+}
+
+/// بطاقة عجلة الحظ اليومية في الصفحة الرئيسية (تظهر مع الألعاب)
+class _DailyWheelCard extends StatelessWidget {
+  const _DailyWheelCard();
+
+  @override
+  Widget build(BuildContext context) {
+    return ValueListenableBuilder<int>(
+      valueListenable: UserData.tick,
+      builder: (c, _, __) {
+        final can = UserData.canSpin;
+        return GestureDetector(
+          onTap: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const _WheelPage())),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(20),
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: can
+                    ? const [Color(0xFFFF8F00), Color(0xFFE65100)]
+                    : const [Color(0xFF3A1B4B), Color(0xFF2A1236)],
+              ),
+              border: Border.all(color: can ? Pal.gold : Colors.white12, width: can ? 1.6 : 1),
+              boxShadow: can
+                  ? [BoxShadow(color: const Color(0xFFFF8F00).withOpacity(0.35), blurRadius: 16, offset: const Offset(0, 6))]
+                  : null,
+            ),
+            child: Row(children: [
+              const Text('🎡', style: TextStyle(fontSize: 40)),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
+                  const Text('عجلة الحظ اليومية',
+                      style: TextStyle(color: Colors.white, fontSize: 17, fontWeight: FontWeight.w900)),
+                  const SizedBox(height: 3),
+                  Text(can ? 'لفتك المجانية جاهزة! اربح حتى 40 عملة' : 'استخدمت لفتك اليوم، عد غداً',
+                      style: TextStyle(color: can ? Colors.white : Pal.muted, fontSize: 12.5)),
+                ]),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                decoration: BoxDecoration(
+                  color: can ? Colors.white : Colors.white12,
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                child: Text(can ? 'لُف الآن' : 'غداً',
+                    style: TextStyle(
+                        color: can ? const Color(0xFFE65100) : Pal.muted, fontWeight: FontWeight.w900, fontSize: 13)),
+              ),
+            ]),
+          ),
+        );
+      },
+    );
+  }
+}
+
+/// صفحة كاملة للعجلة تُفتح من الصفحة الرئيسية
+class _WheelPage extends StatelessWidget {
+  const _WheelPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return rtl(Scaffold(
+      appBar: AppBar(
+        backgroundColor: Pal.bg,
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+        title: const Text('عجلة الحظ', style: TextStyle(color: Pal.gold, fontWeight: FontWeight.bold)),
+      ),
+      body: SafeArea(
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+          children: const [WheelView()],
+        ),
+      ),
+    ));
   }
 }
 
