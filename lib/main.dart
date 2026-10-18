@@ -692,6 +692,7 @@ class CloudSync {
       if (d == null) return;
       apply(d);
       final nm = (d['name'] ?? '').toString().trim();
+      AppState.I.welcomeShown = true; // لاعب قديم: لا نكرر رسالة الترحيب
       AppState.I.me = Profile(
           name: nm.isEmpty ? 'لاعب' : nm,
           avatar: asInt(d['avatar'], 0),
@@ -4749,6 +4750,7 @@ class _LoginState extends State<LoginScreen> {
     if (cloud != null) {
       CloudSync.apply(cloud);
       final nm = (cloud['name'] ?? '').toString().trim();
+      AppState.I.welcomeShown = true; // لاعب قديم: لا نكرر رسالة الترحيب
       AppState.I.setProfile(Profile(
           name: nm.isEmpty ? p.name : nm,
           avatar: CloudSync.asInt(cloud['avatar'], 0),
