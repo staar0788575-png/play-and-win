@@ -545,7 +545,9 @@ class AuthService {
       String sig = '';
       try {
         final pi = await PackageInfo.fromPlatform();
-        sig = pi.buildSignature.isEmpty ? 'EMPTY' : pi.buildSignature;
+        sig = (pi.buildSignature.isEmpty ? 'EMPTY' : pi.buildSignature) +
+            '\nPKG: ' + pi.packageName +
+            '\nVER: ' + pi.version + '+' + pi.buildNumber;
       } catch (e2) {
         sig = 'ERR $e2';
       }
